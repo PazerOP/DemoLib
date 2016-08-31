@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,53 +9,61 @@ using System.Threading.Tasks;
 
 namespace DemoLib
 {
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	struct demoheader_t
+	public class DemoHeader
 	{
-		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-		char[] demofilestamp;                      // Should be HL2DEMO
+		public readonly string m_MagicToken;
+		const string EXPECTED_MAGIC_TOKEN = "HL2DEMO";
 
-		int demoprotocol;                           // Should be DEMO_PROTOCOL
-		int networkprotocol;                        // Should be PROTOCOL_VERSION
-		char servername[SourceConstants.MAX_OSPATH];				// Name of server
-		char clientname[MAX_OSPATH];				// Name of client who recorded the game
-		char mapname[MAX_OSPATH];                   // Name of map
-		
-		char[] gamedirectory;             // Name of game directory (com_gamedir)
+		public readonly int? m_DemoProtocol;
+		public readonly int? m_NetworkProtocol;
+		public readonly string m_ServerName;
+		public readonly string m_ClientName;
+		public readonly string m_MapName;
+		public readonly string m_GameDirectory;
 
-		float playback_time;						// Time of track
-		int playback_ticks;                         // # of ticks in track
-		int playback_frames;                        // # of frames in track
-		int signonlength;                           // length of sigondata in bytes
-	};
-
-	class DemoHeader
-	{
-		string m_MagicToken;
-		int m_DemoProtocol;
-		int m_NetworkProtocol;
-		string m_ServerName;
-		string m_ClientName;
-		string m_MapName;
-		string m_GameDirectory;
-
-		float m_PlaybackTime;
-		int m_PlaybackTicks;
-		int m_PlaybackFrames;
-		int m_SignonLength;
+		public readonly float? m_PlaybackTime;
+		public readonly int? m_PlaybackTicks;
+		public readonly int? m_PlaybackFrames;
+		public readonly int? m_SignonLength;
 
 		public DemoHeader(Stream inputStream)
 		{
 			using (BinaryReader reader = new BinaryReader(inputStream, Encoding.ASCII, true))
 			{
-				m_MagicToken = Encoding.ASCII.GetString(reader.ReadBytes(8));
+				m_MagicToken = Encoding.ASCII.GetString(reader.ReadBytes(8)).Trim('\0');
+				if (m_MagicToken != EXPECTED_MAGIC_TOKEN)
+					throw new DemoParseException(string.Format("Expected magic token: \"{0}\" Actual magic token: \"{1}\"", EXPECTED_MAGIC_TOKEN, m_MagicToken));
 
 				m_DemoProtocol = reader.ReadInt32();
 				m_NetworkProtocol = reader.ReadInt32();
-				m_ServerName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH));
-				m_ClientName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH));
-				m_MapName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH));
+
+				m_ServerName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
+				m_ClientName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
+				m_MapName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
+				m_GameDirectory = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
+
+				m_PlaybackTime = reader.ReadSingle();
+				m_PlaybackTicks = reader.ReadInt32();
+				m_PlaybackFrames = reader.ReadInt32();
+				m_SignonLength = reader.ReadInt32();
 			}
+		}
+
+		public DemoHeader(string magicToken = null, int? demoProtocol = null, int? networkProtocol = null,
+			string serverName = null, string clientName = null, string mapName = null, string gameDirectory = null,
+			float? playbackTime = null, int? playbackTicks = null, int? playbackFrames = null, int? signonLength = null)
+		{
+			m_MagicToken = magicToken;
+			m_DemoProtocol = demoProtocol;
+			m_NetworkProtocol = networkProtocol;
+			m_ServerName = serverName;
+			m_ClientName = clientName;
+			m_MapName = mapName;
+			m_GameDirectory = gameDirectory;
+			m_PlaybackTime = playbackTime;
+			m_PlaybackTicks = playbackTicks;
+			m_PlaybackFrames = playbackFrames;
+			m_SignonLength = signonLength;
 		}
 	}
 }
