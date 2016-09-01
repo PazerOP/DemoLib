@@ -14,7 +14,7 @@ namespace DemoLib.Launcher
 		{
 			using (var stream = File.Open(@"D:\Steam\steamapps\common\Team Fortress 2\tf\demos\2016-07-14_18-13-36.dem", FileMode.Open, FileAccess.Read))
 			{
-				DemoHeader header = new DemoHeader(stream);
+				DemoReader reader = DemoReader.FromStream(stream);
 			}
 		}
 	}

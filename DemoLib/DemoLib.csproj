@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -45,9 +47,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\DemoCommand.cs" />
+    <Compile Include="Commands\DemoConsoleCommand.cs" />
+    <Compile Include="Commands\DemoPacketCommand.cs" />
+    <Compile Include="Commands\DemoSignonCommand.cs" />
+    <Compile Include="Commands\DemoStringTablesCommand.cs" />
+    <Compile Include="Commands\DemoUserCommand.cs" />
+    <Compile Include="Commands\TimestampedDemoCommand.cs" />
     <Compile Include="DemoParseException.cs" />
     <Compile Include="DemoCommandType.cs" />
     <Compile Include="DemoHeader.cs" />
+    <Compile Include="DemoReader.cs" />
+    <Compile Include="DemoViewpoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceConstants.cs" />
   </ItemGroup>

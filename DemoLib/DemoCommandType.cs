@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DemoLib
 {
-	enum DemoCommandType
+	public enum DemoCommandType : byte
 	{
 		// PAZER: added
 		dem_invalid = 0,
@@ -28,7 +28,7 @@ namespace DemoLib
 
 		dem_stringtables,
 
-		// Last command
-		dem_lastcmd = dem_stringtables
+		// Last command -- not necessary in C#
+		//dem_lastcmd = dem_stringtables
 	}
 }

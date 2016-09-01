@@ -30,17 +30,17 @@ namespace DemoLib
 		{
 			using (BinaryReader reader = new BinaryReader(inputStream, Encoding.ASCII, true))
 			{
-				m_MagicToken = Encoding.ASCII.GetString(reader.ReadBytes(8)).Trim('\0');
+				m_MagicToken = Encoding.ASCII.GetString(reader.ReadBytes(8)).TrimEnd('\0');
 				if (m_MagicToken != EXPECTED_MAGIC_TOKEN)
 					throw new DemoParseException(string.Format("Expected magic token: \"{0}\" Actual magic token: \"{1}\"", EXPECTED_MAGIC_TOKEN, m_MagicToken));
 
 				m_DemoProtocol = reader.ReadInt32();
 				m_NetworkProtocol = reader.ReadInt32();
 
-				m_ServerName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
-				m_ClientName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
-				m_MapName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
-				m_GameDirectory = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).Trim('\0');
+				m_ServerName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).TrimEnd('\0');
+				m_ClientName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).TrimEnd('\0');
+				m_MapName = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).TrimEnd('\0');
+				m_GameDirectory = Encoding.ASCII.GetString(reader.ReadBytes(SourceConstants.MAX_OSPATH)).TrimEnd('\0');
 
 				m_PlaybackTime = reader.ReadSingle();
 				m_PlaybackTicks = reader.ReadInt32();
