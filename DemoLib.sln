@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoLib", "DemoLib\DemoLib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher\Launcher.csproj", "{5DCD86FB-1299-4B6F-BDC1-59A57496F197}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitSet", "BitSet\BitSet.csproj", "{8F8A6380-5B10-4891-AC21-3D03494B3E44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{5DCD86FB-1299-4B6F-BDC1-59A57496F197}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DCD86FB-1299-4B6F-BDC1-59A57496F197}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DCD86FB-1299-4B6F-BDC1-59A57496F197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F8A6380-5B10-4891-AC21-3D03494B3E44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F8A6380-5B10-4891-AC21-3D03494B3E44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F8A6380-5B10-4891-AC21-3D03494B3E44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F8A6380-5B10-4891-AC21-3D03494B3E44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

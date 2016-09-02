@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DemoLib.NetMessages;
 
 namespace DemoLib.Commands
 {
@@ -14,8 +15,7 @@ namespace DemoLib.Commands
 		public int SequenceIn { get; set; }
 		public int SequenceOut { get; set; }
 
-		//public List<object> NetMessages { get; set; }
-		public byte[] Data { get; set; }
+		public List<INetMessage> Messages { get; set; }
 
 		public DemoPacketCommand(Stream input) : base(input)
 		{
@@ -55,7 +55,7 @@ namespace DemoLib.Commands
 				SequenceIn = reader.ReadInt32();
 				SequenceOut = reader.ReadInt32();
 
-				Data = reader.ReadBytes((int)reader.ReadUInt32());
+				Messages = NetMessageCoder.Decode(reader.ReadBytes((int)reader.ReadUInt32()));
 			}
 		}
 	}
