@@ -21,12 +21,26 @@ namespace BitSet
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt6(byte[] buffer, int startByte = 0)
 		{
-			throw new NotImplementedException();
+			return (byte)(buffer[startByte] & 0x3F);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt6(byte[] buffer, int startByte, byte bitOffset)
 		{
-			throw new NotImplementedException();
+			switch (bitOffset)
+			{
+				case 0:		return (byte)(buffer[startByte] & 0x3F);
+				case 1:		return (byte)((buffer[startByte] & 0x7E) >> 1);
+				case 2:		return (byte)((buffer[startByte] & 0xFC) >> 2);
+
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				return (byte)((ReadUInt16(buffer, startByte) >> bitOffset) & 0x3F);
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(bitOffset));
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static byte ReadUInt6(byte* buffer, int startByte = 0)

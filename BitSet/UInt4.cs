@@ -6,6 +6,18 @@ namespace BitSet
 	public static partial class BitReader
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte ReadUInt4(byte[] buffer, ref ulong startBit)
+		{
+			var retVal = ReadUInt4(buffer, startBit);
+			startBit += 4;
+			return retVal;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte ReadUInt4(byte[] buffer, ulong startBit)
+		{
+			return ReadUInt4(buffer, (int)(startBit / 8), (byte)(startBit % 8));
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt4(byte[] buffer, int startByte = 0)
 		{
 			return (byte)(buffer[startByte] & 0xF);

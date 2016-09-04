@@ -20,5 +20,10 @@ namespace BitSet
 		{
 			return GetFirstBitIndex((ulong)mask);
 		}
+
+		public static ulong BitsToBytes(ulong bits)
+		{
+			return (bits + 7) >> 3;
+		}
 	}
 }

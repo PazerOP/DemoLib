@@ -25,7 +25,10 @@ namespace BitSet
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt1(byte[] buffer, int startByte, byte bitOffset)
 		{
-			throw new NotImplementedException();
+			if (bitOffset > 7)
+				throw new ArgumentOutOfRangeException(nameof(bitOffset));
+
+			return (byte)(((buffer[startByte] & (1 << bitOffset)) != 0) ? 1 : 0);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static byte ReadUInt1(byte* buffer, ulong startBit)

@@ -7,6 +7,18 @@ namespace BitSet
 	public static partial class BitReader
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte ReadUInt5(byte[] buffer, ref ulong startBit)
+		{
+			var retVal = ReadUInt5(buffer, startBit);
+			startBit += 5;
+			return retVal;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte ReadUInt5(byte[] buffer, ulong startBit)
+		{
+			return ReadUInt5(buffer, (int)(startBit / 8), (byte)(startBit % 8));
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt5(byte[] buffer, int startByte = 0)
 		{
 			throw new NotImplementedException();
@@ -14,7 +26,23 @@ namespace BitSet
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte ReadUInt5(byte[] buffer, int startByte, byte bitOffset)
 		{
-			throw new NotImplementedException();
+			switch (bitOffset)
+			{
+				case 0: return ReadUInt5(buffer, startByte);
+
+				case 1:
+				case 2:
+				case 3:
+					return (byte)((buffer[startByte] >> bitOffset) & 0x1F);
+
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+					return (byte)((ReadUInt16(buffer, startByte) >> bitOffset) & 0x1F);
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(bitOffset));
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe static byte ReadUInt5(byte* buffer, int startByte = 0)
