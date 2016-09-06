@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="BitInfo.cs" />
     <Compile Include="CopyBits.cs" />
+    <Compile Include="CString.cs" />
     <Compile Include="UInt.cs" />
     <Compile Include="UInt1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Single.cs" />
     <Compile Include="UInt10.cs" />
     <Compile Include="UInt8.cs" />
+    <Compile Include="VarInt.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

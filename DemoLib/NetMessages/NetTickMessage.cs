@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using BitSet;
 
 namespace DemoLib.NetMessages
 {
+	[DebuggerDisplay("{Description, nq}")]
 	class NetTickMessage : INetMessage
 	{
 		const int TICK_BITS = 32;
@@ -21,7 +19,7 @@ namespace DemoLib.NetMessages
 		{
 			get
 			{
-				throw new NotImplementedException();
+				return string.Format("net_Tick: tick {0}", Tick);
 			}
 		}
 

@@ -6,6 +6,7 @@ namespace BitSet
 	{
 		public static ulong ReadUInt(byte[] buffer, ref ulong bitOffset, byte bits)
 		{
+#if false
 			switch (bits)
 			{
 				case 1:		return ReadUInt1(buffer, ref bitOffset);
@@ -25,6 +26,11 @@ namespace BitSet
 
 				default:	throw new NotImplementedException();
 			}
+#endif
+			
+			byte[] temp = new byte[8];
+			CopyBits(buffer, bits, ref bitOffset, temp);
+			return BitConverter.ToUInt64(temp, 0);
 		}
 	}
 }

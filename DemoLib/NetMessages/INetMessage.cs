@@ -14,7 +14,5 @@ namespace DemoLib.NetMessages
 		ulong Size { get; }
 
 		string Description { get; }
-
-		NetMessageType Type { get; }
 	}
 }

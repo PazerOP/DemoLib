@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using BitSet;
 
 namespace DemoLib.NetMessages
 {
+	[DebuggerDisplay("{Description, nq}")]
 	class NetUpdateStringTableMessage : INetMessage
 	{
 		const int MAX_TABLE_BITS = 5;
@@ -16,13 +14,16 @@ namespace DemoLib.NetMessages
 
 		public int TableID { get; set; }
 		public int ChangedEntries { get; set; }
+
+		public ulong BitCount { get; set; }
 		public byte[] Data { get; set; }
 
 		public string Description
 		{
 			get
 			{
-				throw new NotImplementedException();
+				return string.Format("svc_UpdateStringTable: table {0}, changed {1}, bytes {2}",
+					TableID, ChangedEntries, BitInfo.BitsToBytes(BitCount));
 			}
 		}
 
@@ -48,8 +49,9 @@ namespace DemoLib.NetMessages
 			else
 				ChangedEntries = (int)BitReader.ReadUInt(buffer, ref bitOffset, CHANGED_ENTRIES_BITS);
 
-			Data = new byte[BitInfo.BitsToBytes(BitReader.ReadUInt(buffer, ref bitOffset, DATA_LENGTH_BITS))];
-			throw new NotImplementedException();
+			BitCount = BitReader.ReadUInt(buffer, ref bitOffset, DATA_LENGTH_BITS);
+			Data = new byte[BitInfo.BitsToBytes(BitCount)];
+			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

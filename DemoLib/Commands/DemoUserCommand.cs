@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DemoLib.Commands
 {
+	[DebuggerDisplay("{Tick, nq} dem_usercmd")]
 	sealed class DemoUserCommand : TimestampedDemoCommand
 	{
 		public int OutgoingSequence { get; set; }

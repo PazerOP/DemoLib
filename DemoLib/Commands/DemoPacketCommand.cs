@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using DemoLib.NetMessages;
 
 namespace DemoLib.Commands
 {
+	[DebuggerDisplay("{Tick, nq} network packet [{Length, nq}]")]
 	sealed class DemoPacketCommand : TimestampedDemoCommand
 	{
 		public DemoViewpoint Viewpoint { get; set; }
@@ -16,6 +15,8 @@ namespace DemoLib.Commands
 		public int SequenceOut { get; set; }
 
 		public List<INetMessage> Messages { get; set; }
+
+		public uint Length { get; set; }
 
 		public DemoPacketCommand(Stream input) : base(input)
 		{
@@ -55,7 +56,8 @@ namespace DemoLib.Commands
 				SequenceIn = reader.ReadInt32();
 				SequenceOut = reader.ReadInt32();
 
-				Messages = NetMessageCoder.Decode(reader.ReadBytes((int)reader.ReadUInt32()));
+				Length = reader.ReadUInt32();
+				Messages = NetMessageCoder.Decode(reader.ReadBytes((int)Length));
 			}
 		}
 	}
