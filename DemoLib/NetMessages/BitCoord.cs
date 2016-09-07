@@ -30,14 +30,14 @@ namespace DemoLib.NetMessages
 				if (intVal != 0)
 				{
 					// Adjust the integers from [0..MAX_COORD_VALUE-1] to [1..MAX_COORD_VALUE]
-					intVal = (int)BitReader.ReadUInt(source, ref readBitOffset, (byte)COORD_INTEGER_BITS);
+					intVal = (int)BitReader.ReadUIntBits(source, ref readBitOffset, (byte)COORD_INTEGER_BITS);
 					intVal++;
 				}
 
 				// If there's a fraction, read it in
 				if (fractVal != 0)
 				{
-					fractVal = (int)BitReader.ReadUInt(source, ref readBitOffset, (byte)COORD_FRACTIONAL_BITS);
+					fractVal = (int)BitReader.ReadUIntBits(source, ref readBitOffset, (byte)COORD_FRACTIONAL_BITS);
 				}
 
 				// Calculate the correct floating point value

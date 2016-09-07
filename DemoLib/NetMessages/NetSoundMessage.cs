@@ -44,12 +44,12 @@ namespace DemoLib.NetMessages
 			if (Reliable)
 			{
 				SoundCount = 1;
-				BitCount = BitReader.ReadUInt(buffer, ref bitOffset, RELIABLE_SIZE_BITS);
+				BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, RELIABLE_SIZE_BITS);
 			}
 			else
 			{
-				SoundCount = (int)BitReader.ReadUInt(buffer, ref bitOffset, SOUND_COUNT_BITS);
-				BitCount = BitReader.ReadUInt(buffer, ref bitOffset, UNRELIABLE_SIZE_BITS);
+				SoundCount = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SOUND_COUNT_BITS);
+				BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, UNRELIABLE_SIZE_BITS);
 			}
 
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];

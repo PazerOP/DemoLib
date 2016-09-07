@@ -13,7 +13,7 @@ namespace BitSet
 			StringBuilder builder = new StringBuilder();
 
 			char c;
-			while ((c = (char)ReadUInt(buffer, ref bitOffset, 8)) != '\0')
+			while ((c = (char)ReadUIntBits(buffer, ref bitOffset, 8)) != '\0')
 			{
 				builder.Append(c);
 			}

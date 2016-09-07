@@ -35,10 +35,10 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			Tick = (uint)BitReader.ReadUInt(buffer, ref bitOffset, TICK_BITS);
+			Tick = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, TICK_BITS);
 
-			HostFrameTime = BitReader.ReadUInt(buffer, ref bitOffset, FLOAT_BITS) / NET_TICK_SCALEUP;
-			HostFrameTimeStdDev = BitReader.ReadUInt(buffer, ref bitOffset, FLOAT_BITS) / NET_TICK_SCALEUP;
+			HostFrameTime = BitReader.ReadUIntBits(buffer, ref bitOffset, FLOAT_BITS) / NET_TICK_SCALEUP;
+			HostFrameTimeStdDev = BitReader.ReadUIntBits(buffer, ref bitOffset, FLOAT_BITS) / NET_TICK_SCALEUP;
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

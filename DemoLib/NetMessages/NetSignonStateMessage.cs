@@ -75,9 +75,9 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			State = (SignonState)BitReader.ReadUInt(buffer, ref bitOffset, 8);
+			State = (SignonState)BitReader.ReadUIntBits(buffer, ref bitOffset, 8);
 			
-			SpawnCount = unchecked((int)BitReader.ReadUInt(buffer, ref bitOffset, 32));
+			SpawnCount = unchecked((int)BitReader.ReadUIntBits(buffer, ref bitOffset, 32));
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

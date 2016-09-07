@@ -1,26 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using BitSet;
 
 namespace DemoLib.NetMessages
 {
 	[DebuggerDisplay("{Description, nq}")]
-	class NetPrefetchMessage : INetMessage
+	class NetPrintMessage : INetMessage
 	{
-		public enum PrefetchType
-		{
-			Sound = 0,
-		}
-
-		public PrefetchType Type { get; set; }
-
-		public int SoundIndex { get; set; }
+		public string Message { get; set; }
 
 		public string Description
 		{
 			get
 			{
-				return string.Format("svc_Prefetch: type {0} index {1}", Type, SoundIndex);
+				return string.Format("svc_Print: \"{0}\"", Message);
 			}
 		}
 
@@ -34,8 +31,7 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			Type = PrefetchType.Sound;
-			SoundIndex = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_SOUND_INDEX_BITS);
+			Message = BitReader.ReadCString(buffer, ref bitOffset);
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

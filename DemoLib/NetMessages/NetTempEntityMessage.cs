@@ -36,7 +36,7 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			EntryCount = (int)BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.EVENT_INDEX_BITS);
+			EntryCount = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.EVENT_INDEX_BITS);
 
 			BitCount = BitReader.ReadVarInt(buffer, ref bitOffset);
 

@@ -10,7 +10,7 @@
 
 			for (byte run = 0; run < 35; run += 7)
 			{
-				byte oneByte = (byte)ReadUInt(buffer, ref bitOffset, 8);
+				byte oneByte = (byte)ReadUIntBits(buffer, ref bitOffset, 8);
 				dest |= ((oneByte & (uint)0x7F) << run);
 
 				if ((oneByte >> 7) == 0)

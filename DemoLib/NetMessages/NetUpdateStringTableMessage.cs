@@ -39,7 +39,7 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			TableID = (int)BitReader.ReadUInt(buffer, ref bitOffset, MAX_TABLE_BITS);
+			TableID = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, MAX_TABLE_BITS);
 
 			bool multipleChanged = false;
 			multipleChanged = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
@@ -47,9 +47,9 @@ namespace DemoLib.NetMessages
 			if (!multipleChanged)
 				ChangedEntries = 1;
 			else
-				ChangedEntries = (int)BitReader.ReadUInt(buffer, ref bitOffset, CHANGED_ENTRIES_BITS);
+				ChangedEntries = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, CHANGED_ENTRIES_BITS);
 
-			BitCount = BitReader.ReadUInt(buffer, ref bitOffset, DATA_LENGTH_BITS);
+			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, DATA_LENGTH_BITS);
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];
 			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);
 		}

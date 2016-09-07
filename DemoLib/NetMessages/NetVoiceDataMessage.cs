@@ -5,10 +5,11 @@ using BitSet;
 namespace DemoLib.NetMessages
 {
 	[DebuggerDisplay("{Description, nq}")]
-	class NetGameEventMessage : INetMessage
+	class NetVoiceDataMessage : INetMessage
 	{
-		const int EVENT_LENGTH_BITS = 11;
-
+		public byte ClientIndex { get; set; }
+		public bool Proximity { get; set; }
+		
 		public ulong BitCount { get; set; }
 		public byte[] Data { get; set; }
 
@@ -16,7 +17,8 @@ namespace DemoLib.NetMessages
 		{
 			get
 			{
-				return string.Format("svc_GameEvent: bytes {0}", BitInfo.BitsToBytes(BitCount));
+				return string.Format("svc_VoiceData: client {0}, bytes {1}",
+					ClientIndex, BitInfo.BitsToBytes(BitCount));
 			}
 		}
 
@@ -28,14 +30,14 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public NetMessageType Type { get { return NetMessageType.SVC_GAMEEVENT; } }
-
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, EVENT_LENGTH_BITS);
+			ClientIndex = (byte)BitReader.ReadUIntBits(buffer, ref bitOffset, 8);
+			Proximity = BitReader.ReadUIntBits(buffer, ref bitOffset, 8) != 0;
 
+			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, 16);
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];
-			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);
+			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);			
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

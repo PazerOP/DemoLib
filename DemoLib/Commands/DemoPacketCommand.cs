@@ -7,14 +7,14 @@ using DemoLib.NetMessages;
 namespace DemoLib.Commands
 {
 	[DebuggerDisplay("{Tick, nq} network packet [{Length, nq}]")]
-	sealed class DemoPacketCommand : TimestampedDemoCommand
+	class DemoPacketCommand : TimestampedDemoCommand
 	{
 		public DemoViewpoint Viewpoint { get; set; }
 
 		public int SequenceIn { get; set; }
 		public int SequenceOut { get; set; }
 
-		public List<INetMessage> Messages { get; set; }
+		public IList<INetMessage> Messages { get; set; }
 
 		public uint Length { get; set; }
 

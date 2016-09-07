@@ -34,8 +34,8 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			MessageType = (int)BitReader.ReadUInt(buffer, ref bitOffset, MAX_USER_MSG_TYPE_BITS);
-			BitCount = BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.MAX_USER_MSG_LENGTH_BITS);
+			MessageType = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, MAX_USER_MSG_TYPE_BITS);
+			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_USER_MSG_LENGTH_BITS);
 
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];
 			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);

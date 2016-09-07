@@ -45,19 +45,19 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			MaxEntries = (uint)BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
+			MaxEntries = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
 
 			IsDelta = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
 			if (IsDelta)
-				DeltaFrom = (int)BitReader.ReadUInt(buffer, ref bitOffset, DELTA_INDEX_BITS);
+				DeltaFrom = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, DELTA_INDEX_BITS);
 			else
 				DeltaFrom = -1;
 
 			Baseline = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
 
-			UpdatedEntries = (uint)BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
+			UpdatedEntries = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
 
-			BitCount = BitReader.ReadUInt(buffer, ref bitOffset, DELTA_SIZE_BITS);
+			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, DELTA_SIZE_BITS);
 
 			UpdateBaseline = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
 

@@ -16,7 +16,7 @@ namespace DemoLib.NetMessages
 			ulong cursor = 0;
 			while (cursor < ((ulong)buffer.LongLength * 8) - SourceConstants.NETMSG_TYPE_BITS)
 			{
-				NetMessageType type = (NetMessageType)BitReader.ReadUInt(buffer, ref cursor, SourceConstants.NETMSG_TYPE_BITS);
+				NetMessageType type = (NetMessageType)BitReader.ReadUIntBits(buffer, ref cursor, SourceConstants.NETMSG_TYPE_BITS);
 
 				if (type == NetMessageType.NET_NOOP)
 					continue;
@@ -38,12 +38,18 @@ namespace DemoLib.NetMessages
 				case NetMessageType.NET_STRINGCMD:			return new NetStringCmdMessage();
 
 				case NetMessageType.NET_SIGNONSTATE:		return new NetSignonStateMessage();
+				case NetMessageType.SVC_PRINT:				return new NetPrintMessage();
+				case NetMessageType.SVC_SERVERINFO:			return new NetServerInfoMessage();
 
 				case NetMessageType.SVC_SETPAUSE:			return new NetSetPausedMessage();
 
 				case NetMessageType.SVC_UPDATESTRINGTABLE:	return new NetUpdateStringTableMessage();
 
+				case NetMessageType.SVC_VOICEDATA:			return new NetVoiceDataMessage();
+
 				case NetMessageType.SVC_SOUND:				return new NetSoundMessage();
+
+				case NetMessageType.SVC_FIXANGLE:			return new NetFixAngleMessage();
 
 				case NetMessageType.SVC_USERMESSAGE:		return new NetUsrMsgMessage();
 

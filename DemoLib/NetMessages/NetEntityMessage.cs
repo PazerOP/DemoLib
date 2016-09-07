@@ -38,10 +38,10 @@ namespace DemoLib.NetMessages
 
 		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
 		{
-			EntityIndex = (uint)BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
-			ClassID = (uint)BitReader.ReadUInt(buffer, ref bitOffset, SourceConstants.MAX_SERVER_CLASS_BITS);
+			EntityIndex = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
+			ClassID = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_SERVER_CLASS_BITS);
 
-			BitCount = BitReader.ReadUInt(buffer, ref bitOffset, DATA_LENGTH_BITS);
+			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, DATA_LENGTH_BITS);
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];
 			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);
 		}
