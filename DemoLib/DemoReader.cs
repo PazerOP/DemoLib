@@ -42,11 +42,13 @@ namespace DemoLib
 			switch (cmdType)
 			{
 				case DemoCommandType.dem_signon:		return new DemoSignonCommand(input, (ulong)header.m_SignonLength);
-				case DemoCommandType.dem_stringtables:	return new DemoStringTablesCommand(input);
-				case DemoCommandType.dem_consolecmd:	return new DemoConsoleCommand(input);
 				case DemoCommandType.dem_packet:		return new DemoPacketCommand(input);
+				case DemoCommandType.dem_synctick:		return new DemoSyncTickCommand(input);
+				case DemoCommandType.dem_consolecmd:	return new DemoConsoleCommand(input);
 				case DemoCommandType.dem_usercmd:		return new DemoUserCommand(input);
+				case DemoCommandType.dem_datatables:	return new DemoDataTablesCommand(input);
 				case DemoCommandType.dem_stop:			return null;
+				case DemoCommandType.dem_stringtables:	return new DemoStringTablesCommand(input);
 
 				default:
 					throw new NotImplementedException(string.Format("Unknown command type {0}", cmdType));

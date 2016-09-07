@@ -49,9 +49,11 @@
   <ItemGroup>
     <Compile Include="Commands\DemoCommand.cs" />
     <Compile Include="Commands\DemoConsoleCommand.cs" />
+    <Compile Include="Commands\DemoDataTablesCommand.cs" />
     <Compile Include="Commands\DemoPacketCommand.cs" />
     <Compile Include="Commands\DemoSignonCommand.cs" />
     <Compile Include="Commands\DemoStringTablesCommand.cs" />
+    <Compile Include="Commands\DemoSyncTickCommand.cs" />
     <Compile Include="Commands\DemoUserCommand.cs" />
     <Compile Include="Commands\TimestampedDemoCommand.cs" />
     <Compile Include="DemoParseException.cs" />
@@ -62,10 +64,14 @@
     <Compile Include="NetMessages\BitAngle.cs" />
     <Compile Include="NetMessages\BitCoord.cs" />
     <Compile Include="NetMessages\INetMessage.cs" />
+    <Compile Include="NetMessages\ExtMath.cs" />
     <Compile Include="NetMessages\NetBSPDecalMessage.cs" />
+    <Compile Include="NetMessages\NetClassInfoMessage.cs" />
+    <Compile Include="NetMessages\NetCreateStringTableMessage.cs" />
     <Compile Include="NetMessages\NetEntityMessage.cs" />
     <Compile Include="NetMessages\NetFileMessage.cs" />
     <Compile Include="NetMessages\NetFixAngleMessage.cs" />
+    <Compile Include="NetMessages\NetGameEventListMessage.cs" />
     <Compile Include="NetMessages\NetGameEventMessage.cs" />
     <Compile Include="NetMessages\NetMessageCoder.cs" />
     <Compile Include="NetMessages\NetMessageType.cs" />
@@ -73,7 +79,9 @@
     <Compile Include="NetMessages\NetPrefetchMessage.cs" />
     <Compile Include="NetMessages\NetPrintMessage.cs" />
     <Compile Include="NetMessages\NetServerInfoMessage.cs" />
+    <Compile Include="NetMessages\NetSetConvarMessage.cs" />
     <Compile Include="NetMessages\NetSetPausedMessage.cs" />
+    <Compile Include="NetMessages\NetSetViewMessage.cs" />
     <Compile Include="NetMessages\NetSignonStateMessage.cs" />
     <Compile Include="NetMessages\NetSoundMessage.cs" />
     <Compile Include="NetMessages\NetStringCmdMessage.cs" />
@@ -82,6 +90,7 @@
     <Compile Include="NetMessages\NetUpdateStringTableMessage.cs" />
     <Compile Include="NetMessages\NetUsrMsgMessage.cs" />
     <Compile Include="NetMessages\NetVoiceDataMessage.cs" />
+    <Compile Include="NetMessages\NetVoiceInitMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceConstants.cs" />
   </ItemGroup>

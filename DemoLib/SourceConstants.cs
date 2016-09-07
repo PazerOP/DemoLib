@@ -7,6 +7,7 @@
 		internal const int NETMSG_TYPE_BITS = 6;
 
 		internal const int EVENT_INDEX_BITS = 8;
+		internal const int MAX_EVENT_BITS = 9;
 
 		internal const int NET_MAX_PAYLOAD_BITS = 17;
 		internal const int NET_MAX_PAYLOAD = (1 << NET_MAX_PAYLOAD_BITS);
