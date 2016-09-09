@@ -33,7 +33,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.NET_TICK; } }
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			Tick = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, TICK_BITS);
 

@@ -40,7 +40,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.NET_FILE; } }
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			TransferID = BitReader.ReadUInt32(buffer, ref bitOffset);
 			Filename = BitReader.ReadCString(buffer, ref bitOffset);

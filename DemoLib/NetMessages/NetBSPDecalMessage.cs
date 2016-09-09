@@ -26,7 +26,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_BSPDECAL; } }
 		
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			throw new NotImplementedException();
 		}

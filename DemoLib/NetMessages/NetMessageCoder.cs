@@ -9,7 +9,7 @@ namespace DemoLib.NetMessages
 {
 	static class NetMessageCoder
 	{
-		public static List<INetMessage> Decode(byte[] buffer)
+		public static List<INetMessage> Decode(DemoReader reader, byte[] buffer)
 		{
 			List<INetMessage> messages = new List<INetMessage>();
 
@@ -22,7 +22,7 @@ namespace DemoLib.NetMessages
 					continue;
 
 				INetMessage newMsg = CreateNetMessage(type);
-				newMsg.ReadMsg(buffer, ref cursor);
+				newMsg.ReadMsg(reader, buffer, ref cursor);
 				messages.Add(newMsg);
 			}
 

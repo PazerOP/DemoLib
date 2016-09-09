@@ -43,7 +43,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_PACKETENTITIES; } }
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			MaxEntries = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
 

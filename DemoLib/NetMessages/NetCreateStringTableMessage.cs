@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using BitSet;
+using DemoLib.NetMessages.Shared;
 
 namespace DemoLib.NetMessages
 {
@@ -15,9 +19,11 @@ namespace DemoLib.NetMessages
 		public byte UserDataSizeBits { get; set; }
 		public bool IsFilenames { get; set; }
 		public bool CompressedData { get; set; }
-
+		
 		public ulong BitCount { get; set; }
 		public byte[] Data { get; set; }
+
+		public IList<StringTableParser.StringEntry> StringEntries { get; set; } = new List<StringTableParser.StringEntry>();
 
 		public string Description
 		{
@@ -36,7 +42,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			if (BitReader.ReadChar(buffer, ref bitOffset) == ':')
 			{
@@ -70,8 +76,14 @@ namespace DemoLib.NetMessages
 
 			CompressedData = BitReader.ReadBool(buffer, ref bitOffset);
 
+			ulong startBit = bitOffset;
+
+			//StringTableParser.ParseUpdate(buffer, ref bitOffset, StringEntries, Entries, MaxEntries);
+
 			Data = new byte[BitInfo.BitsToBytes(BitCount)];
 			BitReader.CopyBits(buffer, BitCount, ref bitOffset, Data);
+
+			Debug.Assert((startBit + BitCount) == bitOffset);
 		}
 
 		public void WriteMsg(byte[] buffer, ref ulong bitOffset)

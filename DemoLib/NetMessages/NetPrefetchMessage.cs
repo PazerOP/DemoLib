@@ -32,7 +32,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			Type = PrefetchType.Sound;
 			SoundIndex = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_SOUND_INDEX_BITS);

@@ -18,46 +18,46 @@ namespace DemoLib.Commands
 
 		public uint Length { get; set; }
 
-		public DemoPacketCommand(Stream input) : base(input)
+		public DemoPacketCommand(DemoReader demoReader, Stream input) : base(input)
 		{
 			Type = DemoCommandType.dem_packet;
 
-			using (BinaryReader reader = new BinaryReader(input, Encoding.ASCII, true))
+			using (BinaryReader r = new BinaryReader(input, Encoding.ASCII, true))
 			{
 				Viewpoint = new DemoViewpoint();
 
-				Viewpoint.ViewpointFlags = (DemoViewpoint.Flags)reader.ReadInt32();
+				Viewpoint.ViewpointFlags = (DemoViewpoint.Flags)r.ReadInt32();
 
 				Viewpoint.ViewOrigin1 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewOrigin1[i] = reader.ReadSingle();
+					Viewpoint.ViewOrigin1[i] = r.ReadSingle();
 
 				Viewpoint.ViewAngles1 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewAngles1[i] = reader.ReadSingle();
+					Viewpoint.ViewAngles1[i] = r.ReadSingle();
 				
 				Viewpoint.LocalViewAngles1 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.LocalViewAngles1[i] = reader.ReadSingle();
+					Viewpoint.LocalViewAngles1[i] = r.ReadSingle();
 
 
 				Viewpoint.ViewOrigin2 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewOrigin2[i] = reader.ReadSingle();
+					Viewpoint.ViewOrigin2[i] = r.ReadSingle();
 
 				Viewpoint.ViewAngles2 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewAngles2[i] = reader.ReadSingle();
+					Viewpoint.ViewAngles2[i] = r.ReadSingle();
 
 				Viewpoint.LocalViewAngles2 = new float[3];
 				for (byte i = 0; i < 3; i++)
-					Viewpoint.LocalViewAngles2[i] = reader.ReadSingle();
+					Viewpoint.LocalViewAngles2[i] = r.ReadSingle();
 
-				SequenceIn = reader.ReadInt32();
-				SequenceOut = reader.ReadInt32();
+				SequenceIn = r.ReadInt32();
+				SequenceOut = r.ReadInt32();
 
-				Length = reader.ReadUInt32();
-				Messages = NetMessageCoder.Decode(reader.ReadBytes((int)Length));
+				Length = r.ReadUInt32();
+				Messages = NetMessageCoder.Decode(demoReader, r.ReadBytes((int)Length));
 			}
 		}
 	}

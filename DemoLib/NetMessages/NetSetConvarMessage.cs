@@ -35,7 +35,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			byte count = BitReader.ReadByte(buffer, ref bitOffset);
 

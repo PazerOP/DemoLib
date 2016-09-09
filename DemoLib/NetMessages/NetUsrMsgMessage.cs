@@ -32,7 +32,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_USERMESSAGE; } }
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			MessageType = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, MAX_USER_MSG_TYPE_BITS);
 			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_USER_MSG_LENGTH_BITS);

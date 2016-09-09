@@ -37,7 +37,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_UPDATESTRINGTABLE; } }
 
-		public void ReadMsg(byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
 		{
 			TableID = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, MAX_TABLE_BITS);
 
