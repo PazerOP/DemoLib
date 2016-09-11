@@ -28,5 +28,7 @@
 		internal const int MAX_SOUND_INDEX_BITS = 14;
 
 		internal const int SP_MODEL_INDEX_BITS = 11;
+
+		internal const int NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS = 10;
 	}
 }

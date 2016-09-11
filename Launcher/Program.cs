@@ -25,7 +25,7 @@ namespace DemoLib.Launcher
 
 				Console.WriteLine();
 				Console.WriteLine("Running {0}", nameof(EntityDataExtractor));
-				EntityDataExtractor extractor = new EntityDataExtractor(reader.NetMessages);
+				EntityDataExtractor extractor = new EntityDataExtractor(reader.NetMessages, reader.SendTables, reader.ServerClasses);
 				foreach (var test in extractor)
 					Console.WriteLine(test);
 

@@ -21,6 +21,7 @@ namespace DemoLib
 		public IEnumerable<INetMessage> NetMessages { get { return Commands.OfType<DemoPacketCommand>().SelectMany(c => c.Messages); } }
 
 		public IReadOnlyList<SendTable> SendTables { get; private set; }
+		public IReadOnlyList<ServerClass> ServerClasses { get; private set; }
 
 		private DemoReader(Stream input)
 		{
@@ -83,6 +84,7 @@ namespace DemoLib
 				DemoDataTablesCommand dt = new DemoDataTablesCommand(input);
 				Debug.Assert(SendTables == null);
 				SendTables = dt.SendTables.AsReadOnly();
+				ServerClasses = dt.ServerClasses.AsReadOnly();
 				return dt;
 			}
 			else
