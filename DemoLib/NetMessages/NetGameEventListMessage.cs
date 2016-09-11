@@ -13,7 +13,7 @@ namespace DemoLib.NetMessages
 		ulong BitCount { get; set; }
 		//public byte[] Data { get; set; }
 
-		public IList<GameEvent> Events { get; set; }
+		public IList<GameEventDeclaration> Events { get; set; }
 
 		public string Description
 		{
@@ -32,23 +32,23 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			ushort eventsCount = (ushort)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EVENT_BITS);
 
 			BitCount = BitReader.ReadUIntBits(buffer, ref bitOffset, 20);
 
-			Events = new List<GameEvent>();
+			Events = new List<GameEventDeclaration>();
 			for (int i = 0; i < eventsCount; i++)
 			{
-				GameEvent e = new GameEvent();
+				GameEventDeclaration e = new GameEventDeclaration();
 				e.ID = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EVENT_BITS);
 				e.Name = BitReader.ReadCString(buffer, ref bitOffset);
 
-				GameEvent.Type type;
+				GameEventDataType type;
 
-				e.Values = new Dictionary<string, GameEvent.Type>();
-				while ((type = (GameEvent.Type)BitReader.ReadUIntBits(buffer, ref bitOffset, 3)) != GameEvent.Type.Local)
+				e.Values = new Dictionary<string, GameEventDataType>();
+				while ((type = (GameEventDataType)BitReader.ReadUIntBits(buffer, ref bitOffset, 3)) != GameEventDataType.Local)
 				{
 					string name = BitReader.ReadCString(buffer, ref bitOffset);
 					e.Values.Add(name, type);

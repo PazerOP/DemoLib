@@ -34,7 +34,7 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_TEMPENTITIES; } }
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			EntryCount = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.EVENT_INDEX_BITS);
 

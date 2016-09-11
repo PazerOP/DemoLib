@@ -36,7 +36,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			ServerClassCount = BitReader.ReadShort(buffer, ref bitOffset);
 

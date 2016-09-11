@@ -42,7 +42,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			if (BitReader.ReadChar(buffer, ref bitOffset) == ':')
 			{

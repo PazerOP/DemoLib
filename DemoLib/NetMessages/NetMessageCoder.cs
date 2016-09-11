@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace DemoLib.NetMessages
 		{
 			List<INetMessage> messages = new List<INetMessage>();
 
+			uint? serverTick = null;
+
 			ulong cursor = 0;
 			while (cursor < ((ulong)buffer.LongLength * 8) - SourceConstants.NETMSG_TYPE_BITS)
 			{
@@ -22,7 +25,14 @@ namespace DemoLib.NetMessages
 					continue;
 
 				INetMessage newMsg = CreateNetMessage(type);
-				newMsg.ReadMsg(reader, buffer, ref cursor);
+				newMsg.ReadMsg(reader, serverTick, buffer, ref cursor);
+
+				if (type == NetMessageType.NET_TICK)
+				{
+					Debug.Assert(!serverTick.HasValue);
+					serverTick = ((NetTickMessage)newMsg).Tick;
+				}
+
 				messages.Add(newMsg);
 			}
 

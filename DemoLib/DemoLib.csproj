@@ -56,12 +56,22 @@
     <Compile Include="Commands\DemoSyncTickCommand.cs" />
     <Compile Include="Commands\DemoUserCommand.cs" />
     <Compile Include="Commands\TimestampedDemoCommand.cs" />
+    <Compile Include="DataExtraction\BaseExtractor.cs" />
+    <Compile Include="DataExtraction\EntityData.cs" />
+    <Compile Include="DataExtraction\EntityDataExtractor.cs" />
+    <Compile Include="DataExtraction\EntityUpdateType.cs" />
+    <Compile Include="DataExtraction\EventDeclarationsExtractor.cs" />
     <Compile Include="DataExtraction\GameEvent.cs" />
+    <Compile Include="DataExtraction\GameEventDeclaration.cs" />
+    <Compile Include="DataExtraction\SendProp.cs" />
+    <Compile Include="DataExtraction\SendTable.cs" />
+    <Compile Include="DataExtraction\ServerClass.cs" />
     <Compile Include="DemoParseException.cs" />
     <Compile Include="DemoCommandType.cs" />
     <Compile Include="DemoHeader.cs" />
     <Compile Include="DemoReader.cs" />
     <Compile Include="DemoViewpoint.cs" />
+    <Compile Include="Extensions\System.Collections.cs" />
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="NetMessages\BitAngle.cs" />
     <Compile Include="NetMessages\BitCoord.cs" />
@@ -96,7 +106,6 @@
     <Compile Include="NetMessages\Shared\StringTableParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceConstants.cs" />
-    <Compile Include="WTFMicrosoft.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -31,7 +31,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			VoiceCodec = BitReader.ReadCString(buffer, ref bitOffset);
 			Quality = BitReader.ReadByte(buffer, ref bitOffset);

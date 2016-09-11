@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DemoLib;
+using DemoLib.DataExtraction;
 
 namespace DemoLib.Launcher
 {
@@ -21,6 +22,13 @@ namespace DemoLib.Launcher
 				DateTime end = DateTime.Now;
 
 				Console.WriteLine("Finished parsing test demo file in {0:N1}ms.", (end - start).TotalMilliseconds);
+
+				Console.WriteLine();
+				Console.WriteLine("Running {0}", nameof(EntityDataExtractor));
+				EntityDataExtractor extractor = new EntityDataExtractor(reader.NetMessages);
+				foreach (var test in extractor)
+					Console.WriteLine(test);
+
 				Console.ReadLine();
 			}
 		}

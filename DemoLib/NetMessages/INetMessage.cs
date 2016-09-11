@@ -1,9 +1,9 @@
 ﻿namespace DemoLib.NetMessages
 {
-	interface INetMessage
+	public interface INetMessage
 	{
 		void WriteMsg(byte[] buffer, ref ulong bitOffset);
-		void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset);
+		void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset);
 
 		ulong Size { get; }
 

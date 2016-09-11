@@ -7,23 +7,17 @@ using System.Threading.Tasks;
 
 namespace DemoLib.DataExtraction
 {
-	[DebuggerDisplay("Game event: {Name}")]
-	public class GameEvent
+	public interface IReadOnlyGameEvent
 	{
-		public int ID { get; set; }
-		public string Name { get; set; }
+		GameEventDeclaration Declaration { get; }
+		IReadOnlyDictionary<string, object> Values { get; }
+	}
 
-		public enum Type
-		{
-			Local = 0, // not networked
-			String,    // zero terminated ASCII string
-			Float,     // float 32 bit
-			Long,      // signed int 32 bit
-			Short,     // signed int 16 bit
-			Byte,      // unsigned int 8 bit
-			Bool,      // unsigned int 1 bit
-		};
-
-		public IDictionary<string, Type> Values { get; set; }
+	[DebuggerDisplay("Game event: {Declaration.Name}")]
+	public class GameEvent : IReadOnlyGameEvent
+	{
+		public GameEventDeclaration Declaration { get; set; }
+		public IDictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
+		IReadOnlyDictionary<string, object> IReadOnlyGameEvent.Values { get { return Values.AsReadOnly(); } }
 	}
 }

@@ -30,7 +30,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			ClientIndex = (byte)BitReader.ReadUIntBits(buffer, ref bitOffset, 8);
 			Proximity = BitReader.ReadUIntBits(buffer, ref bitOffset, 8) != 0;

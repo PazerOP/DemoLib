@@ -36,7 +36,7 @@ namespace DemoLib.NetMessages
 			}
 		}
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			EntityIndex = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
 			ClassID = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_SERVER_CLASS_BITS);

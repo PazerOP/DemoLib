@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
+using System.Linq;
 using BitSet;
 
 namespace DemoLib.NetMessages
@@ -15,12 +17,10 @@ namespace DemoLib.NetMessages
 		public bool IsDelta { get; set; }
 		public bool UpdateBaseline { get; set; }
 		public bool Baseline { get; set; }
-		public int DeltaFrom { get; set; }
+		public int? DeltaFrom { get; set; }
 
 		public ulong BitCount { get; set; }
 		public byte[] Data { get; set; }
-
-		private bool Unknown { get; set; }
 
 		public string Description
 		{
@@ -43,15 +43,13 @@ namespace DemoLib.NetMessages
 
 		public NetMessageType Type { get { return NetMessageType.SVC_PACKETENTITIES; } }
 
-		public void ReadMsg(DemoReader reader, byte[] buffer, ref ulong bitOffset)
+		public void ReadMsg(DemoReader reader, uint? serverTick, byte[] buffer, ref ulong bitOffset)
 		{
 			MaxEntries = (uint)BitReader.ReadUIntBits(buffer, ref bitOffset, SourceConstants.MAX_EDICT_BITS);
 
 			IsDelta = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
 			if (IsDelta)
 				DeltaFrom = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, DELTA_INDEX_BITS);
-			else
-				DeltaFrom = -1;
 
 			Baseline = BitReader.ReadUInt1(buffer, ref bitOffset) != 0;
 
