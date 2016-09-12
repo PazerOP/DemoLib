@@ -9,7 +9,7 @@ namespace DemoLib.Commands
 {
 	sealed class DemoSignonCommand : DemoPacketCommand
 	{
-		public DemoSignonCommand(DemoReader reader, Stream input, ulong signonLength) : base(reader, input)
+		public DemoSignonCommand(Stream input, ulong signonLength) : base(input)
 		{
 			Type = DemoCommandType.dem_signon;
 		}

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using BitSet;
 using DemoLib.DataExtraction;
+using TF2Net.Data;
 
 namespace DemoLib.Commands
 {

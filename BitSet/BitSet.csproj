@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitInfo.cs" />
+    <Compile Include="BitStream.cs" />
     <Compile Include="CopyBits.cs" />
     <Compile Include="CString.cs" />
     <Compile Include="UInt.cs" />

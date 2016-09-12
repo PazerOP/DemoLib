@@ -56,56 +56,12 @@
     <Compile Include="Commands\DemoSyncTickCommand.cs" />
     <Compile Include="Commands\DemoUserCommand.cs" />
     <Compile Include="Commands\TimestampedDemoCommand.cs" />
-    <Compile Include="DataExtraction\BaseExtractor.cs" />
-    <Compile Include="DataExtraction\EntityData.cs" />
-    <Compile Include="DataExtraction\EntityDataExtractor.cs" />
-    <Compile Include="DataExtraction\EntityUpdateType.cs" />
-    <Compile Include="DataExtraction\EventDeclarationsExtractor.cs" />
-    <Compile Include="DataExtraction\GameEvent.cs" />
-    <Compile Include="DataExtraction\GameEventDeclaration.cs" />
-    <Compile Include="DataExtraction\SendProp.cs" />
-    <Compile Include="DataExtraction\SendTable.cs" />
-    <Compile Include="DataExtraction\ServerClass.cs" />
     <Compile Include="DemoParseException.cs" />
     <Compile Include="DemoCommandType.cs" />
     <Compile Include="DemoHeader.cs" />
     <Compile Include="DemoReader.cs" />
     <Compile Include="DemoViewpoint.cs" />
-    <Compile Include="Extensions\System.Collections.cs" />
-    <Compile Include="Extensions\System.Linq.cs" />
-    <Compile Include="NetMessages\BitAngle.cs" />
-    <Compile Include="NetMessages\BitCoord.cs" />
-    <Compile Include="NetMessages\INetMessage.cs" />
-    <Compile Include="NetMessages\ExtMath.cs" />
-    <Compile Include="NetMessages\NetBSPDecalMessage.cs" />
-    <Compile Include="NetMessages\NetClassInfoMessage.cs" />
-    <Compile Include="NetMessages\NetCreateStringTableMessage.cs" />
-    <Compile Include="NetMessages\NetEntityMessage.cs" />
-    <Compile Include="NetMessages\NetFileMessage.cs" />
-    <Compile Include="NetMessages\NetFixAngleMessage.cs" />
-    <Compile Include="NetMessages\NetGameEventListMessage.cs" />
-    <Compile Include="NetMessages\NetGameEventMessage.cs" />
-    <Compile Include="NetMessages\NetMessageCoder.cs" />
-    <Compile Include="NetMessages\NetMessageType.cs" />
-    <Compile Include="NetMessages\NetPacketEntitiesMessage.cs" />
-    <Compile Include="NetMessages\NetPrefetchMessage.cs" />
-    <Compile Include="NetMessages\NetPrintMessage.cs" />
-    <Compile Include="NetMessages\NetServerInfoMessage.cs" />
-    <Compile Include="NetMessages\NetSetConvarMessage.cs" />
-    <Compile Include="NetMessages\NetSetPausedMessage.cs" />
-    <Compile Include="NetMessages\NetSetViewMessage.cs" />
-    <Compile Include="NetMessages\NetSignonStateMessage.cs" />
-    <Compile Include="NetMessages\NetSoundMessage.cs" />
-    <Compile Include="NetMessages\NetStringCmdMessage.cs" />
-    <Compile Include="NetMessages\NetTempEntityMessage.cs" />
-    <Compile Include="NetMessages\NetTickMessage.cs" />
-    <Compile Include="NetMessages\NetUpdateStringTableMessage.cs" />
-    <Compile Include="NetMessages\NetUsrMsgMessage.cs" />
-    <Compile Include="NetMessages\NetVoiceDataMessage.cs" />
-    <Compile Include="NetMessages\NetVoiceInitMessage.cs" />
-    <Compile Include="NetMessages\Shared\StringTableParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SourceConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -114,6 +70,10 @@
     <ProjectReference Include="..\BitSet\BitSet.csproj">
       <Project>{8f8a6380-5b10-4891-ac21-3d03494b3e44}</Project>
       <Name>BitSet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TF2Net\TF2Net.csproj">
+      <Project>{2c2af7cc-4368-4c03-b7e1-356d3bb89f4f}</Project>
+      <Name>TF2Net</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

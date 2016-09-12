@@ -29,7 +29,7 @@ namespace BitSet
 				default:	throw new NotImplementedException();
 			}
 #endif
-			
+
 			byte[] temp = new byte[8];
 			CopyBits(buffer, bits, ref bitOffset, temp);
 			return BitConverter.ToUInt64(temp, 0);

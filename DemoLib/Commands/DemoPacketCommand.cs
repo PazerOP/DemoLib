@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using DemoLib.NetMessages;
+using BitSet;
+using TF2Net.NetMessages;
 
 namespace DemoLib.Commands
 {
@@ -14,11 +15,11 @@ namespace DemoLib.Commands
 		public int SequenceIn { get; set; }
 		public int SequenceOut { get; set; }
 
-		public IList<INetMessage> Messages { get; set; }
+		//public IList<INetMessage> Messages { get; set; }
 
-		public uint Length { get; set; }
+		public BitStream Data { get; set; }
 
-		public DemoPacketCommand(DemoReader demoReader, Stream input) : base(input)
+		public DemoPacketCommand(Stream input) : base(input)
 		{
 			Type = DemoCommandType.dem_packet;
 
@@ -56,8 +57,8 @@ namespace DemoLib.Commands
 				SequenceIn = r.ReadInt32();
 				SequenceOut = r.ReadInt32();
 
-				Length = r.ReadUInt32();
-				Messages = NetMessageCoder.Decode(demoReader, r.ReadBytes((int)Length));
+				ulong length = r.ReadUInt32();
+				Data = new BitStream(r.ReadBytes((int)length));
 			}
 		}
 	}

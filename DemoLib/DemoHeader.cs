@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using TF2Net.Data;
 
 namespace DemoLib
 {
@@ -32,7 +28,7 @@ namespace DemoLib
 			{
 				m_MagicToken = Encoding.ASCII.GetString(reader.ReadBytes(8)).TrimEnd('\0');
 				if (m_MagicToken != EXPECTED_MAGIC_TOKEN)
-					throw new DemoParseException(string.Format("Expected magic token: \"{0}\" Actual magic token: \"{1}\"", EXPECTED_MAGIC_TOKEN, m_MagicToken));
+					throw new FormatException(string.Format("Expected magic token: \"{0}\" Actual magic token: \"{1}\"", EXPECTED_MAGIC_TOKEN, m_MagicToken));
 
 				m_DemoProtocol = reader.ReadInt32();
 				m_NetworkProtocol = reader.ReadInt32();
