@@ -8,13 +8,36 @@ using TF2Net.NetMessages;
 
 namespace TF2Net
 {
-	public class WorldState : IReadOnlyWorldState
+	public class WorldState
 	{
-		public Dictionary<string, string> ConVars { get; } = new Dictionary<string, string>();
+		public WorldEvents Listeners { get; set; }
+
+		public ulong Tick { get; set; }
+
+		public double LastFrameTime { get; set; }
+		public double LastFrameTimeStdDev { get; set; }
+
+		public SignonState SignonState { get; set; }
+
+		public ServerInfo ServerInfo { get; set; }
+
+		public SortedSet<Entity> Entities { get; }
+
+		public IList<StringTable> StringTables { get; set; } = new List<StringTable>();
+
+		public IDictionary<string, string> ConVars { get; } = new Dictionary<string, string>();
 		
-		public NetClassInfoMessage ServerClassInfo { get; set; }
+		public IList<ServerClass> ServerClasses { get; set; }
+		public IList<SendTable> SendTables { get; set; }
 
 		public IList<GameEventDeclaration> EventDeclarations { get; set; }
-		IReadOnlyList<IReadOnlyGameEventDeclaration> IReadOnlyWorldState.EventDeclarations { get { return EventDeclarations.AsReadOnly(); } }
+
+		public ushort? ViewEntity { get; set; }
+
+		public WorldState()
+		{
+			Entities = new SortedSet<Entity>(
+				Comparer<Entity>.Create((x, y) => Comparer<uint>.Default.Compare(x.Index, y.Index)));
+		}
 	}
 }

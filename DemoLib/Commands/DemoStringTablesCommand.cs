@@ -4,11 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BitSet;
 
 namespace DemoLib.Commands
 {
 	sealed class DemoStringTablesCommand : TimestampedDemoCommand
 	{
+		public BitStream Data { get; set; }
+
 		public DemoStringTablesCommand(Stream input) : base(input)
 		{
 			Type = DemoCommandType.dem_stringtables;
@@ -16,10 +19,18 @@ namespace DemoLib.Commands
 			using (BinaryReader reader = new BinaryReader(input, Encoding.ASCII, true))
 			{
 				int dataLength = reader.ReadInt32();
-				Data = reader.ReadBytes(dataLength);
+				Data = new BitStream(reader.ReadBytes(dataLength));
+
+				/*while (true)
+				{
+					ulong startCursor = Data.Cursor;
+
+					string test = Data.ReadCString();
+					Console.WriteLine(test);
+
+					Data.Cursor = startCursor + 1;
+				}*/
 			}
 		}
-
-		public byte[] Data { get; set; }
 	}
 }

@@ -10,13 +10,13 @@ using TF2Net.NetMessages;
 
 namespace TF2Net
 {
-	static class NetMessageCoder
+	public static class NetMessageCoder
 	{
-		public static List<INetMessage> Decode(BitStream stream, WorldState ws)
+		public static List<INetMessage> Decode(BitStream stream)
 		{
 			List<INetMessage> messages = new List<INetMessage>();
 			
-			while (stream.Cursor < (stream.Length * 8 - SourceConstants.NETMSG_TYPE_BITS))
+			while (stream.Cursor < (stream.Length - SourceConstants.NETMSG_TYPE_BITS))
 			{
 				NetMessageType type = (NetMessageType)stream.ReadByte(SourceConstants.NETMSG_TYPE_BITS);
 
@@ -24,8 +24,7 @@ namespace TF2Net
 					continue;
 
 				INetMessage newMsg = CreateNetMessage(type);
-				newMsg.ReadMsg(stream, ws);
-
+				newMsg.ReadMsg(stream);
 				messages.Add(newMsg);
 			}
 

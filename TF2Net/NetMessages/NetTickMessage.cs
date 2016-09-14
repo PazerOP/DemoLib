@@ -23,7 +23,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			Tick = stream.ReadUInt(TICK_BITS);
 
@@ -33,7 +33,11 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			ws.Tick = Tick;
+			ws.LastFrameTime = HostFrameTime;
+			ws.LastFrameTimeStdDev = HostFrameTimeStdDev;
+
+			ws.Listeners.OnNewTick(ws);
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace TF2Net.NetMessages
 			throw new NotImplementedException();
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			throw new NotImplementedException();
 		}

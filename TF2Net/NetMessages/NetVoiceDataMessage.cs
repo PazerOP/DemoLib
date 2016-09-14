@@ -21,7 +21,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			ClientIndex = stream.ReadByte();
 			Proximity = stream.ReadByte() != 0;

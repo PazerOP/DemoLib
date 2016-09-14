@@ -25,7 +25,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			Type = PrefetchType.Sound;
 			SoundIndex = stream.ReadInt(SourceConstants.MAX_SOUND_INDEX_BITS);

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using BitSet;
+using Snappy;
 using TF2Net.Data;
 using TF2Net.NetMessages.Shared;
 
@@ -21,7 +22,10 @@ namespace TF2Net.NetMessages
 		public bool IsFilenames { get; set; }
 		public bool CompressedData { get; set; }
 		
-		public BitStream Data { get; set; }
+		//public BitStream Data { get; set; }
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		ulong BitCount { get; set; }
 
 		public IList<StringTableEntry> StringEntries { get; set; } = new List<StringTableEntry>();
 
@@ -30,11 +34,11 @@ namespace TF2Net.NetMessages
 			get
 			{
 				return string.Format("svc_CreateStringTable: table {0}, entries {1}, bytes {2} userdatasize {3} userdatabits {4}",
-					TableName, Entries, BitInfo.BitsToBytes(Data.Length), UserDataSize, UserDataSizeBits);
+					TableName, Entries, BitInfo.BitsToBytes(BitCount), UserDataSize, UserDataSizeBits);
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			if (stream.ReadChar() == ':')
 			{
@@ -52,7 +56,7 @@ namespace TF2Net.NetMessages
 			int encodeBits = ExtMath.Log2(MaxEntries);
 			Entries = stream.ReadUShort((byte)(encodeBits + 1));
 
-			ulong bitCount = stream.ReadVarInt();
+			BitCount = stream.ReadVarInt();
 
 			UserDataFixedSize = stream.ReadBool();
 			if (UserDataFixedSize)
@@ -63,15 +67,55 @@ namespace TF2Net.NetMessages
 
 			CompressedData = stream.ReadBool();
 
-			//StringTableParser.ParseUpdate(buffer, ref bitOffset, StringEntries, Entries, MaxEntries);
+			BitStream data = stream.Subsection(stream.Cursor, stream.Cursor + BitCount);
+			stream.Seek(BitCount, System.IO.SeekOrigin.Current);
 
-			Data = stream.Subsection(stream.Cursor, stream.Cursor + bitCount);
-			stream.Seek(bitCount, System.IO.SeekOrigin.Current);
+			if (CompressedData)
+			{
+				uint decompressedNumBytes = data.ReadUInt();
+				uint compressedNumBytes = data.ReadUInt();
+
+				byte[] compressedData = data.ReadBytes(compressedNumBytes);
+
+				char[] magic = Encoding.ASCII.GetChars(compressedData, 0, 4);
+				if (
+					magic[0] != 'S' ||
+					magic[1] != 'N' ||
+					magic[2] != 'A' ||
+					magic[3] != 'P')
+				{
+					throw new FormatException("Unknown format for compressed stringtable");
+				}
+
+				int snappyDecompressedNumBytes = SnappyCodec.GetUncompressedLength(compressedData, 4, compressedData.Length - 4);
+				if (snappyDecompressedNumBytes != decompressedNumBytes)
+					throw new FormatException("Mismatching decompressed data lengths");
+
+				byte[] decompressedData = new byte[snappyDecompressedNumBytes];
+				if (SnappyCodec.Uncompress(compressedData, 4, compressedData.Length - 4, decompressedData, 0) != decompressedNumBytes)
+					throw new FormatException("Snappy didn't decode all the bytes");
+
+				data = new BitStream(decompressedData);
+			}
+
+			StringTableParser.ParseUpdate(data, StringEntries, Entries, MaxEntries, UserDataSize, UserDataSizeBits);
 		}
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			StringTable foundTable = ws.StringTables.SingleOrDefault(t => t.TableName == TableName);
+
+			if (foundTable != null)
+				throw new InvalidOperationException("Attempted to create a stringtable that already exists!");
+			
+			foundTable = new StringTable();
+			foundTable.MaxEntries = MaxEntries;
+			foundTable.Entries = new List<StringTableEntry>(StringEntries);
+			foundTable.TableName = TableName;
+			foundTable.UserDataSize = UserDataSize;
+			foundTable.UserDataSizeBits = UserDataSizeBits;
+
+			ws.StringTables.Add(foundTable);
 		}
 	}
 }

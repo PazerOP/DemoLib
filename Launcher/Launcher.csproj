@@ -57,6 +57,10 @@
       <Project>{95495901-1a5c-47a2-bb54-8f7ee9004a77}</Project>
       <Name>DemoLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TF2Net\TF2Net.csproj">
+      <Project>{2C2AF7CC-4368-4C03-B7E1-356D3BB89F4F}</Project>
+      <Name>TF2Net</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -35,7 +35,7 @@ namespace TF2Net.NetMessages
 			throw new NotImplementedException();
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			byte count = stream.ReadByte();
 
@@ -50,7 +50,11 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			foreach (var cvar in Cvars)
+			{
+				ws.ConVars[cvar.Key] = cvar.Value;
+				ws.Listeners.OnServerSetConVar(ws, cvar);
+			}
 		}
 	}
 }

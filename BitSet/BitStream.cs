@@ -17,32 +17,54 @@ namespace BitSet
 		public ulong Cursor
 		{
 			get { return m_Cursor - m_MinCursor; }
-			set { throw new NotImplementedException(); }
+			set
+			{
+				ulong newCursor = m_MinCursor + value;
+				if (newCursor > m_MaxCursor)
+					throw new ArgumentOutOfRangeException(nameof(value));
+
+				m_Cursor = newCursor;
+			}
 		}
 
 		byte[] m_Data;
 		ulong m_Cursor;
 
-		ulong m_MinCursor = ulong.MinValue;
-		ulong m_MaxCursor = ulong.MaxValue;
+		ulong m_MinCursor;
+		ulong m_MaxCursor;
 
 		private BitStream() { }
 
-		public BitStream(byte[] data, ulong cursor = 0, ulong minCursor = ulong.MinValue, ulong maxCursor = ulong.MaxValue)
+		public BitStream(byte[] data, ulong? cursor = null, ulong minCursor = 0, ulong? maxCursor = null)
 		{
 			if (data == null)
 				throw new ArgumentNullException(nameof(data));
-			if (cursor > ((ulong)data.Length * 8))
-				throw new ArgumentException("Cursor position is larger than data length");
+
+			if (!maxCursor.HasValue)
+				maxCursor = (ulong)data.LongLength * 8;
+
+			if (minCursor > maxCursor.Value)
+				throw new ArgumentOutOfRangeException(nameof(minCursor), string.Format("{0} ({1}) greater than {2} ({3})",
+					nameof(minCursor), minCursor, nameof(maxCursor), maxCursor));
+
+			if (!cursor.HasValue)
+				cursor = minCursor;
+
+			if (cursor.Value < minCursor || cursor.Value > maxCursor.Value)
+				throw new ArgumentOutOfRangeException(nameof(cursor), string.Format("{0} ({1}) outside the range specified by {2} and {3} [{4}, {5}]", nameof(cursor), cursor, nameof(minCursor), nameof(maxCursor), minCursor, maxCursor));
 
 			m_Data = data;
-			m_Cursor = cursor;
+			m_Cursor = cursor.Value;
+			m_MinCursor = minCursor;
+			m_MaxCursor = maxCursor.Value;
 		}
 
 		public ulong ReadULong(byte bits = 64)
 		{
 			if (bits < 1 || bits > 64)
 				throw new ArgumentOutOfRangeException(nameof(bits));
+
+			CheckOverflow(bits);
 
 			return BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
 		}
@@ -52,12 +74,16 @@ namespace BitSet
 			if (bits < 1 || bits > 16)
 				throw new ArgumentOutOfRangeException(nameof(bits));
 
+			CheckOverflow(bits);
+
 			return (short)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
 		}
 		public ushort ReadUShort(byte bits = 16)
 		{
 			if (bits < 1 || bits > 16)
 				throw new ArgumentOutOfRangeException(nameof(bits));
+
+			CheckOverflow(bits);
 
 			return (ushort)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
 		}
@@ -67,12 +93,16 @@ namespace BitSet
 			if (bits < 1 || bits > 32)
 				throw new ArgumentOutOfRangeException(nameof(bits));
 
+			CheckOverflow(bits);
+
 			return (uint)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
 		}
 		public int ReadInt(byte bits = 32)
 		{
 			if (bits < 1 || bits > 32)
 				throw new ArgumentOutOfRangeException(nameof(bits));
+
+			CheckOverflow(bits);
 
 			return (int)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
 		}
@@ -82,47 +112,101 @@ namespace BitSet
 			if (bits < 1 || bits > 8)
 				throw new ArgumentOutOfRangeException(nameof(bits));
 
+			CheckOverflow(bits);
+
 			return (byte)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
+		}
+
+		public byte[] ReadBytes(ulong bytes)
+		{
+			byte[] retVal = new byte[bytes];
+
+			for (ulong i = 0; i < bytes; i++)
+				retVal[i] = ReadByte(8);
+
+			return retVal;
 		}
 
 		public float ReadSingle()
 		{
+			CheckOverflow(32);
+
 			return BitReader.ReadSingle(m_Data, ref m_Cursor);
 		}
 
 		public bool ReadBool()
 		{
+			CheckOverflow(1);
+
 			return BitReader.ReadUIntBits(m_Data, ref m_Cursor, 1) == 1;
 		}
 
 		public string ReadCString()
 		{
-			return BitReader.ReadCString(m_Data, ref m_Cursor);
+			ulong startCursor = m_Cursor;
+
+			string retVal = BitReader.ReadCString(m_Data, ref m_Cursor);
+
+			ulong endCursor = m_Cursor;
+			m_Cursor = startCursor;
+
+			CheckOverflow(endCursor - startCursor);
+
+			m_Cursor = endCursor;
+			return retVal;
 		}
 
 		public char ReadChar()
 		{
+			CheckOverflow(8);
+
 			return Encoding.ASCII.GetChars(new byte[1] { ReadByte() }).Single();
 		}
 
 		public uint ReadVarInt()
 		{
-			return BitReader.ReadVarInt(m_Data, ref m_Cursor);
+			ulong startCursor = m_Cursor;
+
+			uint retVal = BitReader.ReadVarInt(m_Data, ref m_Cursor);
+
+			ulong endCursor = m_Cursor;
+			m_Cursor = startCursor;
+
+			CheckOverflow(endCursor - startCursor);
+
+			m_Cursor = endCursor;
+
+			return retVal;
 		}
 
-		public BitStream Subsection(ulong minCursor = ulong.MinValue, ulong maxCursor = ulong.MaxValue)
+		void CheckOverflow(ulong bits)
 		{
+			if ((m_Cursor + bits) > m_MaxCursor)
+				throw new OverflowException(string.Format("Attempted seek beyond the bounds of this {0}", nameof(BitStream)));
+		}
+
+		public BitStream Subsection(ulong minCursor = 0, ulong? maxCursor = null)
+		{
+			if (!maxCursor.HasValue)
+				maxCursor = m_MaxCursor;
+
+			if (minCursor > maxCursor.Value)
+				throw new ArgumentOutOfRangeException(nameof(minCursor), string.Format("{0} ({1}) greater than {2} ({3})", nameof(minCursor), minCursor, nameof(maxCursor), maxCursor));
+
+			if (maxCursor.Value > m_MaxCursor)
+				throw new ArgumentOutOfRangeException(nameof(maxCursor), string.Format("{0} ({1}) greater than {2} ({3})", nameof(maxCursor), maxCursor, nameof(Length), Length));
+
 			BitStream retVal = new BitStream();
 			retVal.m_Data = m_Data;
-			retVal.m_Cursor = 0;
 
 			retVal.m_MinCursor = m_MinCursor + minCursor;
 
-			ulong overflowCheck = unchecked(retVal.m_MinCursor + maxCursor);
-			if (overflowCheck < maxCursor)
-				retVal.m_MaxCursor = ulong.MaxValue;
+			if (maxCursor.HasValue)
+				retVal.m_MaxCursor = m_MinCursor + maxCursor.Value;
 			else
-				retVal.m_MaxCursor = overflowCheck;
+				retVal.m_MaxCursor = m_MaxCursor;
+
+			retVal.m_Cursor = retVal.m_MinCursor;
 
 			return retVal;
 		}

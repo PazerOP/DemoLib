@@ -22,14 +22,14 @@ namespace TF2Net.NetMessages
 			}
 		}
 		
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			EntityIndex = stream.ReadUShort(SourceConstants.MAX_EDICT_BITS);
 		}
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			ws.ViewEntity = EntityIndex;
 		}
 	}
 }

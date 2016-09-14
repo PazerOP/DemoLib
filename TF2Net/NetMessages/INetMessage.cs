@@ -6,7 +6,7 @@ namespace TF2Net.NetMessages
 	{
 		string Description { get; }
 
-		void ReadMsg(BitStream stream, IReadOnlyWorldState ws);
+		void ReadMsg(BitStream stream);
 		void ApplyWorldState(WorldState ws);
 	}
 }

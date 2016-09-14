@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using BitSet;
+using TF2Net.Data;
+using TF2Net.NetMessages.Shared;
 
 namespace TF2Net.NetMessages
 {
@@ -26,7 +28,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			TableID = stream.ReadInt(MAX_TABLE_BITS);
 
@@ -38,11 +40,17 @@ namespace TF2Net.NetMessages
 
 			ulong bitCount = stream.ReadULong(DATA_LENGTH_BITS);
 			Data = stream.Subsection(stream.Cursor, stream.Cursor + bitCount);
+			stream.Seek(bitCount, System.IO.SeekOrigin.Current);
 		}
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			StringTable found = ws.StringTables[TableID];
+			StringTableParser.ParseUpdate(
+				Data, found.Entries, (ushort)ChangedEntries, found.MaxEntries,
+				found.UserDataSize, found.UserDataSizeBits);
+
+			ws.Listeners.OnStringTableUpdated(ws, found);
 		}
 	}
 }

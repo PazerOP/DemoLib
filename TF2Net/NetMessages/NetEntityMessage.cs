@@ -32,7 +32,7 @@ namespace TF2Net.NetMessages
 			throw new NotImplementedException();
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			EntityIndex = stream.ReadUInt(SourceConstants.MAX_EDICT_BITS);
 			ClassID = stream.ReadUInt(SourceConstants.MAX_SERVER_CLASS_BITS);

@@ -22,7 +22,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			ulong bitCount = stream.ReadULong(EVENT_LENGTH_BITS);
 			Data = stream.Subsection(stream.Cursor, stream.Cursor + bitCount);
@@ -54,7 +54,7 @@ namespace TF2Net.NetMessages
 				}
 			}
 
-			ws.TriggerGameEvent(retVal);
+			ws.Listeners.OnGameEvent(ws, retVal);
 		}
 	}
 }

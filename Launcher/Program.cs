@@ -22,6 +22,8 @@ namespace DemoLib.Launcher
 
 				Console.WriteLine("Finished parsing test demo file in {0:N1}ms.", (end - start).TotalMilliseconds);
 
+				reader.SimulateDemo();
+
 				Console.ReadLine();
 			}
 		}

@@ -22,7 +22,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			MessageType = stream.ReadInt(MAX_USER_MSG_TYPE_BITS);
 

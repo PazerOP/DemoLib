@@ -29,7 +29,7 @@ namespace TF2Net.NetMessages
 				return string.Format("net_File: {0} {1}", Filename, Status);
 			}
 		}
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			TransferID = stream.ReadUInt();
 			Filename = stream.ReadCString();

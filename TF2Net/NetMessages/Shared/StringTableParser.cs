@@ -14,18 +14,20 @@ namespace TF2Net.NetMessages.Shared
 		const byte SUBSTRING_BITS = 5;
 		const byte MAX_USERDATA_BITS = 14;
 
-		public static void ParseUpdate(byte[] buffer, ref ulong bitOffset,
+		public static void ParseUpdate(BitStream stream,
 			IList<StringTableEntry> stringEntries, ushort entries, ushort maxEntries,
 			ushort? userDataSize, byte? userDataSizeBits)
 		{
+			List<string> history = new List<string>();
+
 			byte entryBits = (byte)ExtMath.Log2(maxEntries);
 			int lastEntry = -1;
 			for (int i = 0; i < entries; i++)
 			{
 				int entryIndex = lastEntry + 1;
 
-				if (!BitReader.ReadBool(buffer, ref bitOffset))
-					entryIndex = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, entryBits);
+				if (!stream.ReadBool())
+					entryIndex = stream.ReadInt(entryBits);
 
 				lastEntry = entryIndex;
 
@@ -33,49 +35,47 @@ namespace TF2Net.NetMessages.Shared
 					throw new FormatException("Server sent bogus string index for stringtable");
 
 				string value = null;
-				if (BitReader.ReadBool(buffer, ref bitOffset))
+				if (stream.ReadBool())
 				{
-					bool substringcheck = BitReader.ReadBool(buffer, ref bitOffset);
+					bool substringcheck = stream.ReadBool();
 
 					if (substringcheck)
 					{
-						int index = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, 5);
-						int bytesToCopy = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, SUBSTRING_BITS);
-						value = stringEntries.Single(s => s.ID == index).Value.Substring(0, bytesToCopy) + BitReader.ReadCString(buffer, ref bitOffset);
+						int index = stream.ReadInt(5);
+						int bytesToCopy = stream.ReadInt(SUBSTRING_BITS);
+						
+						value = history[index].Substring(0, bytesToCopy) + stream.ReadCString();
 					}
 					else
 					{
-						value = BitReader.ReadCString(buffer, ref bitOffset);
+						value = stream.ReadCString();
 					}
 				}
 
-				int nBytes = 0;
-				byte[] userData = null;
-				if (BitReader.ReadBool(buffer, ref bitOffset))
+				ulong? nBytes;
+				BitStream userData = null;
+				if (stream.ReadBool())
 				{
 					if (userDataSize.HasValue)
 					{
-						nBytes = userDataSize.Value;
-						Debug.Assert(nBytes > 0);
-						userData = new byte[nBytes];
-						BitReader.CopyBits(buffer, userDataSizeBits.Value, ref bitOffset, userData);
+						userData = stream.Subsection(stream.Cursor, stream.Cursor + userDataSizeBits.Value);
+						stream.Seek(userDataSizeBits.Value, System.IO.SeekOrigin.Current);
 					}
 					else
 					{
-						nBytes = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, MAX_USERDATA_BITS);
-						userData = new byte[nBytes];
-						BitReader.CopyBits(buffer, (ulong)(nBytes * 3), ref bitOffset, userData);
-						throw new NotImplementedException();
+						nBytes = stream.ReadULong(MAX_USERDATA_BITS);
+						userData = stream.Subsection(stream.Cursor, stream.Cursor + (nBytes.Value * 8));
+						stream.Seek(nBytes.Value * 8, System.IO.SeekOrigin.Current);
 					}
 				}
 
-				if (entryIndex < stringEntries.Count)
+				if (stringEntries.Any(s => s.ID == entryIndex))
 				{
 					throw new NotImplementedException();
 				}
 				else
 				{
-					Debug.Assert(entryIndex == stringEntries.Count);
+					//Debug.Assert(entryIndex == stringEntries.Count);
 					Debug.Assert(value != null);
 
 					StringTableEntry newEntry = new StringTableEntry();
@@ -84,6 +84,11 @@ namespace TF2Net.NetMessages.Shared
 					newEntry.Value = value;
 					stringEntries.Add(newEntry);
 				}
+
+				if (history.Count > 31)
+					history.RemoveAt(0);
+
+				history.Add(value);
 			}
 		}
 	}

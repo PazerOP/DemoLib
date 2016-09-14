@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BitSet;
 
 namespace TF2Net.Data
 {
@@ -12,6 +13,6 @@ namespace TF2Net.Data
 	{
 		public ushort ID { get; set; }
 		public string Value { get; set; }
-		public byte[] UserData { get; set; }
+		public BitStream UserData { get; set; }
 	}
 }

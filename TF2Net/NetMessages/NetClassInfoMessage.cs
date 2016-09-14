@@ -28,7 +28,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			ServerClassCount = stream.ReadShort();
 
@@ -52,7 +52,8 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			if (!CreateOnClient)
+				throw new NotImplementedException();
 		}
 	}
 }

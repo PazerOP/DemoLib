@@ -24,7 +24,7 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			EntryCount = stream.ReadInt(SourceConstants.EVENT_INDEX_BITS);
 

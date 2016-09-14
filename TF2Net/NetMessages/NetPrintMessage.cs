@@ -21,14 +21,14 @@ namespace TF2Net.NetMessages
 			}
 		}
 
-		public void ReadMsg(BitStream stream, IReadOnlyWorldState ws)
+		public void ReadMsg(BitStream stream)
 		{
 			Message = stream.ReadCString();
 		}
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			ws.Listeners.OnServerTextMessage(ws, Message);
 		}
 	}
 }

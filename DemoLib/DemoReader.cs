@@ -12,11 +12,14 @@ using TF2Net.NetMessages;
 
 namespace DemoLib
 {
-	public class DemoReader : IEnumerable<WorldState>
+	public class DemoReader
 	{
 		public DemoHeader Header { get; private set; }
 		
 		public IReadOnlyList<DemoCommand> Commands { get; private set; }
+
+		readonly WorldEvents m_Events = new WorldEvents();
+		public IWorldEvents Events { get { return m_Events; } }
 
 		private DemoReader(Stream input)
 		{
@@ -55,11 +58,32 @@ namespace DemoLib
 			}
 		}
 
-		public IEnumerator<WorldState> GetEnumerator()
+		public void SimulateDemo()
 		{
-			throw new NotImplementedException();
-		}
+			WorldState ws = new WorldState();
+			ws.Listeners = m_Events;
 
-		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+			foreach (DemoCommand cmd in Commands)
+			{
+				if (cmd.Type == DemoCommandType.dem_datatables)
+				{
+					DemoDataTablesCommand dt = (DemoDataTablesCommand)cmd;
+
+					ws.ServerClasses = dt.ServerClasses;
+					m_Events.OnServerClassesLoaded(ws);
+
+					ws.SendTables = dt.SendTables;
+					m_Events.OnSendTablesLoaded(ws);
+				}
+				else if (cmd.Type == DemoCommandType.dem_signon ||
+					cmd.Type == DemoCommandType.dem_packet)
+				{
+					DemoPacketCommand p = (DemoPacketCommand)cmd;
+
+					foreach (INetMessage netMsg in p.Messages)
+						netMsg.ApplyWorldState(ws);
+				}
+			}
+		}
 	}
 }

@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using BitSet;
+using TF2Net;
 using TF2Net.NetMessages;
 
 namespace DemoLib.Commands
 {
-	[DebuggerDisplay("{Tick, nq} network packet [{Length, nq}]")]
+	[DebuggerDisplay("{Tick, nq} network packet [{Data.Length, nq}]")]
 	class DemoPacketCommand : TimestampedDemoCommand
 	{
 		public DemoViewpoint Viewpoint { get; set; }
@@ -15,9 +16,7 @@ namespace DemoLib.Commands
 		public int SequenceIn { get; set; }
 		public int SequenceOut { get; set; }
 
-		//public IList<INetMessage> Messages { get; set; }
-
-		public BitStream Data { get; set; }
+		public IList<INetMessage> Messages { get; set; }
 
 		public DemoPacketCommand(Stream input) : base(input)
 		{
@@ -58,7 +57,9 @@ namespace DemoLib.Commands
 				SequenceOut = r.ReadInt32();
 
 				ulong length = r.ReadUInt32();
-				Data = new BitStream(r.ReadBytes((int)length));
+				BitStream data = new BitStream(r.ReadBytes((int)length));
+
+				Messages = NetMessageCoder.Decode(data);
 			}
 		}
 	}
