@@ -25,7 +25,9 @@ namespace TF2Net
 
 		public IList<StringTable> StringTables { get; set; } = new List<StringTable>();
 
-		public IDictionary<string, string> ConVars { get; } = new Dictionary<string, string>();
+		public IDictionary<string, string> ConVars { get; }
+
+		public byte ClassBits { get { return (byte)Math.Ceiling(Math.Log(ServerClasses.Count, 2)); } }
 		
 		public IList<ServerClass> ServerClasses { get; set; }
 		public IList<SendTable> SendTables { get; set; }
@@ -38,6 +40,8 @@ namespace TF2Net
 		{
 			Entities = new SortedSet<Entity>(
 				Comparer<Entity>.Create((x, y) => Comparer<uint>.Default.Compare(x.Index, y.Index)));
+
+			ConVars = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		}
 	}
 }

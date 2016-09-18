@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace BitSet
 {
+	[DebuggerDisplay("{ToString(),nq}")]
 	public class BitStream : ICloneable
 	{
 		public ulong Length
@@ -32,6 +34,18 @@ namespace BitSet
 
 		ulong m_MinCursor;
 		ulong m_MaxCursor;
+
+		private IEnumerable<bool> DebugBits
+		{
+			get
+			{
+				for (ulong i = m_Cursor; i <= m_MaxCursor; i++)
+				{
+					ulong dummy = i;
+					yield return BitReader.ReadBool(m_Data, ref dummy);
+				}
+			}
+		}
 
 		private BitStream() { }
 
@@ -239,5 +253,10 @@ namespace BitSet
 			return new BitStream(m_Data, m_Cursor);
 		}
 		object ICloneable.Clone() { return Clone(); }
+
+		public override string ToString()
+		{
+			return string.Format("{0}: {1} / {2}", nameof(BitStream), Cursor, Length);
+		}
 	}
 }

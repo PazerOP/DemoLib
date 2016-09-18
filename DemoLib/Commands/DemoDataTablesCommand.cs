@@ -27,75 +27,82 @@ namespace DemoLib.Commands
 		{
 			Type = DemoCommandType.dem_datatables;
 
-			byte[] data;
+			BitStream stream;
 			using (BinaryReader reader = new BinaryReader(input, Encoding.ASCII, true))
 			{
 				int length = reader.ReadInt32();
-				data = reader.ReadBytes(length);
+				stream = new BitStream(reader.ReadBytes(length));
 			}
 
-			ulong cursor = 0;
+			while (stream.ReadBool())
+				SendTables.Add(ParseSendTable(stream));
 
-			while (BitReader.ReadBool(data, ref cursor))
+			// Link referenced datatables
+			foreach (SendTable table in SendTables)
 			{
-				SendTables.Add(ParseSendTable(data, ref cursor));
+				foreach (SendProp dtProp in table.Properties.Where(t => t.Type == SendPropType.Datatable))
+				{
+					dtProp.Table = SendTables.Single(t => t.NetTableName == dtProp.ExcludeName);
+				}
 			}
 
-			short serverClasses = BitReader.ReadShort(data, ref cursor);
+			short serverClasses = stream.ReadShort();
 			Debug.Assert(serverClasses > 0);
 
 			ServerClasses = new List<ServerClass>(serverClasses);
 
 			for (int i = 0; i < serverClasses; i++)
 			{
-				short classID = BitReader.ReadShort(data, ref cursor);
+				short classID = stream.ReadShort();
 				if (classID >= serverClasses)
 					throw new DemoParseException("Invalid server class ID");
 
 				ServerClass sc = new ServerClass();
-				sc.Classname = BitReader.ReadCString(data, ref cursor);
-				sc.DatatableName = BitReader.ReadCString(data, ref cursor);
+				sc.Classname = stream.ReadCString();
+				sc.DatatableName = stream.ReadCString();
 				ServerClasses.Add(sc);
 			}
+
+			Debug.Assert((stream.Length - stream.Cursor) < 8);
 		}
 				
-		static SendTable ParseSendTable(byte[] buffer, ref ulong bitOffset)
+		static SendTable ParseSendTable(BitStream stream)
 		{
-			bitOffset++; //bool needsDecoder = BitReader.ReadBool(Data, ref cursor);
+			stream.Seek(1, SeekOrigin.Current);
 
 			SendTable table = new SendTable();
 
-			table.NetTableName = BitReader.ReadCString(buffer, ref bitOffset);
+			table.NetTableName = stream.ReadCString();
 			
-			int propertyCount = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, PROPINFOBITS_NUMPROPS);
+			int propertyCount = (int)stream.ReadULong(PROPINFOBITS_NUMPROPS);
 
 			for (int i = 0; i < propertyCount; i++)
 			{
 				SendProp prop = new SendProp(table);
 				
-				prop.Type = (SendPropType)BitReader.ReadUIntBits(buffer, ref bitOffset, PROPINFOBITS_TYPE);
+				prop.Type = (SendPropType)stream.ReadULong(PROPINFOBITS_TYPE);
 				Debug.Assert(Enum.GetValues(typeof(SendPropType)).Cast<SendPropType>().Contains(prop.Type));
 
-				prop.Name = BitReader.ReadCString(buffer, ref bitOffset);
+				prop.Name = stream.ReadCString();
 
-				prop.Flags = (SendPropFlags)BitReader.ReadUIntBits(buffer, ref bitOffset, PROPINFOBITS_FLAGS);
+				prop.Flags = (SendPropFlags)stream.ReadULong(PROPINFOBITS_FLAGS);
 
 				if (prop.Type == SendPropType.Datatable)
 				{
-					prop.ExcludeName = BitReader.ReadCString(buffer, ref bitOffset);
+					prop.ExcludeName = stream.ReadCString();
 				}
 				else
 				{
 					if ((prop.Flags & SendPropFlags.Exclude) != 0)
-						prop.ExcludeName = BitReader.ReadCString(buffer, ref bitOffset);
+						prop.ExcludeName = stream.ReadCString();
 					else if (prop.Type == SendPropType.Array)
-						prop.ArrayElements = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, PROPINFOBITS_NUMELEMENTS);
+						prop.ArrayElements = (int)stream.ReadULong(PROPINFOBITS_NUMELEMENTS);
 					else
 					{
-						prop.LowValue = BitReader.ReadSingle(buffer, ref bitOffset);
-						prop.HighValue = BitReader.ReadSingle(buffer, ref bitOffset);
+						prop.LowValue = stream.ReadSingle();
+						prop.HighValue = stream.ReadSingle();
 
-						prop.BitCount = (int)BitReader.ReadUIntBits(buffer, ref bitOffset, PROPINFOBITS_NUMBITS);
+						prop.BitCount = (int)stream.ReadULong(PROPINFOBITS_NUMBITS);
 					}
 				}
 

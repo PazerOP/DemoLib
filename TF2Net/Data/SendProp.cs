@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using BitSet;
 
 namespace TF2Net.Data
 {
-	[DebuggerDisplay("SendProp {Name} ({Type,nq} : {Flags,nq})")]
-	public class SendProp
+	[DebuggerDisplay("{ToString(),nq}")]
+	public class SendProp : ICloneable
 	{
+		private SendProp() { }
 		public SendProp(SendTable parent)
 		{
 			Parent = parent;
@@ -23,6 +25,164 @@ namespace TF2Net.Data
 		public double? LowValue { get; set; }
 		public double? HighValue { get; set; }
 		public int? BitCount { get; set; }
+
+		// If we're SendPropType.Datatable
+		public SendTable Table { get; set; }
+
+		public object Decode(BitStream stream)
+		{
+			switch (Type)
+			{
+				case SendPropType.Int:		return ReadInt(stream);
+				case SendPropType.Vector:	return ReadVector(stream);
+				case SendPropType.Float:	return ReadFloat(stream);
+
+				default:
+				throw new NotImplementedException();
+			}
+		}
+
+		int ReadInt(BitStream stream)
+		{
+			if (Flags.HasFlag(SendPropFlags.Unsigned))
+				return (int)stream.ReadUInt((byte)BitCount.Value);
+			else
+				throw new NotImplementedException();
+		}
+
+		double ReadBitCoord(BitStream stream, bool isIntegral, bool isLowPrecision)
+		{
+			double value = 0;
+			bool isNegative = false;
+			bool inBounds = stream.ReadBool();
+
+			if (isIntegral)
+			{
+				bool hasIntVal = stream.ReadBool();
+				if (hasIntVal)
+				{
+					isNegative = stream.ReadBool();
+
+					if (inBounds)
+						value = stream.ReadULong(SourceConstants.COORD_INTEGER_BITS_MP) + 1;
+					else
+					{
+						value = stream.ReadULong(SourceConstants.COORD_INTEGER_BITS) + 1;
+
+						if (value < (1 << SourceConstants.COORD_INTEGER_BITS_MP))
+							throw new FormatException("Something's fishy...");
+					}
+				}
+			}
+			else
+			{
+				bool hasIntVal = stream.ReadBool();
+				isNegative = stream.ReadBool();
+
+				if (hasIntVal)
+				{
+					if (inBounds)
+						value = stream.ReadULong(SourceConstants.COORD_INTEGER_BITS_MP) + 1;
+					else
+					{
+						value = stream.ReadULong(SourceConstants.COORD_INTEGER_BITS) + 1;
+
+						if (value < (1 << SourceConstants.COORD_INTEGER_BITS_MP))
+							throw new FormatException("Something's fishy...");
+					}
+				}
+
+				var fractVal = stream.ReadULong(isLowPrecision ? (byte)SourceConstants.COORD_FRACTIONAL_BITS_MP_LOWPRECISION : (byte)SourceConstants.COORD_FRACTIONAL_BITS);
+
+				value = value + fractVal * (isLowPrecision ? SourceConstants.COORD_RESOLUTION_LOWPRECISION : SourceConstants.COORD_RESOLUTION);
+			}
+
+			if (isNegative)
+				value = -value;
+
+			return value;
+		}
+
+		bool ReadSpecialFloat(BitStream stream, out double retVal)
+		{
+			if (Flags.HasFlag(SendPropFlags.Coord))
+			{
+				throw new NotImplementedException();
+				return true;
+			}
+			else if (Flags.HasFlag(SendPropFlags.CoordMP))
+			{
+				retVal = ReadBitCoord(stream, false, false);
+				return true;
+			}
+			else if (Flags.HasFlag(SendPropFlags.CoordMPLowPrecision))
+			{
+				throw new NotImplementedException();
+				return true;
+			}
+			else if (Flags.HasFlag(SendPropFlags.CoordMPIntegral))
+			{
+				throw new NotImplementedException();
+				return true;
+			}
+			else if (Flags.HasFlag(SendPropFlags.NoScale))
+			{
+				retVal = stream.ReadSingle();
+				return true;
+			}
+			else if (Flags.HasFlag(SendPropFlags.Normal))
+			{
+				throw new NotImplementedException();
+				return true;
+			}
+
+			retVal = default(double);
+			return false;
+		}
+
+		double ReadFloat(BitStream stream)
+		{
+			double retVal;
+			if (ReadSpecialFloat(stream, out retVal))
+				return retVal;
+
+			ulong raw = stream.ReadULong((byte)BitCount.Value);
+			double percentage = (double)raw / ((1 << BitCount.Value) - 1);
+			retVal = LowValue.Value + (HighValue.Value - LowValue.Value) * percentage;
+
+			return retVal;
+		}
+
+		Vector ReadVector(BitStream stream)
+		{
+			Vector retVal = new Vector();
+
+			retVal.X = ReadFloat(stream);
+			retVal.Y = ReadFloat(stream);
+
+			if (!Flags.HasFlag(SendPropFlags.Normal))
+				retVal.Z = ReadFloat(stream);
+			else
+			{
+				throw new NotImplementedException();
+			}
+
+			return retVal;
+		}
+
+		public override string ToString()
+		{
+			string bitCount = (BitCount.HasValue && BitCount.Value > 0) ? string.Format("[{0}]", BitCount.Value) : string.Empty;
+
+			return string.Format("{0}{1} \"{2}\" ({3})", Type, bitCount, Name, Flags);
+		}
+
+		public SendProp Clone()
+		{
+			SendProp retVal = (SendProp)MemberwiseClone();
+			return retVal;
+		}
+		object ICloneable.Clone() { return Clone(); }
 	}
 	public enum SendPropType
 	{
@@ -124,5 +284,10 @@ namespace TF2Net.Data
 		/// SPROP_COORD_MP, but coordinates are rounded to integral boundaries
 		/// </summary>
 		CoordMPIntegral = (1 << 15),
+
+		/// <summary>
+		/// reuse existing flag so we don't break demo. note you want to include SPROP_UNSIGNED if needed, its more efficient
+		/// </summary>
+		VarInt = Normal,
 	}
 }

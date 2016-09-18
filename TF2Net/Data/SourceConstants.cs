@@ -30,5 +30,21 @@
 		internal const int SP_MODEL_INDEX_BITS = 11;
 
 		internal const int NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS = 10;
+
+		internal const int MAX_DATATABLES = 1024;
+		internal const int MAX_DATATABLE_PROPS = 4096;
+
+		internal const int COORD_INTEGER_BITS = 14;
+		internal const int COORD_FRACTIONAL_BITS = 5;
+		internal const int COORD_DENOMINATOR = 1 << COORD_FRACTIONAL_BITS;
+		internal const double COORD_RESOLUTION = 1.0 / COORD_DENOMINATOR;
+
+		internal const int COORD_INTEGER_BITS_MP = 11;
+		internal const int COORD_FRACTIONAL_BITS_MP_LOWPRECISION = 3;
+		internal const int COORD_DENOMINATOR_LOWPRECISION = 1 << COORD_FRACTIONAL_BITS_MP_LOWPRECISION;
+		internal const double COORD_RESOLUTION_LOWPRECISION = 1.0 / COORD_DENOMINATOR_LOWPRECISION;
+
+		internal const int SPROP_NUMFLAGBITS_NETWORKED = 16;
+		internal const int SPROP_NUMFLAGBITS = 17;
 	}
 }

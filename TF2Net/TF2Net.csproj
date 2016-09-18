@@ -63,6 +63,7 @@
     <Compile Include="Data\SignonState.cs" />
     <Compile Include="Data\StringTable.cs" />
     <Compile Include="Data\StringTableEntry.cs" />
+    <Compile Include="Data\Vector.cs" />
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="Extensions\System.Collections.cs" />
     <Compile Include="IWorldEvents.cs" />
