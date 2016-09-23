@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using BitSet;
 
@@ -24,7 +25,7 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			throw new NotImplementedException();
+			ws.Listeners.OnServerConCommand(ws, Command);
 		}
 	}
 }

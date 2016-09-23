@@ -46,9 +46,7 @@ namespace TF2Net.NetMessages
 		public void ApplyWorldState(WorldState ws)
 		{
 			StringTable found = ws.StringTables[TableID];
-			StringTableParser.ParseUpdate(
-				Data, found.Entries, (ushort)ChangedEntries, found.MaxEntries,
-				found.UserDataSize, found.UserDataSizeBits);
+			StringTableParser.ParseUpdate(Data, found, (ushort)ChangedEntries);
 
 			ws.Listeners.OnStringTableUpdated(ws, found);
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 using BitSet;
 
 namespace TF2Net.Data
@@ -21,10 +22,11 @@ namespace TF2Net.Data
 		public string ExcludeName { get; set; }
 
 		public int? ArrayElements { get; set; }
+		public SendProp ArrayProperty { get; set; }
 
 		public double? LowValue { get; set; }
 		public double? HighValue { get; set; }
-		public int? BitCount { get; set; }
+		public ulong? BitCount { get; set; }
 
 		// If we're SendPropType.Datatable
 		public SendTable Table { get; set; }
@@ -36,18 +38,44 @@ namespace TF2Net.Data
 				case SendPropType.Int:		return ReadInt(stream);
 				case SendPropType.Vector:	return ReadVector(stream);
 				case SendPropType.Float:	return ReadFloat(stream);
+				case SendPropType.String:	return ReadString(stream);
+				case SendPropType.Array:	return ReadArray(stream);
 
 				default:
 				throw new NotImplementedException();
 			}
 		}
 
-		int ReadInt(BitStream stream)
+		object[] ReadArray(BitStream stream)
+		{
+			int maxElements = ArrayElements.Value;
+			byte numBits = 1;
+			while ((maxElements >>= 1) != 0)
+				numBits++;
+
+			uint elementCount = stream.ReadUInt(numBits);
+			object[] retVal = new object[elementCount];
+
+			for (int i = 0; i < elementCount; i++)
+				retVal[i] = ArrayProperty.Decode(stream);
+
+			return retVal;
+		}
+
+		string ReadString(BitStream stream)
+		{
+			ulong chars = stream.ReadULong(9);
+
+			byte[] raw = stream.ReadBytes(chars);
+			return Encoding.ASCII.GetString(raw);
+		}
+
+		object ReadInt(BitStream stream)
 		{
 			if (Flags.HasFlag(SendPropFlags.Unsigned))
-				return (int)stream.ReadUInt((byte)BitCount.Value);
+				return stream.ReadUInt((byte)BitCount.Value);
 			else
-				throw new NotImplementedException();
+				return stream.ReadInt((byte)BitCount.Value);
 		}
 
 		double ReadBitCoord(BitStream stream, bool isIntegral, bool isLowPrecision)
@@ -147,7 +175,7 @@ namespace TF2Net.Data
 				return retVal;
 
 			ulong raw = stream.ReadULong((byte)BitCount.Value);
-			double percentage = (double)raw / ((1 << BitCount.Value) - 1);
+			double percentage = (double)raw / ((1UL << (byte)BitCount.Value) - 1);
 			retVal = LowValue.Value + (HighValue.Value - LowValue.Value) * percentage;
 
 			return retVal;

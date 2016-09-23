@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TF2Net.Data;
-using TF2Net.NetMessages;
 
 namespace TF2Net
 {
@@ -33,6 +29,9 @@ namespace TF2Net
 
 		public event Action<WorldState, KeyValuePair<string, string>> ServerSetConVar;
 		public void OnServerSetConVar(WorldState ws, KeyValuePair<string, string> cvar) { ServerSetConVar?.Invoke(ws, cvar); }
+
+		public event Action<WorldState, string> ServerConCommand;
+		public void OnServerConCommand(WorldState ws, string cmd) { ServerConCommand?.Invoke(ws, cmd); }
 
 		public event Action<WorldState> ViewEntityUpdated;
 		public void OnViewEntityUpdated(WorldState ws) { ViewEntityUpdated?.Invoke(ws); }

@@ -71,5 +71,19 @@ namespace System.Linq
 
 			return new DictionaryWrapper<K, V>(input);
 		}
+
+		public static IEnumerable<T> Except<T>(this IEnumerable<T> input, T without)
+		{
+			if (input == null)
+				throw new ArgumentNullException(nameof(input));
+
+			foreach (var x in input)
+			{
+				if (x.Equals(without))
+					continue;
+
+				yield return x;
+			}
+		}
 	}
 }

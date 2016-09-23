@@ -14,6 +14,8 @@ namespace TF2Net.Data
 		public string NetTableName { get; set; }
 
 		public IList<SendProp> Properties { get; set; } = new List<SendProp>();
+
+		public bool Unknown1 { get; set; }
 		
 		public IEnumerable<SendProp> AllProperties
 		{
@@ -36,7 +38,29 @@ namespace TF2Net.Data
 						throw new InvalidOperationException();
 					}));
 
+				foreach (SendProp prop in datatablesFirst)
+				{
+					if (prop.Type == SendPropType.Datatable)
+					{
+						foreach (var p in prop.Table.AllProperties)
+						{
+							SendProp cloned = p.Clone();
+							cloned.Name = cloned.Name.Insert(0, NetTableName + '.');
+							yield return cloned;
+						}
+					}
+					else
+					{
+						SendProp cloned = prop.Clone();
+						cloned.Name = cloned.Name.Insert(0, NetTableName + '.');
+						yield return cloned;
+					}
+				}
+
+#if false
+
 				var flattened = Flatten(datatablesFirst);
+				return flattened;
 
 				var changesOftenFirst = flattened.OrderBy(p => p.Flags, 
 					Comparer<SendPropFlags>.Create((f1, f2) =>
@@ -56,6 +80,41 @@ namespace TF2Net.Data
 					}));
 
 				return changesOftenFirst;
+#endif
+			}
+		}
+
+		public IEnumerable<SendProp> SortedProperties
+		{
+			get
+			{
+				SendProp[] allProperties = AllProperties.ToArray();
+
+				if (allProperties.Length < 2)
+					return allProperties;
+
+				int start = 0;
+				for (int i = start + 1; i < allProperties.Length; i++)
+				{
+					bool startChangesOften = allProperties[start].Flags.HasFlag(SendPropFlags.ChangesOften);
+					if (startChangesOften)
+					{
+						start++;
+						continue;
+					}
+
+					if (allProperties[i].Flags.HasFlag(SendPropFlags.ChangesOften))
+					{
+						SendProp temp = allProperties[start];
+						allProperties[start] = allProperties[i];
+						allProperties[i] = temp;
+
+						start++;
+						continue;
+					}
+				}
+
+				return allProperties;
 			}
 		}
 

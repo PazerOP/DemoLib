@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace TF2Net.Data
 {
+	[DebuggerDisplay("{Index,nq}: {Class}")]
 	public class Entity
 	{
 		public uint Index { get; }

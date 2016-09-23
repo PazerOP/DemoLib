@@ -12,65 +12,59 @@ namespace TF2Net.NetMessages
 {
 	[DebuggerDisplay("{Description, nq}")]
 	public class NetCreateStringTableMessage : INetMessage
-	{
-		public string TableName { get; set; }
-		public ushort MaxEntries { get; set; }
-		public ushort Entries { get; set; }
-		public bool UserDataFixedSize { get; set; }
-		public ushort? UserDataSize { get; set; }
-		public byte? UserDataSizeBits { get; set; }
-		public bool IsFilenames { get; set; }
-		public bool CompressedData { get; set; }
-		
+	{		
 		//public BitStream Data { get; set; }
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		ulong BitCount { get; set; }
 
-		public IList<StringTableEntry> StringEntries { get; set; } = new List<StringTableEntry>();
+		public StringTable Table { get; set; }
 
 		public string Description
 		{
 			get
 			{
 				return string.Format("svc_CreateStringTable: table {0}, entries {1}, bytes {2} userdatasize {3} userdatabits {4}",
-					TableName, Entries, BitInfo.BitsToBytes(BitCount), UserDataSize, UserDataSizeBits);
+					Table.TableName, Table.Entries.Count, BitInfo.BitsToBytes(BitCount), Table.UserDataSize, Table.UserDataSizeBits);
 			}
 		}
 
 		public void ReadMsg(BitStream stream)
 		{
+			bool isFilenames;
 			if (stream.ReadChar() == ':')
 			{
-				IsFilenames = true;
+				isFilenames = true;
 			}
 			else
 			{
 				stream.Seek(-8, System.IO.SeekOrigin.Current);
-				IsFilenames = false;
+				isFilenames = false;
 			}
 
-			TableName = stream.ReadCString();
+			Table = new StringTable();
 
-			MaxEntries = stream.ReadUShort();
-			int encodeBits = ExtMath.Log2(MaxEntries);
-			Entries = stream.ReadUShort((byte)(encodeBits + 1));
+			Table.TableName = stream.ReadCString();
+
+			Table.MaxEntries = stream.ReadUShort();
+			int encodeBits = ExtMath.Log2(Table.MaxEntries);
+			ushort entries = stream.ReadUShort((byte)(encodeBits + 1));
 
 			BitCount = stream.ReadVarInt();
-
-			UserDataFixedSize = stream.ReadBool();
-			if (UserDataFixedSize)
+			
+			// userdatafixedsize
+			if (stream.ReadBool())
 			{
-				UserDataSize = stream.ReadUShort(12);
-				UserDataSizeBits = stream.ReadByte(4);
+				Table.UserDataSize = stream.ReadUShort(12);
+				Table.UserDataSizeBits = stream.ReadByte(4);
 			}
 
-			CompressedData = stream.ReadBool();
+			bool isCompressedData = stream.ReadBool();
 
 			BitStream data = stream.Subsection(stream.Cursor, stream.Cursor + BitCount);
 			stream.Seek(BitCount, System.IO.SeekOrigin.Current);
 
-			if (CompressedData)
+			if (isCompressedData)
 			{
 				uint decompressedNumBytes = data.ReadUInt();
 				uint compressedNumBytes = data.ReadUInt();
@@ -98,24 +92,17 @@ namespace TF2Net.NetMessages
 				data = new BitStream(decompressedData);
 			}
 
-			StringTableParser.ParseUpdate(data, StringEntries, Entries, MaxEntries, UserDataSize, UserDataSizeBits);
+			StringTableParser.ParseUpdate(data, Table, entries);
 		}
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			StringTable foundTable = ws.StringTables.SingleOrDefault(t => t.TableName == TableName);
+			StringTable foundTable = ws.StringTables.SingleOrDefault(t => t.TableName == Table.TableName);
 
 			if (foundTable != null)
 				throw new InvalidOperationException("Attempted to create a stringtable that already exists!");
 			
-			foundTable = new StringTable();
-			foundTable.MaxEntries = MaxEntries;
-			foundTable.Entries = new List<StringTableEntry>(StringEntries);
-			foundTable.TableName = TableName;
-			foundTable.UserDataSize = UserDataSize;
-			foundTable.UserDataSizeBits = UserDataSizeBits;
-
-			ws.StringTables.Add(foundTable);
+			ws.StringTables.Add(Table);
 		}
 	}
 }

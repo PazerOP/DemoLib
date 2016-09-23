@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TF2Net.Data;
 
 namespace TF2Net
@@ -25,6 +22,7 @@ namespace TF2Net
 		event Action<WorldState> NewTick;
 
 		event Action<WorldState, KeyValuePair<string, string>> ServerSetConVar;
+		event Action<WorldState, string> ServerConCommand;
 
 		event Action<WorldState> ViewEntityUpdated;
 

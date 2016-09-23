@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,7 @@ namespace TF2Net.NetMessages
 
 			retVal.Declaration = ws.EventDeclarations.Single(g => g.ID == eventID);
 
+			retVal.Values = new Dictionary<string, object>();
 			foreach (var value in retVal.Declaration.Values)
 			{
 				switch (value.Value)

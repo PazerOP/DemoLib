@@ -63,6 +63,8 @@ namespace DemoLib
 			WorldState ws = new WorldState();
 			ws.Listeners = m_Events;
 
+			int test = 50;
+
 			foreach (DemoCommand cmd in Commands)
 			{
 				if (cmd.Type == DemoCommandType.dem_datatables)
@@ -81,7 +83,12 @@ namespace DemoLib
 					DemoPacketCommand p = (DemoPacketCommand)cmd;
 
 					foreach (INetMessage netMsg in p.Messages)
+					{
+						//if (netMsg is NetPacketEntitiesMessage && test-- > 0)
+						//	continue;
+
 						netMsg.ApplyWorldState(ws);
+					}
 				}
 			}
 		}

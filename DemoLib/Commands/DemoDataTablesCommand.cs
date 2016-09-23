@@ -68,13 +68,15 @@ namespace DemoLib.Commands
 				
 		static SendTable ParseSendTable(BitStream stream)
 		{
-			stream.Seek(1, SeekOrigin.Current);
-
 			SendTable table = new SendTable();
+
+			table.Unknown1 = stream.ReadBool();
 
 			table.NetTableName = stream.ReadCString();
 			
 			int propertyCount = (int)stream.ReadULong(PROPINFOBITS_NUMPROPS);
+
+			SendProp arrayElementProp = null;
 
 			for (int i = 0; i < propertyCount; i++)
 			{
@@ -102,11 +104,37 @@ namespace DemoLib.Commands
 						prop.LowValue = stream.ReadSingle();
 						prop.HighValue = stream.ReadSingle();
 
-						prop.BitCount = (int)stream.ReadULong(PROPINFOBITS_NUMBITS);
+						prop.BitCount = stream.ReadULong(PROPINFOBITS_NUMBITS);
 					}
 				}
 
-				table.Properties.Add(prop);
+				if (prop.Flags.HasFlag(SendPropFlags.NoScale))
+				{
+					if (prop.Type == SendPropType.Float)
+						prop.BitCount = 32;
+					else if (prop.Type == SendPropType.Vector)
+					{
+						if (!prop.Flags.HasFlag(SendPropFlags.Normal))
+							prop.BitCount = 32 * 3;
+					}
+				}
+
+				if (arrayElementProp != null)
+				{
+					Debug.Assert(prop.Type == SendPropType.Array);
+					prop.ArrayProperty = arrayElementProp;
+					arrayElementProp = null;
+				}
+
+				if (prop.Flags.HasFlag(SendPropFlags.InsideArray))
+				{
+					Debug.Assert(arrayElementProp == null);
+					arrayElementProp = prop;
+				}
+				else
+				{
+					table.Properties.Add(prop);
+				}
 			}
 
 			return table;

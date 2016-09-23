@@ -14,24 +14,30 @@ namespace TF2Net.NetMessages.Shared
 		const byte SUBSTRING_BITS = 5;
 		const byte MAX_USERDATA_BITS = 14;
 
-		public static void ParseUpdate(BitStream stream,
-			IList<StringTableEntry> stringEntries, ushort entries, ushort maxEntries,
-			ushort? userDataSize, byte? userDataSizeBits)
+		public static void ParseUpdate(BitStream stream, StringTable table, ushort entries)
 		{
-			List<string> history = new List<string>();
+			Debug.Assert(stream.Cursor == 0);
 
-			byte entryBits = (byte)ExtMath.Log2(maxEntries);
+			IList<StringTableEntry> history = new List<StringTableEntry>();
+
+			byte entryBits = (byte)ExtMath.Log2(table.MaxEntries);
 			int lastEntry = -1;
 			for (int i = 0; i < entries; i++)
 			{
+				// Did we read the entry from the BitStream or just assume it was lastEntry + 1?
+				bool readEntry = false;
+
 				int entryIndex = lastEntry + 1;
 
 				if (!stream.ReadBool())
-					entryIndex = stream.ReadInt(entryBits);
+				{
+					entryIndex = (int)stream.ReadUInt(entryBits);
+					readEntry = true;
+				}
 
 				lastEntry = entryIndex;
 
-				if (entryIndex < 0 || entryIndex > maxEntries)
+				if (entryIndex < 0 || entryIndex > table.MaxEntries)
 					throw new FormatException("Server sent bogus string index for stringtable");
 
 				string value = null;
@@ -41,55 +47,78 @@ namespace TF2Net.NetMessages.Shared
 
 					if (substringcheck)
 					{
-						int index = stream.ReadInt(5);
-						int bytesToCopy = stream.ReadInt(SUBSTRING_BITS);
-						
-						value = history[index].Substring(0, bytesToCopy) + stream.ReadCString();
+						int index = (int)stream.ReadUInt(5);
+						int bytesToCopy = (int)stream.ReadUInt(SUBSTRING_BITS);
+
+						string restOfString = stream.ReadCString();
+
+						var testLength = history[index].Value?.Length;
+
+						value = history[index].Value?.Substring(0, bytesToCopy) + restOfString;
 					}
 					else
 					{
 						value = stream.ReadCString();
 					}
 				}
-
-				ulong? nBytes;
+				
 				BitStream userData = null;
 				if (stream.ReadBool())
 				{
-					if (userDataSize.HasValue)
+					if (table.UserDataSize.HasValue)
 					{
-						userData = stream.Subsection(stream.Cursor, stream.Cursor + userDataSizeBits.Value);
-						stream.Seek(userDataSizeBits.Value, System.IO.SeekOrigin.Current);
+						userData = stream.Subsection(stream.Cursor, stream.Cursor + table.UserDataSizeBits.Value);
+						stream.Seek(table.UserDataSizeBits.Value, System.IO.SeekOrigin.Current);
 					}
 					else
 					{
-						nBytes = stream.ReadULong(MAX_USERDATA_BITS);
-						userData = stream.Subsection(stream.Cursor, stream.Cursor + (nBytes.Value * 8));
-						stream.Seek(nBytes.Value * 8, System.IO.SeekOrigin.Current);
+						ulong nBytes = stream.ReadUInt(MAX_USERDATA_BITS);
+						userData = stream.Subsection(stream.Cursor, stream.Cursor + (nBytes * 8));
+						stream.Seek(nBytes * 8, System.IO.SeekOrigin.Current);
 					}
 				}
-
-				if (stringEntries.Any(s => s.ID == entryIndex))
+				
+				StringTableEntry existingEntry = table.Entries.SingleOrDefault(s => s.ID == entryIndex);
+				if (existingEntry != null)
 				{
-					throw new NotImplementedException();
+					existingEntry.UserData = userData;
+
+					if (value != null && value != existingEntry.Value)
+					{
+						//throw new FormatException("Corrupted demo?");
+						existingEntry.Value = value;
+					}
+					else
+						value = existingEntry.Value;
+
+					existingEntry.Value = value;
 				}
 				else
 				{
-					//Debug.Assert(entryIndex == stringEntries.Count);
-					Debug.Assert(value != null);
+					//Debug.Assert(entryIndex == table.Entries.Count);
+					if (value == null)
+						Debug.Assert(true);
+					//Debug.Assert(value != null);
+
+					//if (value == null)
+					//	value = string.Empty;
 
 					StringTableEntry newEntry = new StringTableEntry();
 					newEntry.ID = (ushort)entryIndex;
 					newEntry.UserData = userData;
 					newEntry.Value = value;
-					stringEntries.Add(newEntry);
+					table.Entries.Add(newEntry);
+
+					existingEntry = newEntry;
 				}
 
 				if (history.Count > 31)
 					history.RemoveAt(0);
 
-				history.Add(value);
+				history.Add(existingEntry);
 			}
+			
+			Debug.Assert((stream.Length - stream.Cursor) < 8);
 		}
 	}
 }
