@@ -19,7 +19,7 @@ namespace TF2Net.NetMessages
 		public uint UpdatedEntries { get; set; }
 		public bool IsDelta { get; set; }
 		public bool UpdateBaseline { get; set; }
-		public bool Baseline { get; set; }
+		public BaselineIndex? Baseline { get; set; }
 		public int? DeltaFrom { get; set; }
 
 		public BitStream Data { get; set; }
@@ -43,7 +43,7 @@ namespace TF2Net.NetMessages
 			if (IsDelta)
 				DeltaFrom = stream.ReadInt(DELTA_INDEX_BITS);
 
-			Baseline = stream.ReadBool();
+			Baseline = (BaselineIndex)stream.ReadByte(1);
 
 			UpdatedEntries = stream.ReadUInt(SourceConstants.MAX_EDICT_BITS);
 
@@ -88,12 +88,61 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			Data.Seek(0, System.IO.SeekOrigin.Begin);
+			if (ws.SignonState.State == ConnectionState.Spawn)
+			{
+				if (!IsDelta)
+				{
+					// We are done with signon sequence.
+					ws.SignonState.State = ConnectionState.Full;
+				}
+				else
+					throw new InvalidOperationException("eceived delta packet entities while spawing!");
+			}
 
-			int currentEntity = -1;
+			ClientFrame newFrame = new ClientFrame(ws.Tick);
+			ClientFrame oldFrame = null;
+			if (IsDelta)
+			{
+				if (ws.Tick == (ulong)DeltaFrom.Value)
+					throw new InvalidDataException("Update self-referencing");
+
+				oldFrame = ws.Frames.Single(f => f.ServerTick == (ulong)DeltaFrom.Value);
+			}
+
+			if (UpdateBaseline)
+			{
+				if (Baseline.Value == BaselineIndex.Baseline0)
+				{
+					ws.Baselines[(int)BaselineIndex.Baseline1] = ws.Baselines[(int)BaselineIndex.Baseline0];
+					ws.Baselines[(int)BaselineIndex.Baseline0] = new List<Entity>();
+				}
+				else if (Baseline.Value == BaselineIndex.Baseline1)
+				{
+					ws.Baselines[(int)BaselineIndex.Baseline0] = ws.Baselines[(int)BaselineIndex.Baseline1];
+					ws.Baselines[(int)BaselineIndex.Baseline1] = new List<Entity>();
+				}
+				else
+					throw new ArgumentOutOfRangeException(nameof(Baseline));
+			}
+
+			Data.Seek(0, System.IO.SeekOrigin.Begin);
+			
+			int newEntity = -1;
+			int oldEntity = -1;
 			for (int i = 0; i < UpdatedEntries; i++)
 			{
-				currentEntity += 1 + (int)ReadUBitVar(Data);
+				// NextOldEntity
+				if (oldFrame != null)
+				{
+					var nextSet = oldFrame.TransmitEntity.FindNextSetBit((uint)(oldEntity + 1));
+					oldEntity = nextSet.HasValue ? (int)nextSet.Value : int.MaxValue;
+				}
+				else
+				{
+					oldEntity = int.MaxValue;
+				}
+
+				newEntity += 1 + (int)ReadUBitVar(Data);
 
 				// Leave PVS flag
 				if (!Data.ReadBool())
@@ -101,8 +150,8 @@ namespace TF2Net.NetMessages
 					// Enter PVS flag
 					if (Data.ReadBool())
 					{
-						Entity e = ReadEnterPVS(ws, Data, (uint)currentEntity);
-
+						Entity e = ReadEnterPVS(ws, Data, (uint)newEntity);
+						
 						ApplyEntityUpdate(e, Data);
 
 						Debug.Assert(!ws.Entities.Any(x => x.Index == e.Index));
@@ -111,7 +160,7 @@ namespace TF2Net.NetMessages
 					else
 					{
 						// Preserve/update
-						Entity e = ws.Entities.Single(ent => ent.Index == currentEntity);
+						Entity e = ws.Entities.Single(ent => ent.Index == newEntity);
 						ApplyEntityUpdate(e, Data);
 					}
 				}
@@ -122,13 +171,18 @@ namespace TF2Net.NetMessages
 					else
 						throw new NotImplementedException("Leave PVS");
 
-					var removed = ws.Entities.RemoveWhere(e => e.Index == currentEntity);
+					var removed = ws.Entities.RemoveWhere(e => e.Index == newEntity);
 					Debug.Assert(removed == 1);
 
 					Data.Cursor++;
 				}
+
+				if (newEntity > oldEntity && (oldFrame == null || oldEntity > oldFrame.LastEntityIndex))
+				{
+					Debug.Assert(i == (UpdatedEntries - 1));
+					break;
+				}
 			}
-			
 		}
 
 		static Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
@@ -140,31 +194,12 @@ namespace TF2Net.NetMessages
 			e.Class = ws.ServerClasses[(int)serverClassID];
 			e.NetworkTable = ws.SendTables.Single(st => st.NetTableName == e.Class.DatatableName);
 
-			//ulong start = stream.Cursor;
-			//ulong test = stream.Cursor;
-			//while (stream.ReadULong(ws.ClassBits) != 306)
-			//	stream.Cursor = ++test;
-			//stream.Cursor = start;
-			//stream = stream.Subsection(stream.Cursor, test);
-
-			StringTable instanceBaselines = ws.StringTables.Single(st => st.TableName == "instancebaseline");
-
-			/*int index = 0;
-			foreach (var bl in instanceBaselines.Entries.OrderBy(ib => ib.UserData.Length))
-			{
-				Entity testEnt = new Entity(uint.MaxValue, uint.MaxValue);
-				testEnt.Class = ws.ServerClasses[int.Parse(bl.Value)];
-				testEnt.NetworkTable = ws.SendTables.Single(st => st.NetTableName == testEnt.Class.DatatableName);
-				ApplyEntityUpdate(testEnt, bl.UserData);
-				index++;
-			}*/
-
-			StringTableEntry baseline = instanceBaselines.Entries.SingleOrDefault(ib => uint.Parse(ib.Value) == serverClassID);
+			BitStream baseline = ws.StaticBaselines.SingleOrDefault(bl => bl.Key == e.Class).Value;
 			if (baseline != null)
 			{
-				baseline.UserData.Cursor = 0;
-				ApplyEntityUpdate(e, baseline.UserData);
-				Debug.Assert((baseline.UserData.Length - baseline.UserData.Cursor) < 8);
+				baseline.Cursor = 0;
+				ApplyEntityUpdate(e, baseline);
+				Debug.Assert((baseline.Length - baseline.Cursor) < 8);
 			}
 
 			return e;
@@ -172,18 +207,7 @@ namespace TF2Net.NetMessages
 
 		static void ApplyEntityUpdate(Entity e, BitStream stream)
 		{
-			//bool newWay = stream.ReadBool();
-
 			var guessProps = e.NetworkTable.SortedProperties.ToArray();
-
-			//var nUnknownLength = guessProps.Where(p => p.BitCount.HasValue && p.BitCount != 0);
-			//var nStrings = guessProps.Where(p => p.Type != SendPropType.String);
-			//var props = nUnknownLength.Concat(nStrings.Concat(guessProps)).Distinct().ToArray();
-			//SendProp[] props = e.NetworkTable.Properties.ToArray();
-
-			//var test = BruteForce(stream, guessProps);
-
-			//Debug.Fail("BruteForce finished");
 
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
@@ -193,9 +217,9 @@ namespace TF2Net.NetMessages
 
 				var prop = guessProps[index];
 
-				var decoded = prop.Decode(stream);
+				var decoded = prop.Property.Decode(stream);
 
-				e.Properties[prop] = decoded;
+				e.Properties[prop.Property] = decoded;
 				guessProps[index] = null;
 			}
 		}
@@ -231,81 +255,6 @@ namespace TF2Net.NetMessages
 					return highest;
 				}
 			}
-		}
-
-		static ulong cursor = 0;
-
-		static List<Node> BruteForce(BitStream stream, IEnumerable<SendProp> remainingProps)
-		{
-			List<Node> retVal = new List<Node>();
-
-			var outerStartPos = stream.Cursor;
-
-			int fieldIndex = -1;
-			while ((fieldIndex = ReadFieldIndex(stream, fieldIndex)) != -1)
-			{
-				var startPos = stream.Cursor;
-				foreach (SendProp prop in remainingProps)
-				{
-					try
-					{
-						bool passedTest = false;
-						if (prop.BitCount.HasValue && prop.BitCount != 0 &&
-							(prop.Type == SendPropType.Float ||
-							prop.Type == SendPropType.Int))
-						{
-							stream.Cursor += prop.BitCount.Value;
-
-							if (!stream.ReadBool())
-								continue;
-
-							passedTest = true;
-							stream.Cursor = startPos;
-						}
-
-						ulong startReadBit = stream.Cursor;
-						if (prop.Type == SendPropType.String)
-						{
-							var length = stream.ReadULong(9);
-							if ((length * 8) > (stream.Length - stream.Cursor))
-								continue;
-							else
-								stream.Cursor = startReadBit;
-						}
-
-						//var streamCopy = stream.Clone();
-
-						object decodeTest = prop.Decode(stream);
-
-						if (!passedTest)
-						{
-							if (!stream.PeekBool())
-								continue;
-						}
-						
-						Node newNode = new Node();
-						newNode.Property = prop;
-						newNode.Value = decodeTest;
-						newNode.FieldIndex = fieldIndex;
-						newNode.Stream = stream.Clone();
-						newNode.BitsRead = stream.Cursor - startReadBit;
-						newNode.RemainingProps = remainingProps;
-						
-						newNode.ChildNodes = BruteForce(stream, remainingProps.Except(prop));
-
-						retVal.Add(newNode);
-					}
-					catch (OverflowException) { }
-					catch (FormatException) { }
-					finally
-					{
-						stream.Cursor = startPos;
-					}
-				}
-			}
-
-			stream.Cursor = outerStartPos;
-			return retVal;
 		}
 
 		static int ReadFieldIndex(BitStream stream, int lastIndex)

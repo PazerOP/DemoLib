@@ -12,7 +12,7 @@ namespace DemoLib.Launcher
 	{
 		static void Main(string[] args)
 		{
-			using (var stream = File.Open(@"D:\Steam\steamapps\common\Team Fortress 2\tf\demos\2016-07-14_18-13-36.dem", FileMode.Open, FileAccess.Read))
+			using (var stream = File.Open(@"D:\Steam\steamapps\common\Team Fortress 2\tf\demos\testdemo.dem", FileMode.Open, FileAccess.Read))
 			{
 				Console.WriteLine("Parsing test demo file...");
 

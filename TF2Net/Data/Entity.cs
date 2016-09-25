@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace TF2Net.Data
 {
-	[DebuggerDisplay("{Index,nq}: {Class}")]
+	[DebuggerDisplay("{Index,nq}: {Class.Classname,nq}")]
 	public class Entity
 	{
 		public uint Index { get; }

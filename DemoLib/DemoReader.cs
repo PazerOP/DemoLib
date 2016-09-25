@@ -63,7 +63,7 @@ namespace DemoLib
 			WorldState ws = new WorldState();
 			ws.Listeners = m_Events;
 
-			int test = 50;
+			int test = 1;
 
 			foreach (DemoCommand cmd in Commands)
 			{
