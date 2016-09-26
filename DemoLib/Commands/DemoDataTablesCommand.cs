@@ -40,9 +40,19 @@ namespace DemoLib.Commands
 			// Link referenced datatables
 			foreach (SendTable table in SendTables)
 			{
-				foreach (SendProp dtProp in table.Properties.Where(t => t.Type == SendPropType.Datatable))
+				foreach (SendProp dtProp in table.Properties)
 				{
-					dtProp.Table = SendTables.Single(t => t.NetTableName == dtProp.ExcludeName);
+					if (dtProp.Type == SendPropType.Datatable || dtProp.Flags.HasFlag(SendPropFlags.Exclude))
+						dtProp.Table = SendTables.Single(t => t.NetTableName == dtProp.ExcludeName);
+					if (dtProp.Flags.HasFlag(SendPropFlags.Exclude))
+					{
+						var referencedProp = dtProp.Table.Properties.SingleOrDefault(p => p.Name == dtProp.Name);
+						if (referencedProp != null)
+						{
+							dtProp.Type = referencedProp.Type;
+							dtProp.Flags |= referencedProp.Flags;
+						}
+					}
 				}
 			}
 
@@ -129,6 +139,7 @@ namespace DemoLib.Commands
 				if (prop.Flags.HasFlag(SendPropFlags.InsideArray))
 				{
 					Debug.Assert(arrayElementProp == null);
+					Debug.Assert(!prop.Flags.HasFlag(SendPropFlags.ChangesOften));
 					arrayElementProp = prop;
 				}
 				else
