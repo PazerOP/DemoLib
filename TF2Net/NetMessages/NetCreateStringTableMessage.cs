@@ -50,7 +50,7 @@ namespace TF2Net.NetMessages
 			int encodeBits = ExtMath.Log2(Table.MaxEntries);
 			ushort entries = stream.ReadUShort((byte)(encodeBits + 1));
 
-			BitCount = stream.ReadVarInt();
+			BitCount = stream.ReadVarUInt();
 			
 			// userdatafixedsize
 			if (stream.ReadBool())

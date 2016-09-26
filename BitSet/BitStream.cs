@@ -140,11 +140,19 @@ namespace BitSet
 			ThrowIfOverflow(bits);
 
 			uint raw = (uint)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
+
+			if (raw == uint.MaxValue)
+				return -1;
+			else
+				return (int)raw;
+
+#if false
 			if ((raw & (1UL << (bits - 1))) != 0)
 			{
 				uint filled = uint.MaxValue & (uint.MaxValue << bits);
 				return unchecked((int)(filled | raw));
 			}
+#endif
 
 			return (int)raw;
 		}
@@ -216,7 +224,7 @@ namespace BitSet
 			return Encoding.ASCII.GetChars(new byte[1] { ReadByte() }).Single();
 		}
 
-		public uint ReadVarInt()
+		public uint ReadVarUInt()
 		{
 			ulong startCursor = m_Cursor;
 
@@ -230,6 +238,12 @@ namespace BitSet
 			m_Cursor = endCursor;
 
 			return retVal;
+		}
+
+		public int ReadVarInt()
+		{
+			var result = ReadVarUInt();
+			return (int)((result >> 1) ^ -(result & 1));
 		}
 
 		public bool CheckOverflow(ulong bits)

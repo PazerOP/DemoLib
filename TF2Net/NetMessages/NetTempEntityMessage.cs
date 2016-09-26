@@ -28,7 +28,7 @@ namespace TF2Net.NetMessages
 		{
 			EntryCount = stream.ReadInt(SourceConstants.EVENT_INDEX_BITS);
 
-			ulong bitCount = stream.ReadVarInt();
+			ulong bitCount = stream.ReadVarUInt();
 
 			Data = stream.Subsection(stream.Cursor, stream.Cursor + bitCount);
 			stream.Seek(bitCount, System.IO.SeekOrigin.Current);

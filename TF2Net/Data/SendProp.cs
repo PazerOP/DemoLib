@@ -73,10 +73,20 @@ namespace TF2Net.Data
 
 		object ReadInt(BitStream stream)
 		{
-			if (Flags.HasFlag(SendPropFlags.Unsigned))
-				return stream.ReadUInt((byte)BitCount.Value);
+			if (Flags.HasFlag(SendPropFlags.VarInt))
+			{
+				if (Flags.HasFlag(SendPropFlags.Unsigned))
+					return stream.ReadVarUInt();
+				else
+					return stream.ReadVarInt();
+			}
 			else
-				return stream.ReadInt((byte)BitCount.Value);
+			{
+				if (Flags.HasFlag(SendPropFlags.Unsigned))
+					return stream.ReadUInt((byte)BitCount.Value);
+				else
+					return stream.ReadInt((byte)BitCount.Value);
+			}
 		}
 
 		double ReadBitCoord(BitStream stream, bool isIntegral, bool isLowPrecision)
