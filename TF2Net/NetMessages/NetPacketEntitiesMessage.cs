@@ -205,22 +205,70 @@ namespace TF2Net.NetMessages
 			return e;
 		}
 
+		[DebuggerDisplay("{Property,nq} = {Decoded,nq}")]
+		class Junk
+		{
+			public int ThisIndex { get; set; }
+			public object Decoded { get; set; }
+			public int NextIndex { get; set; }
+			public FlattenedProp Property { get; set; }
+		}
 		static void ApplyEntityUpdate(Entity e, BitStream stream)
 		{
-			var guessProps = e.NetworkTable.SortedProperties.ToArray();
+			var guessProps = e.NetworkTable.SortedProperties.ToList();
+			var testGuessProps = e.NetworkTable.SetupFlatPropertyArray();
 
+			List<Junk> bruteForceFirstLayer = new List<Junk>();
+			var startCursor = stream.Cursor;
+			foreach (var prop in guessProps)
+			{
+				try
+				{
+					var thisIndex = ReadFieldIndex(stream, -1);
+					if (thisIndex == -1)
+						continue;
+
+					var decoded = prop.Property.Decode(stream);
+
+					var nextIndex = ReadFieldIndex(stream, thisIndex);
+					if (nextIndex == -1)
+						continue;
+
+					if (nextIndex >= guessProps.Count)
+						continue;
+
+					bruteForceFirstLayer.Add(new Junk()
+					{
+						ThisIndex = thisIndex,
+						Property = prop,
+						Decoded = decoded,
+						NextIndex = nextIndex,
+					});
+				}
+				catch (OverflowException) { }
+				catch (FormatException) { }
+				finally
+				{
+					stream.Cursor = startCursor;
+				}
+			}
+
+			var refined = bruteForceFirstLayer.Where(o => o.Decoded is double ? (double)o.Decoded != (double)-152256 : true);
+			refined = refined.Where(o => o.Decoded is uint ? (uint)o.Decoded != 3356798976 : true);
+			refined = refined.Where(o => o.Decoded is uint ? (uint)o.Decoded != 307200 : true);
+			
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
 			{
-				Debug.Assert(index < guessProps.Length);
+				Debug.Assert(index < guessProps.Count);
 				Debug.Assert(index < SourceConstants.MAX_DATATABLE_PROPS);
 
-				var prop = guessProps[index];
+				var prop = testGuessProps[index];
 
-				var decoded = prop.Property.Decode(stream);
+				var decoded = prop.Decode(stream);
 
-				e.Properties[prop.Property] = decoded;
-				guessProps[index] = null;
+				e.Properties[prop] = decoded;
+				testGuessProps[index] = null;
 			}
 		}
 

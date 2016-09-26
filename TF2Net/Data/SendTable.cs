@@ -25,18 +25,15 @@ namespace TF2Net.Data
 			{
 				foreach (SendProp prop in Properties)
 				{
-					if (prop.Type == SendPropType.Datatable)
+					if (prop.Flags.HasFlag(SendPropFlags.Exclude))
+						yield return prop;
+					else if (prop.Type == SendPropType.Datatable)
 					{
 						foreach (SendProp childProp in prop.Table.Properties)
 						{
 							if (childProp.Flags.HasFlag(SendPropFlags.Exclude))
 								yield return childProp;
 						}
-					}
-					else
-					{
-						if (prop.Flags.HasFlag(SendPropFlags.Exclude))
-							yield return prop;
 					}
 				}
 			}
@@ -114,6 +111,8 @@ namespace TF2Net.Data
 				if (excludes.Contains(prop))
 					continue;
 
+				Debug.Assert(!prop.Flags.HasFlag(SendPropFlags.Exclude));
+
 				if (prop.Type == SendPropType.Datatable)
 				{
 					foreach (FlattenedProp childProp in prop.Table.Flatten(excludes))
@@ -136,15 +135,15 @@ namespace TF2Net.Data
 		{
 			get
 			{
-				var allProperties = AllProperties.ToArray();
+				var allProperties = AllProperties.ToList();
 
-				var allChangesOften = allProperties.Where(p => p.Property.Flags.HasFlag(SendPropFlags.ChangesOften));
+				//var allChangesOften = allProperties.Where(p => p.Property.Flags.HasFlag(SendPropFlags.ChangesOften));
 
-				if (allProperties.Length < 2)
+				if (allProperties.Count < 2)
 					return allProperties;
 
 				int start = 0;
-				for (int i = start + 1; i < allProperties.Length; i++)
+				for (int i = start + 1; i < allProperties.Count; i++)
 				{
 					if (allProperties[start].Property.Flags.HasFlag(SendPropFlags.ChangesOften))
 					{
@@ -164,6 +163,86 @@ namespace TF2Net.Data
 				}
 
 				return allProperties;
+			}
+		}
+
+		public List<SendProp> SetupFlatPropertyArray()
+		{
+			var excludes = Excludes;
+			
+			List<SendProp> props = new List<SendProp>();
+
+			SendTable_BuildHierarchy(excludes, props);
+
+			SendTable_SortByPriority(props);
+
+			return props;
+		}
+
+		void SendTable_BuildHierarchy(IEnumerable<SendProp> excludes, List<SendProp> props)
+		{
+			List<SendProp> nonDatatableProps = new List<SendProp>();
+
+			SendTable_BuildHierarchy_IterateProps(excludes, nonDatatableProps, props);
+
+			props.AddRange(nonDatatableProps);
+		}
+
+		IEnumerable<SendProp> TestSortedProps
+		{
+			get { return SetupFlatPropertyArray(); }
+		}
+
+		void SendTable_SortByPriority(List<SendProp> props)
+		{
+			int start = 0;
+			for (int i = start + 1; i < props.Count; i++)
+			{
+				if (props[start].Flags.HasFlag(SendPropFlags.ChangesOften))
+				{
+					start++;
+					continue;
+				}
+
+				if (props[i].Flags.HasFlag(SendPropFlags.ChangesOften))
+				{
+					var temp = props[i];
+					props[i] = props[start];
+					props[start] = temp;
+
+					start++;
+					continue;
+				}
+			}
+		}
+
+		void SendTable_BuildHierarchy_IterateProps(IEnumerable<SendProp> excludes, List<SendProp> props, List<SendProp> dtProps)
+		{
+			foreach (var prop in Properties)
+			{
+				if (prop.Flags.HasFlag(SendPropFlags.Exclude) ||
+					excludes.Contains(prop) ||
+					prop.Flags.HasFlag(SendPropFlags.InsideArray))
+				{
+					continue;
+				}
+				
+				if (excludes.Any(e => e.Name == prop.Name && e.ExcludeName == prop.Parent.NetTableName))
+					continue;
+
+				if (prop.Type == SendPropType.Datatable)
+				{
+					if (prop.Flags.HasFlag(SendPropFlags.Collapsible))
+						prop.Table.SendTable_BuildHierarchy_IterateProps(excludes, props, dtProps);
+					else
+					{
+						prop.Table.SendTable_BuildHierarchy(excludes, dtProps);
+					}
+				}
+				else
+				{
+					props.Add(prop);
+				}
 			}
 		}
 	}

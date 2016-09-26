@@ -95,6 +95,8 @@ namespace DemoLib.Commands
 				prop.Type = (SendPropType)stream.ReadULong(PROPINFOBITS_TYPE);
 				Debug.Assert(Enum.GetValues(typeof(SendPropType)).Cast<SendPropType>().Contains(prop.Type));
 
+				Debug.Assert(prop.Type == SendPropType.Datatable ? prop.Flags == 0 : true);
+
 				prop.Name = stream.ReadCString();
 
 				prop.Flags = (SendPropFlags)stream.ReadULong(PROPINFOBITS_FLAGS);

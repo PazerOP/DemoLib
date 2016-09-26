@@ -40,6 +40,7 @@ namespace TF2Net.Data
 				case SendPropType.Float:	return ReadFloat(stream);
 				case SendPropType.String:	return ReadString(stream);
 				case SendPropType.Array:	return ReadArray(stream);
+				case SendPropType.VectorXY:	return ReadVectorXY(stream);
 
 				default:
 				throw new NotImplementedException();
@@ -145,7 +146,7 @@ namespace TF2Net.Data
 			}
 			else if (Flags.HasFlag(SendPropFlags.CoordMPLowPrecision))
 			{
-				throw new NotImplementedException();
+				retVal = ReadBitCoord(stream, false, true);
 				return true;
 			}
 			else if (Flags.HasFlag(SendPropFlags.CoordMPIntegral))
@@ -194,6 +195,16 @@ namespace TF2Net.Data
 			{
 				throw new NotImplementedException();
 			}
+
+			return retVal;
+		}
+		
+		Vector ReadVectorXY(BitStream stream)
+		{
+			Vector retVal = new Vector();
+
+			retVal.X = ReadFloat(stream);
+			retVal.Y = ReadFloat(stream);
 
 			return retVal;
 		}
