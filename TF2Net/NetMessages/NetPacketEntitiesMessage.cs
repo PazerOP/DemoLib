@@ -28,7 +28,7 @@ namespace TF2Net.NetMessages
 		{
 			get
 			{
-				return string.Format("svc_PacketEntities: delta {0}, max {1}, changed {2}, {3} bytes {4}",
+				return string.Format("svc_PacketEntities: delta {0}, max {1}, changed {2},{3} bytes {4}",
 					DeltaFrom, MaxEntries, UpdatedEntries,
 					UpdateBaseline ? " BL update," : "",
 					BitInfo.BitsToBytes(Data.Length));
@@ -99,14 +99,15 @@ namespace TF2Net.NetMessages
 					throw new InvalidOperationException("eceived delta packet entities while spawing!");
 			}
 
-			ClientFrame newFrame = new ClientFrame(ws.Tick);
-			ClientFrame oldFrame = null;
+			//ClientFrame newFrame = new ClientFrame(ws.Tick);
+			//ws.Frames.Add(newFrame);
+			//ClientFrame oldFrame = null;
 			if (IsDelta)
 			{
 				if (ws.Tick == (ulong)DeltaFrom.Value)
 					throw new InvalidDataException("Update self-referencing");
 
-				oldFrame = ws.Frames.Single(f => f.ServerTick == (ulong)DeltaFrom.Value);
+				//oldFrame = ws.Frames.Single(f => f.ServerTick == (ulong)DeltaFrom.Value);
 			}
 
 			if (UpdateBaseline)
@@ -132,15 +133,15 @@ namespace TF2Net.NetMessages
 			for (int i = 0; i < UpdatedEntries; i++)
 			{
 				// NextOldEntity
-				if (oldFrame != null)
-				{
-					var nextSet = oldFrame.TransmitEntity.FindNextSetBit((uint)(oldEntity + 1));
-					oldEntity = nextSet.HasValue ? (int)nextSet.Value : int.MaxValue;
-				}
-				else
-				{
-					oldEntity = int.MaxValue;
-				}
+				//if (oldFrame != null)
+				//{
+				//	var nextSet = oldFrame.TransmitEntity.FindNextSetBit((uint)(oldEntity + 1));
+				//	oldEntity = nextSet.HasValue ? (int)nextSet.Value : int.MaxValue;
+				//}
+				//else
+				//{
+				//	oldEntity = int.MaxValue;
+				//}
 
 				newEntity += 1 + (int)ReadUBitVar(Data);
 
@@ -154,35 +155,57 @@ namespace TF2Net.NetMessages
 						
 						ApplyEntityUpdate(e, Data);
 
-						Debug.Assert(!ws.Entities.Any(x => x.Index == e.Index));
-						ws.Entities.Add(e);
+						//Debug.Assert(oldFrame?.TransmitEntity.Get(newEntity) != true);
+
+						//Debug.Assert(newFrame.LastEntityIndex <= newEntity);
+						//newFrame.LastEntityIndex = newEntity;
+						//Debug.Assert(!newFrame.TransmitEntity.Get(newEntity));
+						//newFrame.TransmitEntity.Set(newEntity, true);
+
+						//Debug.Assert(!ws.Entities.Any(x => x.Index == e.Index));
+						ws.Entities[e.Index] = e;
 					}
 					else
 					{
 						// Preserve/update
-						Entity e = ws.Entities.Single(ent => ent.Index == newEntity);
+						Entity e = ws.Entities[newEntity];// ws.Entities.Single(ent => ent.Index == newEntity);
 						ApplyEntityUpdate(e, Data);
+
+						//newFrame.LastEntityIndex = newEntity;
+						//Debug.Assert(!newFrame.TransmitEntity.Get(newEntity));
+						//newFrame.TransmitEntity.Set(newEntity, true);
 					}
 				}
 				else
 				{
-					if (Data.ReadBool())
-						throw new NotImplementedException("Force delete");
-					else
-						throw new NotImplementedException("Leave PVS");
+					bool shouldDelete = Data.ReadBool();
 
-					var removed = ws.Entities.RemoveWhere(e => e.Index == newEntity);
-					Debug.Assert(removed == 1);
+					ReadLeavePVS(ws, newEntity, shouldDelete);
 
-					Data.Cursor++;
+					//Data.Cursor++;
 				}
 
-				if (newEntity > oldEntity && (oldFrame == null || oldEntity > oldFrame.LastEntityIndex))
+				//if (newEntity > oldEntity && (oldFrame == null || oldEntity > oldFrame.LastEntityIndex))
+				//{
+				//	Debug.Assert(i == (UpdatedEntries - 1));
+				//	break;
+				//}
+			}
+
+			if (IsDelta)
+			{
+				// Read explicit deletions
+				while (Data.ReadBool())
 				{
-					Debug.Assert(i == (UpdatedEntries - 1));
-					break;
+					uint ent = Data.ReadUInt(SourceConstants.MAX_EDICT_BITS);
+					//Debug.Assert(!newFrame.TransmitEntity.Get((int)ent));
+
+					Debug.Assert(ws.Entities[ent] != null);
+					ws.Entities[ent] = null;
 				}
 			}
+
+			Console.WriteLine("Parsed {0}", Description);
 		}
 
 		static Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
@@ -205,62 +228,28 @@ namespace TF2Net.NetMessages
 			return e;
 		}
 
-		[DebuggerDisplay("{Property,nq} = {Decoded,nq}")]
-		class Junk
+		void ReadLeavePVS(WorldState ws, int newEntity, bool delete)
 		{
-			public int ThisIndex { get; set; }
-			public object Decoded { get; set; }
-			public int NextIndex { get; set; }
-			public FlattenedProp Property { get; set; }
+			//Debug.Assert(!IsDelta);
+
+			//Debug.Assert(oldFrame.TransmitEntity.Get(oldEntity));
+			//Debug.Assert(!newFrame.TransmitEntity.Get(oldEntity));
+
+			if (delete)
+			{
+				//Debug.Assert(ws.Entities[newEntity] != null);
+				ws.Entities[newEntity] = null;
+			}
 		}
+		
 		static void ApplyEntityUpdate(Entity e, BitStream stream)
 		{
-			var guessProps = e.NetworkTable.SortedProperties.ToList();
-			var testGuessProps = e.NetworkTable.SetupFlatPropertyArray();
+			var testGuessProps = e.NetworkTable.FlattenedProps;
 
-			List<Junk> bruteForceFirstLayer = new List<Junk>();
-			var startCursor = stream.Cursor;
-			foreach (var prop in guessProps)
-			{
-				try
-				{
-					var thisIndex = ReadFieldIndex(stream, -1);
-					if (thisIndex == -1)
-						continue;
-
-					var decoded = prop.Property.Decode(stream);
-
-					var nextIndex = ReadFieldIndex(stream, thisIndex);
-					if (nextIndex == -1)
-						continue;
-
-					if (nextIndex >= guessProps.Count)
-						continue;
-
-					bruteForceFirstLayer.Add(new Junk()
-					{
-						ThisIndex = thisIndex,
-						Property = prop,
-						Decoded = decoded,
-						NextIndex = nextIndex,
-					});
-				}
-				catch (OverflowException) { }
-				catch (FormatException) { }
-				finally
-				{
-					stream.Cursor = startCursor;
-				}
-			}
-
-			var refined = bruteForceFirstLayer.Where(o => o.Decoded is double ? (double)o.Decoded != (double)-152256 : true);
-			refined = refined.Where(o => o.Decoded is uint ? (uint)o.Decoded != 3356798976 : true);
-			refined = refined.Where(o => o.Decoded is uint ? (uint)o.Decoded != 307200 : true);
-			
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
 			{
-				Debug.Assert(index < guessProps.Count);
+				Debug.Assert(index < testGuessProps.Length);
 				Debug.Assert(index < SourceConstants.MAX_DATATABLE_PROPS);
 
 				var prop = testGuessProps[index];
@@ -268,40 +257,6 @@ namespace TF2Net.NetMessages
 				var decoded = prop.Decode(stream);
 
 				e.Properties[prop] = decoded;
-				testGuessProps[index] = null;
-			}
-		}
-
-		[DebuggerDisplay("[{HighestDepth,nq}] {Property,nq} = {Value}")]
-		class Node
-		{
-			/// <summary>
-			/// If we have multiple paths with the same depth.
-			/// </summary>
-			public List<Node> ChildNodes { get; set; }
-
-			public int FieldIndex { get; set; }
-			
-			public SendProp Property { get; set; }
-
-			public ulong BitsRead { get; set; }
-			public object Value { get; set; }
-
-			public BitStream Stream { get; set; }
-
-			public IEnumerable<SendProp> RemainingProps { get; set; }
-
-			public int HighestDepth
-			{
-				get
-				{
-					int highest = 0;
-
-					foreach (var node in ChildNodes)
-						highest = Math.Max(highest, node.HighestDepth + 1);
-
-					return highest;
-				}
 			}
 		}
 

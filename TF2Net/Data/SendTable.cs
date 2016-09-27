@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 
@@ -8,12 +9,21 @@ namespace TF2Net.Data
 	[DebuggerDisplay("SendTable {NetTableName}, {Properties.Count} SendProps")]
 	public class SendTable
 	{
+		public SendTable()
+		{
+			m_FlattenedProps = new Lazy<ImmutableArray<SendProp>>(
+				() => ImmutableArray.Create(SetupFlatPropertyArray().ToArray()));
+		}
+
 		/// <summary>
 		/// The name matched between client and server.
 		/// </summary>
 		public string NetTableName { get; set; }
 
 		public IList<SendProp> Properties { get; set; } = new List<SendProp>();
+
+		private Lazy<ImmutableArray<SendProp>> m_FlattenedProps;
+		public ImmutableArray<SendProp> FlattenedProps { get { return m_FlattenedProps.Value; } }
 
 		public bool Unknown1 { get; set; }
 		
@@ -29,11 +39,8 @@ namespace TF2Net.Data
 						yield return prop;
 					else if (prop.Type == SendPropType.Datatable)
 					{
-						foreach (SendProp childProp in prop.Table.Properties)
-						{
-							if (childProp.Flags.HasFlag(SendPropFlags.Exclude))
-								yield return childProp;
-						}
+						foreach (SendProp childExclude in prop.Table.Excludes)
+							yield return childExclude;
 					}
 				}
 			}
@@ -166,7 +173,7 @@ namespace TF2Net.Data
 			}
 		}
 
-		public List<SendProp> SetupFlatPropertyArray()
+		List<SendProp> SetupFlatPropertyArray()
 		{
 			var excludes = Excludes;
 			
@@ -179,13 +186,13 @@ namespace TF2Net.Data
 			return props;
 		}
 
-		void SendTable_BuildHierarchy(IEnumerable<SendProp> excludes, List<SendProp> props)
+		void SendTable_BuildHierarchy(IEnumerable<SendProp> excludes, List<SendProp> allProperties)
 		{
-			List<SendProp> nonDatatableProps = new List<SendProp>();
+			List<SendProp> localProperties = new List<SendProp>();
 
-			SendTable_BuildHierarchy_IterateProps(excludes, nonDatatableProps, props);
+			SendTable_BuildHierarchy_IterateProps(excludes, localProperties, allProperties);
 
-			props.AddRange(nonDatatableProps);
+			allProperties.AddRange(localProperties);
 		}
 
 		IEnumerable<SendProp> TestSortedProps
@@ -196,19 +203,16 @@ namespace TF2Net.Data
 		void SendTable_SortByPriority(List<SendProp> props)
 		{
 			int start = 0;
-			for (int i = start + 1; i < props.Count; i++)
+			for (int i = start; i < props.Count; i++)
 			{
-				if (props[start].Flags.HasFlag(SendPropFlags.ChangesOften))
-				{
-					start++;
-					continue;
-				}
-
 				if (props[i].Flags.HasFlag(SendPropFlags.ChangesOften))
 				{
-					var temp = props[i];
-					props[i] = props[start];
-					props[start] = temp;
+					if (i != start)
+					{
+						var temp = props[i];
+						props[i] = props[start];
+						props[start] = temp;
+					}
 
 					start++;
 					continue;
@@ -216,13 +220,11 @@ namespace TF2Net.Data
 			}
 		}
 
-		void SendTable_BuildHierarchy_IterateProps(IEnumerable<SendProp> excludes, List<SendProp> props, List<SendProp> dtProps)
+		void SendTable_BuildHierarchy_IterateProps(IEnumerable<SendProp> excludes, List<SendProp> localProperties, List<SendProp> childDTProperties)
 		{
 			foreach (var prop in Properties)
 			{
-				if (prop.Flags.HasFlag(SendPropFlags.Exclude) ||
-					excludes.Contains(prop) ||
-					prop.Flags.HasFlag(SendPropFlags.InsideArray))
+				if (prop.Flags.HasFlag(SendPropFlags.Exclude) || excludes.Contains(prop))
 				{
 					continue;
 				}
@@ -233,15 +235,15 @@ namespace TF2Net.Data
 				if (prop.Type == SendPropType.Datatable)
 				{
 					if (prop.Flags.HasFlag(SendPropFlags.Collapsible))
-						prop.Table.SendTable_BuildHierarchy_IterateProps(excludes, props, dtProps);
+						prop.Table.SendTable_BuildHierarchy_IterateProps(excludes, localProperties, childDTProperties);
 					else
 					{
-						prop.Table.SendTable_BuildHierarchy(excludes, dtProps);
+						prop.Table.SendTable_BuildHierarchy(excludes, childDTProperties);
 					}
 				}
 				else
 				{
-					props.Add(prop);
+					localProperties.Add(prop);
 				}
 			}
 		}

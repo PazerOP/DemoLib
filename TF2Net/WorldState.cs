@@ -7,6 +7,7 @@ using BitSet;
 using TF2Net.Data;
 using TF2Net.NetMessages;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace TF2Net
 {
@@ -23,7 +24,16 @@ namespace TF2Net
 
 		public ServerInfo ServerInfo { get; set; }
 
-		public SortedSet<Entity> Entities { get; }
+		//public SortedSet<Entity> Entities { get; }
+
+		private IEnumerable<KeyValuePair<uint, Entity>> NonNullEntities
+		{
+			get { return Entities
+					.Select((e, i) => new KeyValuePair<uint, Entity>((uint)i, e))
+					.Where(kv => kv.Value != null); }
+		}
+		
+		public Entity[] Entities { get; } = new Entity[SourceConstants.MAX_EDICTS];
 
 		public IList<StringTable> StringTables { get; } = new List<StringTable>();
 
@@ -57,8 +67,8 @@ namespace TF2Net
 
 		public WorldState()
 		{
-			Entities = new SortedSet<Entity>(
-				Comparer<Entity>.Create((x, y) => Comparer<uint>.Default.Compare(x.Index, y.Index)));
+			//Entities = new SortedSet<Entity>(
+			//	Comparer<Entity>.Create((x, y) => Comparer<uint>.Default.Compare(x.Index, y.Index)));
 		}
 	}
 }

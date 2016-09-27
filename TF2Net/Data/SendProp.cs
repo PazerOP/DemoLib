@@ -223,7 +223,7 @@ namespace TF2Net.Data
 		{
 			string bitCount = (BitCount.HasValue && BitCount.Value > 0) ? string.Format("[{0}]", BitCount.Value) : string.Empty;
 
-			return string.Format("{0}{1} \"{2}\" ({3})", Type, bitCount, Name, Flags);
+			return string.Format("{0}{1} \"{2}.{3}\" ({4})", Type, bitCount, Parent.NetTableName, Name, Flags);
 		}
 
 		public SendProp Clone()
