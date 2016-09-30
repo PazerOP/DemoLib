@@ -28,5 +28,16 @@ namespace System.Collections
 		{
 			return new Dictionary<TKey, TValue>(src);
 		}
+
+		public static void AddRange<T>(this IList<T> input, IEnumerable<T> range)
+		{
+			if (input == null)
+				throw new ArgumentNullException(nameof(input));
+			if (range == null)
+				throw new ArgumentNullException(nameof(range));
+
+			foreach (var x in range)
+				input.Add(x);
+		}
 	}
 }

@@ -153,7 +153,7 @@ namespace TF2Net.NetMessages
 					else
 					{
 						// Preserve/update
-						Entity e = ws.Entities[newEntity];// ws.Entities.Single(ent => ent.Index == newEntity);
+						Entity e = ws.Entities[(uint)newEntity];// ws.Entities.Single(ent => ent.Index == newEntity);
 						ApplyEntityUpdate(e, Data);
 					}
 				}
@@ -184,18 +184,45 @@ namespace TF2Net.NetMessages
 			//Console.WriteLine("Parsed {0}", Description);
 		}
 
+		class SendPropDefinitionComparer : IEqualityComparer<SendProp>
+		{
+			public static SendPropDefinitionComparer Instance { get; } = new SendPropDefinitionComparer();
+			private SendPropDefinitionComparer() { }
+
+			public bool Equals(SendProp x, SendProp y)
+			{
+				return x.Definition.Equals(y.Definition);
+			}
+
+			public int GetHashCode(SendProp obj)
+			{
+				return obj.Definition.GetHashCode();
+			}
+		}
+
 		Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
 		{
 			uint serverClassID = stream.ReadUInt(ws.ClassBits);
 			uint serialNumber = stream.ReadUInt(SourceConstants.NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS);
 
-			Entity e = new Entity(ws, entityIndex, serialNumber);
+			Entity e;
+			{
+				Entity existing = ws.Entities[entityIndex];
+				e = (existing == null || existing.SerialNumber != serialNumber) ? new Entity(ws, entityIndex, serialNumber) : existing;
+			}
 			e.Class = ws.ServerClasses[(int)serverClassID];
 			e.NetworkTable = ws.SendTables.Single(st => st.NetTableName == e.Class.DatatableName);
 
 			var decodedBaseline = ws.InstanceBaselines[(int)Baseline.Value][entityIndex];
 			if (decodedBaseline != null)
-				e.Properties = new List<SendProp>(decodedBaseline.Select(sp => sp.Clone()));
+			{
+				var propertiesToAdd =
+					decodedBaseline
+					.Except(e.Properties, SendPropDefinitionComparer.Instance)
+					.Select(sp => sp.Clone());
+
+				e.Properties.AddRange(propertiesToAdd);
+			}
 			else
 			{
 				BitStream baseline = ws.StaticBaselines.SingleOrDefault(bl => bl.Key == e.Class).Value;

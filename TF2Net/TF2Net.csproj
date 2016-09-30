@@ -74,6 +74,7 @@
     <Compile Include="Data\StringTableEntry.cs" />
     <Compile Include="Data\Team.cs" />
     <Compile Include="Data\Vector.cs" />
+    <Compile Include="Extensions\AutoDictionary.cs" />
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="Extensions\System.Collections.cs" />
     <Compile Include="IWorldEvents.cs" />

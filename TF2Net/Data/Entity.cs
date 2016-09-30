@@ -15,7 +15,7 @@ namespace TF2Net.Data
 		public ServerClass Class { get; set; }
 		public SendTable NetworkTable { get; set; }
 
-		public IList<SendProp> Properties { get; set; } = new List<SendProp>();
+		public IList<SendProp> Properties { get; } = new List<SendProp>();
 
 		bool m_InPVS;
 		public bool InPVS

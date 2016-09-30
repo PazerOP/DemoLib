@@ -6,9 +6,8 @@
         xmlns:local="clr-namespace:PlayerPositionsTest"
         mc:Ignorable="d"
         Title="MainWindow" Height="480" Width="800" Background="Black" Loaded="Window_Loaded">
-    <Grid x:Name="BaseGrid" LayoutUpdated="BaseGrid_LayoutUpdated">
+    <Grid x:Name="BaseGrid">
         <Image x:Name="MapImage" Margin="0" Source="koth_sawmill.png" RenderOptions.BitmapScalingMode="Fant"/>
-        <Ellipse x:Name="WorldspawnMarker" Fill="Lime" Width="10" Height="10" SnapsToDevicePixels="False" UseLayoutRounding="False" Stroke="Black" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="126" Foreground="White"/>
     </Grid>
 </Window>

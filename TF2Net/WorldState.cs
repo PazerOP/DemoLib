@@ -8,6 +8,7 @@ using TF2Net.Data;
 using TF2Net.NetMessages;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using TF2Net.Extensions;
 
 namespace TF2Net
 {
@@ -32,13 +33,6 @@ namespace TF2Net
 		public SignonState SignonState { get; set; }
 
 		public ServerInfo ServerInfo { get; set; }
-
-		private IEnumerable<KeyValuePair<uint, Entity>> NonNullEntities
-		{
-			get { return Entities
-					.Select((e, i) => new KeyValuePair<uint, Entity>((uint)i, e))
-					.Where(kv => kv.Value != null); }
-		}
 
 		public IEnumerable<Player> Players
 		{

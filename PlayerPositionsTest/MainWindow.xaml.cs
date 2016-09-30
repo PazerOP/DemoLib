@@ -147,7 +147,9 @@ namespace PlayerPositionsTest
 			newMargin.Left = displayPos.X;
 
 			var team = p.Team;
-			if (team == Team.Red)
+			if (p.EntityIndex == 5)
+				e.Fill = Brushes.Lime;
+			else if (team == Team.Red)
 				e.Fill = Brushes.Red;
 			else if (team == Team.Blue)
 				e.Fill = Brushes.DarkCyan;
@@ -163,21 +165,6 @@ namespace PlayerPositionsTest
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-		}
-
-		private void BaseGrid_LayoutUpdated(object sender, EventArgs e)
-		{
-			var topLeft = MapImage.TranslatePoint(new Point(0, 0), BaseGrid);
-			var bottomRight = MapImage.TranslatePoint(new Point(MapImage.ActualWidth, MapImage.ActualHeight), BaseGrid);
-
-			var margin = WorldspawnMarker.Margin;
-
-			var worldspawn = TranslateCoordinate(new Point(0, 0));
-
-			margin.Top = worldspawn.Y;
-			margin.Left = worldspawn.X;
-
-			WorldspawnMarker.Margin = margin;
 		}
 
 		Point TranslateCoordinate(Point world)
