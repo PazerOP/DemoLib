@@ -12,7 +12,7 @@ namespace TF2Net.Data
 	{
 		public string FullName { get; set; }
 
-		public SendProp Property { get; set; }
+		public SendPropDefinition Property { get; set; }
 
 		public override string ToString()
 		{

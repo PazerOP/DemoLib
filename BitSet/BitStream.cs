@@ -107,11 +107,7 @@ namespace BitSet
 
 		public short ReadShort(byte bits = 16)
 		{
-			if (bits < 1 || bits > 16)
-				throw new ArgumentOutOfRangeException(nameof(bits));
-
-			var test = ReadInt(bits);
-			return (short)test;
+			return (short)(ReadUShort(bits) << (32 - bits) >> (32 - bits));
 		}
 		public ushort ReadUShort(byte bits = 16)
 		{
@@ -134,27 +130,7 @@ namespace BitSet
 		}
 		public int ReadInt(byte bits = 32)
 		{
-			if (bits < 1 || bits > 32)
-				throw new ArgumentOutOfRangeException(nameof(bits));
-
-			ThrowIfOverflow(bits);
-
-			uint raw = (uint)BitReader.ReadUIntBits(m_Data, ref m_Cursor, bits);
-
-			if (raw == uint.MaxValue)
-				return -1;
-			else
-				return (int)raw;
-
-#if false
-			if ((raw & (1UL << (bits - 1))) != 0)
-			{
-				uint filled = uint.MaxValue & (uint.MaxValue << bits);
-				return unchecked((int)(filled | raw));
-			}
-#endif
-
-			return (int)raw;
+			return unchecked((int)ReadUInt(bits)) << (32 - bits) >> (32 - bits);
 		}
 
 		public byte ReadByte(byte bits = 8)

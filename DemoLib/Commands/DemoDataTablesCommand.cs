@@ -40,24 +40,13 @@ namespace DemoLib.Commands
 			// Link referenced datatables
 			foreach (SendTable table in SendTables)
 			{
-				foreach (SendProp dtProp in table.Properties)
+				foreach (SendPropDefinition dtProp in table.Properties)
 				{
-					if (dtProp.Type == SendPropType.Datatable)// || dtProp.Flags.HasFlag(SendPropFlags.Exclude))
+					if (dtProp.Type == SendPropType.Datatable)
 					{
 						dtProp.Table = SendTables.Single(t => t.NetTableName == dtProp.ExcludeName);
 						dtProp.ExcludeName = null;
 					}
-#if false
-					if (dtProp.Flags.HasFlag(SendPropFlags.Exclude))
-					{
-						var referencedProp = dtProp.Table.Properties.SingleOrDefault(p => p.Name == dtProp.Name);
-						if (referencedProp != null)
-						{
-							dtProp.Type = referencedProp.Type;
-							dtProp.Flags |= referencedProp.Flags;
-						}
-					}
-#endif
 				}
 			}
 
@@ -78,17 +67,6 @@ namespace DemoLib.Commands
 				ServerClasses.Add(sc);
 			}
 
-			var unknownTrue = SendTables.Where(st => st.Unknown1).OrderBy(st => st.NetTableName);
-			var unknownFalse = SendTables.Where(st => !st.Unknown1).OrderBy(st => st.NetTableName);
-
-			//foreach (var unknownTrueTable in unknownTrue)
-			//	Debug.Assert(unknownTrueTable.Properties.FirstOrDefault()?.Name?.Equals("baseclass") != false);
-			//foreach (var unknownFalseTable in unknownFalse)
-			//	Debug.Assert(unknownFalseTable.Properties.FirstOrDefault()?.Name.Equals("baseclass") != true);
-
-			//Debug.Assert(unknownTrue.All(st => st.Properties.First().Name == "baseclass"));
-			//Debug.Assert(unknownFalse.All(st => st.Properties.First().Name != "baseclass"));
-
 			Debug.Assert((stream.Length - stream.Cursor) < 8);
 		}
 				
@@ -102,11 +80,11 @@ namespace DemoLib.Commands
 			
 			int propertyCount = (int)stream.ReadULong(PROPINFOBITS_NUMPROPS);
 
-			SendProp arrayElementProp = null;
+			SendPropDefinition arrayElementProp = null;
 
 			for (int i = 0; i < propertyCount; i++)
 			{
-				SendProp prop = new SendProp(table);
+				SendPropDefinition prop = new SendPropDefinition(table);
 				
 				prop.Type = (SendPropType)stream.ReadULong(PROPINFOBITS_TYPE);
 				Debug.Assert(Enum.GetValues(typeof(SendPropType)).Cast<SendPropType>().Contains(prop.Type));

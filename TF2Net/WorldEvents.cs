@@ -38,5 +38,17 @@ namespace TF2Net
 
 		public event Action<WorldState, StringTable> StringTableUpdated;
 		public void OnStringTableUpdated(WorldState ws, StringTable t) { StringTableUpdated?.Invoke(ws, t); }
+
+		public event Action<WorldState, Entity> EntityCreated;
+		public void OnEntityCreate(WorldState ws, Entity e) { EntityCreated?.Invoke(ws, e); }
+
+		public event Action<WorldState, Entity> EntityEnteredPVS;
+		public void OnEntityEnteredPVS(WorldState ws, Entity e) { EntityEnteredPVS?.Invoke(ws, e); }
+
+		public event Action<WorldState, Entity> EntityLeftPVS;
+		public void OnEntityLeftPVS(WorldState ws, Entity e) { EntityLeftPVS?.Invoke(ws, e); }
+
+		public event Action<WorldState, Entity> EntityDeleted;
+		public void OnEntityDeleted(WorldState ws, Entity e) { EntityDeleted?.Invoke(ws, e); }
 	}
 }

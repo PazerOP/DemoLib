@@ -27,5 +27,10 @@ namespace TF2Net
 		event Action<WorldState> ViewEntityUpdated;
 
 		event Action<WorldState, StringTable> StringTableUpdated;
+
+		event Action<WorldState, Entity> EntityCreated;
+		event Action<WorldState, Entity> EntityEnteredPVS;
+		event Action<WorldState, Entity> EntityLeftPVS;
+		event Action<WorldState, Entity> EntityDeleted;
 	}
 }

@@ -23,5 +23,10 @@ namespace System.Collections
 
 			return null;
 		}
+
+		public static IDictionary<TKey, TValue> Clone<TKey, TValue>(this IDictionary<TKey, TValue> src)
+		{
+			return new Dictionary<TKey, TValue>(src);
+		}
 	}
 }

@@ -11,7 +11,7 @@ namespace TF2Net.Data
 	{
 		public SendTable()
 		{
-			m_FlattenedProps = new Lazy<ImmutableArray<SendProp>>(
+			m_FlattenedProps = new Lazy<ImmutableArray<SendPropDefinition>>(
 				() => ImmutableArray.Create(SetupFlatPropertyArray().ToArray()));
 		}
 
@@ -20,26 +20,26 @@ namespace TF2Net.Data
 		/// </summary>
 		public string NetTableName { get; set; }
 
-		public IList<SendProp> Properties { get; set; } = new List<SendProp>();
+		public IList<SendPropDefinition> Properties { get; set; } = new List<SendPropDefinition>();
 
-		private Lazy<ImmutableArray<SendProp>> m_FlattenedProps;
-		public ImmutableArray<SendProp> FlattenedProps { get { return m_FlattenedProps.Value; } }
+		private Lazy<ImmutableArray<SendPropDefinition>> m_FlattenedProps;
+		public ImmutableArray<SendPropDefinition> FlattenedProps { get { return m_FlattenedProps.Value; } }
 
 		public bool Unknown1 { get; set; }
 		
 		IEnumerable<FlattenedProp> AllProperties { get { return Flatten(Excludes); } }
 		
-		IEnumerable<SendProp> Excludes
+		IEnumerable<SendPropDefinition> Excludes
 		{
 			get
 			{
-				foreach (SendProp prop in Properties)
+				foreach (SendPropDefinition prop in Properties)
 				{
 					if (prop.Flags.HasFlag(SendPropFlags.Exclude))
 						yield return prop;
 					else if (prop.Type == SendPropType.Datatable)
 					{
-						foreach (SendProp childExclude in prop.Table.Excludes)
+						foreach (SendPropDefinition childExclude in prop.Table.Excludes)
 							yield return childExclude;
 					}
 				}
@@ -68,7 +68,7 @@ namespace TF2Net.Data
 					   throw new InvalidOperationException();
 				   }));
 
-				foreach (SendProp prop in datatablesFirst)
+				foreach (SendPropDefinition prop in datatablesFirst)
 				{
 					if (prop.Type == SendPropType.Datatable)
 					{
@@ -91,7 +91,7 @@ namespace TF2Net.Data
 		}
 #endif
 
-		IEnumerable<FlattenedProp> Flatten(IEnumerable<SendProp> excludes)
+		IEnumerable<FlattenedProp> Flatten(IEnumerable<SendPropDefinition> excludes)
 		{
 			var datatablesFirst = Properties.OrderByDescending(p => p.Type,
 				Comparer<SendPropType>.Create((p1, p2) =>
@@ -110,7 +110,7 @@ namespace TF2Net.Data
 					throw new InvalidOperationException();
 				}));
 
-			foreach (SendProp prop in datatablesFirst)
+			foreach (SendPropDefinition prop in datatablesFirst)
 			{
 				if (excludes.Any(e => e.Name == prop.Name && e.ExcludeName == prop.Parent.NetTableName))
 					continue;
@@ -173,11 +173,11 @@ namespace TF2Net.Data
 			}
 		}
 
-		List<SendProp> SetupFlatPropertyArray()
+		List<SendPropDefinition> SetupFlatPropertyArray()
 		{
 			var excludes = Excludes;
 			
-			List<SendProp> props = new List<SendProp>();
+			List<SendPropDefinition> props = new List<SendPropDefinition>();
 
 			SendTable_BuildHierarchy(excludes, props);
 
@@ -186,21 +186,21 @@ namespace TF2Net.Data
 			return props;
 		}
 
-		void SendTable_BuildHierarchy(IEnumerable<SendProp> excludes, List<SendProp> allProperties)
+		void SendTable_BuildHierarchy(IEnumerable<SendPropDefinition> excludes, List<SendPropDefinition> allProperties)
 		{
-			List<SendProp> localProperties = new List<SendProp>();
+			List<SendPropDefinition> localProperties = new List<SendPropDefinition>();
 
 			SendTable_BuildHierarchy_IterateProps(excludes, localProperties, allProperties);
 
 			allProperties.AddRange(localProperties);
 		}
 
-		IEnumerable<SendProp> TestSortedProps
+		IEnumerable<SendPropDefinition> TestSortedProps
 		{
 			get { return SetupFlatPropertyArray(); }
 		}
 
-		void SendTable_SortByPriority(List<SendProp> props)
+		void SendTable_SortByPriority(List<SendPropDefinition> props)
 		{
 			int start = 0;
 			for (int i = start; i < props.Count; i++)
@@ -220,7 +220,7 @@ namespace TF2Net.Data
 			}
 		}
 
-		void SendTable_BuildHierarchy_IterateProps(IEnumerable<SendProp> excludes, List<SendProp> localProperties, List<SendProp> childDTProperties)
+		void SendTable_BuildHierarchy_IterateProps(IEnumerable<SendPropDefinition> excludes, List<SendPropDefinition> localProperties, List<SendPropDefinition> childDTProperties)
 		{
 			foreach (var prop in Properties)
 			{

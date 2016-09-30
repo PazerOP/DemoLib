@@ -24,6 +24,7 @@ namespace DemoLib.Launcher
 
 				reader.SimulateDemo();
 
+				Console.WriteLine("Finished simulating demo.");
 				Console.ReadLine();
 			}
 		}

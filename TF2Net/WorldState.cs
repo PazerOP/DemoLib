@@ -13,7 +13,16 @@ namespace TF2Net
 {
 	public class WorldState
 	{
-		public WorldEvents Listeners { get; set; }
+		WorldEvents m_Listeners;
+		public WorldEvents Listeners
+		{
+			get { return m_Listeners; }
+			set
+			{
+				m_Listeners = value;
+				RegisterEventHandlers();
+			}
+		}
 
 		public ulong Tick { get; set; }
 
@@ -24,15 +33,31 @@ namespace TF2Net
 
 		public ServerInfo ServerInfo { get; set; }
 
-		//public SortedSet<Entity> Entities { get; }
-
 		private IEnumerable<KeyValuePair<uint, Entity>> NonNullEntities
 		{
 			get { return Entities
 					.Select((e, i) => new KeyValuePair<uint, Entity>((uint)i, e))
 					.Where(kv => kv.Value != null); }
 		}
-		
+
+		public IEnumerable<Player> Players
+		{
+			get
+			{
+				var userinfoTable = StringTables.Single(st => st.TableName == "userinfo");
+
+				foreach (var user in userinfoTable.Entries)
+				{
+					var localCopy = user.UserData?.Clone();
+					if (localCopy == null)
+						continue;
+
+					localCopy.Cursor = 0;
+					yield return new Player(localCopy, this, uint.Parse(user.Value) + 1);
+				}
+			}
+		}
+
 		public Entity[] Entities { get; } = new Entity[SourceConstants.MAX_EDICTS];
 
 		public IList<StringTable> StringTables { get; } = new List<StringTable>();
@@ -40,7 +65,7 @@ namespace TF2Net
 		public IDictionary<string, string> ConVars { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
 		public byte ClassBits { get { return (byte)Math.Ceiling(Math.Log(ServerClasses.Count, 2)); } }
-		
+
 		public IList<ServerClass> ServerClasses { get; set; }
 		public IList<SendTable> SendTables { get; set; }
 
@@ -55,20 +80,18 @@ namespace TF2Net
 			}
 		}
 
-		public IList<Entity>[] Baselines { get; } = new IList<Entity>[2]
+		public IList<SendProp>[][] InstanceBaselines { get; } = new IList<SendProp>[2][]
 		{
-			new List<Entity>(),
-			new List<Entity>()
+			new IList<SendProp>[SourceConstants.MAX_EDICTS],
+			new IList<SendProp>[SourceConstants.MAX_EDICTS],
 		};
-
-		public IList<ClientFrame> Frames { get; } = new List<ClientFrame>();
 
 		public ushort? ViewEntity { get; set; }
 
-		public WorldState()
+		void RegisterEventHandlers()
 		{
-			//Entities = new SortedSet<Entity>(
-			//	Comparer<Entity>.Create((x, y) => Comparer<uint>.Default.Compare(x.Index, y.Index)));
+			if (Listeners == null)
+				return;
 		}
 	}
 }

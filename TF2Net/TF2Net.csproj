@@ -63,13 +63,16 @@
     <Compile Include="Data\FlattenedProp.cs" />
     <Compile Include="Data\GameEvent.cs" />
     <Compile Include="Data\GameEventDeclaration.cs" />
+    <Compile Include="Data\Player.cs" />
     <Compile Include="Data\SendProp.cs" />
+    <Compile Include="Data\SendPropDefinition.cs" />
     <Compile Include="Data\SendTable.cs" />
     <Compile Include="Data\ServerClass.cs" />
     <Compile Include="Data\ServerInfo.cs" />
     <Compile Include="Data\SignonState.cs" />
     <Compile Include="Data\StringTable.cs" />
     <Compile Include="Data\StringTableEntry.cs" />
+    <Compile Include="Data\Team.cs" />
     <Compile Include="Data\Vector.cs" />
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="Extensions\System.Collections.cs" />

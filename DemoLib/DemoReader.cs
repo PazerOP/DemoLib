@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using DemoLib.Commands;
 using DemoLib.DataExtraction;
 using TF2Net;
@@ -60,10 +61,10 @@ namespace DemoLib
 
 		public void SimulateDemo()
 		{
+			m_Events.NewTick += TickTimer;
+
 			WorldState ws = new WorldState();
 			ws.Listeners = m_Events;
-
-			int test = 1;
 
 			foreach (DemoCommand cmd in Commands)
 			{
@@ -84,13 +85,32 @@ namespace DemoLib
 
 					foreach (INetMessage netMsg in p.Messages)
 					{
-						//if (netMsg is NetPacketEntitiesMessage && test-- > 0)
-						//	continue;
-
 						netMsg.ApplyWorldState(ws);
 					}
 				}
 			}
+		}
+
+		ulong m_FirstTick = ulong.MinValue;
+		DateTime m_FirstTickTime;
+		private void TickTimer(WorldState ws)
+		{
+			if (m_FirstTick == ulong.MinValue)
+			{
+				if (ws.SignonState?.State == ConnectionState.Full)
+				{
+					m_FirstTick = ws.Tick;
+					m_FirstTickTime = DateTime.Now;
+				}
+				return;
+			}
+
+			TimeSpan elapsed = TimeSpan.FromSeconds((ws.Tick - m_FirstTick) * (1.0 / 66.0));
+			DateTime expected = m_FirstTickTime + elapsed;
+			TimeSpan deltaFromExpected = DateTime.Now - expected;
+
+			if (deltaFromExpected.TotalSeconds < 0)
+				Thread.Sleep(-deltaFromExpected);
 		}
 	}
 }

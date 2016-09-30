@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using BitSet;
 using TF2Net;
+using TF2Net.Data;
 using TF2Net.NetMessages;
 
 namespace DemoLib.Commands
@@ -28,38 +29,19 @@ namespace DemoLib.Commands
 
 				Viewpoint.ViewpointFlags = (DemoViewpoint.Flags)r.ReadInt32();
 
-				Viewpoint.ViewOrigin1 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewOrigin1[i] = r.ReadSingle();
+				Viewpoint.ViewOrigin1 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+				Viewpoint.ViewAngles1 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());				
+				Viewpoint.LocalViewAngles1 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 
-				Viewpoint.ViewAngles1 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewAngles1[i] = r.ReadSingle();
-				
-				Viewpoint.LocalViewAngles1 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.LocalViewAngles1[i] = r.ReadSingle();
-
-
-				Viewpoint.ViewOrigin2 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewOrigin2[i] = r.ReadSingle();
-
-				Viewpoint.ViewAngles2 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.ViewAngles2[i] = r.ReadSingle();
-
-				Viewpoint.LocalViewAngles2 = new float[3];
-				for (byte i = 0; i < 3; i++)
-					Viewpoint.LocalViewAngles2[i] = r.ReadSingle();
+				Viewpoint.ViewOrigin2 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+				Viewpoint.ViewAngles2 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+				Viewpoint.LocalViewAngles2 = new Vector(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 
 				SequenceIn = r.ReadInt32();
 				SequenceOut = r.ReadInt32();
-
-				ulong length = r.ReadUInt32();
-				BitStream data = new BitStream(r.ReadBytes((int)length));
-
-				Messages = NetMessageCoder.Decode(data);
+				
+				BitStream data = new BitStream(r.ReadBytes((int)r.ReadUInt32()));				
+				Messages = NetMessageCoder.Decode(data).ToArray();
 			}
 		}
 	}

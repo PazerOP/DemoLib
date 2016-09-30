@@ -114,13 +114,13 @@ namespace TF2Net.NetMessages
 			{
 				if (Baseline.Value == BaselineIndex.Baseline0)
 				{
-					ws.Baselines[(int)BaselineIndex.Baseline1] = ws.Baselines[(int)BaselineIndex.Baseline0];
-					ws.Baselines[(int)BaselineIndex.Baseline0] = new List<Entity>();
+					ws.InstanceBaselines[(int)BaselineIndex.Baseline1] = ws.InstanceBaselines[(int)BaselineIndex.Baseline0];
+					ws.InstanceBaselines[(int)BaselineIndex.Baseline0] = new IList<SendProp>[SourceConstants.MAX_EDICTS];
 				}
 				else if (Baseline.Value == BaselineIndex.Baseline1)
 				{
-					ws.Baselines[(int)BaselineIndex.Baseline0] = ws.Baselines[(int)BaselineIndex.Baseline1];
-					ws.Baselines[(int)BaselineIndex.Baseline1] = new List<Entity>();
+					ws.InstanceBaselines[(int)BaselineIndex.Baseline0] = ws.InstanceBaselines[(int)BaselineIndex.Baseline1];
+					ws.InstanceBaselines[(int)BaselineIndex.Baseline1] = new IList<SendProp>[SourceConstants.MAX_EDICTS];
 				}
 				else
 					throw new ArgumentOutOfRangeException(nameof(Baseline));
@@ -129,20 +129,8 @@ namespace TF2Net.NetMessages
 			Data.Seek(0, System.IO.SeekOrigin.Begin);
 			
 			int newEntity = -1;
-			int oldEntity = -1;
 			for (int i = 0; i < UpdatedEntries; i++)
 			{
-				// NextOldEntity
-				//if (oldFrame != null)
-				//{
-				//	var nextSet = oldFrame.TransmitEntity.FindNextSetBit((uint)(oldEntity + 1));
-				//	oldEntity = nextSet.HasValue ? (int)nextSet.Value : int.MaxValue;
-				//}
-				//else
-				//{
-				//	oldEntity = int.MaxValue;
-				//}
-
 				newEntity += 1 + (int)ReadUBitVar(Data);
 
 				// Leave PVS flag
@@ -154,42 +142,31 @@ namespace TF2Net.NetMessages
 						Entity e = ReadEnterPVS(ws, Data, (uint)newEntity);
 						
 						ApplyEntityUpdate(e, Data);
-
-						//Debug.Assert(oldFrame?.TransmitEntity.Get(newEntity) != true);
-
-						//Debug.Assert(newFrame.LastEntityIndex <= newEntity);
-						//newFrame.LastEntityIndex = newEntity;
-						//Debug.Assert(!newFrame.TransmitEntity.Get(newEntity));
-						//newFrame.TransmitEntity.Set(newEntity, true);
-
-						//Debug.Assert(!ws.Entities.Any(x => x.Index == e.Index));
+						
 						ws.Entities[e.Index] = e;
+
+						if (UpdateBaseline)
+							ws.InstanceBaselines[Baseline.Value == BaselineIndex.Baseline0 ? 1 : 0][e.Index] = new List<SendProp>(e.Properties.Select(sp => sp.Clone()));
+
+						e.InPVS = true;
 					}
 					else
 					{
 						// Preserve/update
 						Entity e = ws.Entities[newEntity];// ws.Entities.Single(ent => ent.Index == newEntity);
 						ApplyEntityUpdate(e, Data);
-
-						//newFrame.LastEntityIndex = newEntity;
-						//Debug.Assert(!newFrame.TransmitEntity.Get(newEntity));
-						//newFrame.TransmitEntity.Set(newEntity, true);
 					}
 				}
 				else
 				{
 					bool shouldDelete = Data.ReadBool();
 
+					Entity e = ws.Entities[newEntity];
+					if (e != null)
+						e.InPVS = false;
+					
 					ReadLeavePVS(ws, newEntity, shouldDelete);
-
-					//Data.Cursor++;
 				}
-
-				//if (newEntity > oldEntity && (oldFrame == null || oldEntity > oldFrame.LastEntityIndex))
-				//{
-				//	Debug.Assert(i == (UpdatedEntries - 1));
-				//	break;
-				//}
 			}
 
 			if (IsDelta)
@@ -198,31 +175,36 @@ namespace TF2Net.NetMessages
 				while (Data.ReadBool())
 				{
 					uint ent = Data.ReadUInt(SourceConstants.MAX_EDICT_BITS);
-					//Debug.Assert(!newFrame.TransmitEntity.Get((int)ent));
 
-					Debug.Assert(ws.Entities[ent] != null);
+					//Debug.Assert(ws.Entities[ent] != null);
 					ws.Entities[ent] = null;
 				}
 			}
 
-			Console.WriteLine("Parsed {0}", Description);
+			//Console.WriteLine("Parsed {0}", Description);
 		}
 
-		static Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
+		Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
 		{
 			uint serverClassID = stream.ReadUInt(ws.ClassBits);
 			uint serialNumber = stream.ReadUInt(SourceConstants.NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS);
 
-			Entity e = new Entity(entityIndex, serialNumber);
+			Entity e = new Entity(ws, entityIndex, serialNumber);
 			e.Class = ws.ServerClasses[(int)serverClassID];
 			e.NetworkTable = ws.SendTables.Single(st => st.NetTableName == e.Class.DatatableName);
 
-			BitStream baseline = ws.StaticBaselines.SingleOrDefault(bl => bl.Key == e.Class).Value;
-			if (baseline != null)
+			var decodedBaseline = ws.InstanceBaselines[(int)Baseline.Value][entityIndex];
+			if (decodedBaseline != null)
+				e.Properties = new List<SendProp>(decodedBaseline.Select(sp => sp.Clone()));
+			else
 			{
-				baseline.Cursor = 0;
-				ApplyEntityUpdate(e, baseline);
-				Debug.Assert((baseline.Length - baseline.Cursor) < 8);
+				BitStream baseline = ws.StaticBaselines.SingleOrDefault(bl => bl.Key == e.Class).Value;
+				if (baseline != null)
+				{
+					baseline.Cursor = 0;
+					ApplyEntityUpdate(e, baseline);
+					Debug.Assert((baseline.Length - baseline.Cursor) < 8);
+				}
 			}
 
 			return e;
@@ -230,11 +212,6 @@ namespace TF2Net.NetMessages
 
 		void ReadLeavePVS(WorldState ws, int newEntity, bool delete)
 		{
-			//Debug.Assert(!IsDelta);
-
-			//Debug.Assert(oldFrame.TransmitEntity.Get(oldEntity));
-			//Debug.Assert(!newFrame.TransmitEntity.Get(oldEntity));
-
 			if (delete)
 			{
 				//Debug.Assert(ws.Entities[newEntity] != null);
@@ -246,6 +223,8 @@ namespace TF2Net.NetMessages
 		{
 			var testGuessProps = e.NetworkTable.FlattenedProps;
 
+			bool propertiesUpdated = false;
+
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
 			{
@@ -254,10 +233,19 @@ namespace TF2Net.NetMessages
 
 				var prop = testGuessProps[index];
 
-				var decoded = prop.Decode(stream);
+				SendProp s = e.Properties.SingleOrDefault(x => x.Definition == prop);
+				if (s == null)
+				{
+					s = new SendProp(e.World, prop);
+					e.Properties.Add(s);
+				}
+				s.Value = prop.Decode(stream);
 
-				e.Properties[prop] = decoded;
+				propertiesUpdated = true;
 			}
+
+			if (propertiesUpdated)
+				e.OnPropertiesUpdated();
 		}
 
 		static int ReadFieldIndex(BitStream stream, int lastIndex)

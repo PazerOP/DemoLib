@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TF2Net.Data;
 
 namespace DemoLib
 {
@@ -19,12 +20,12 @@ namespace DemoLib
 
 		public Flags ViewpointFlags { get; set; }
 
-		public float[] ViewOrigin1 { get; set; }
-		public float[] ViewAngles1 { get; set; }
-		public float[] LocalViewAngles1 { get; set; }
+		public Vector ViewOrigin1 { get; set; }
+		public Vector ViewAngles1 { get; set; }
+		public Vector LocalViewAngles1 { get; set; }
 
-		public float[] ViewOrigin2 { get; set; }
-		public float[] ViewAngles2 { get; set; }
-		public float[] LocalViewAngles2 { get; set; }
+		public Vector ViewOrigin2 { get; set; }
+		public Vector ViewAngles2 { get; set; }
+		public Vector LocalViewAngles2 { get; set; }
 	}
 }
