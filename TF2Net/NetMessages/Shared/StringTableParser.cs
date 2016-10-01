@@ -25,14 +25,14 @@ namespace TF2Net.NetMessages.Shared
 			for (int i = 0; i < entries; i++)
 			{
 				// Did we read the entry from the BitStream or just assume it was lastEntry + 1?
-				bool readEntry = false;
+				//bool readEntry = false;
 
 				int entryIndex = lastEntry + 1;
 
 				if (!stream.ReadBool())
 				{
 					entryIndex = (int)stream.ReadUInt(entryBits);
-					readEntry = true;
+					//readEntry = true;
 				}
 
 				lastEntry = entryIndex;
@@ -103,11 +103,11 @@ namespace TF2Net.NetMessages.Shared
 					//if (value == null)
 					//	value = string.Empty;
 
-					StringTableEntry newEntry = new StringTableEntry();
+					StringTableEntry newEntry = new StringTableEntry(table);
 					newEntry.ID = (ushort)entryIndex;
 					newEntry.UserData = userData;
 					newEntry.Value = value;
-					table.Entries.Add(newEntry);
+					table.Add(newEntry);
 
 					existingEntry = newEntry;
 				}

@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using DemoLib;
 using TF2Net;
 using TF2Net.Data;
@@ -26,7 +27,8 @@ namespace PlayerPositionsTest
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-
+		readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromArgb(255, 189, 59, 59));
+		readonly SolidColorBrush BluBrush = new SolidColorBrush(Color.FromArgb(255, 91, 122, 140));
 
 		Task<DemoReader> m_Reader;
 		public MainWindow()
@@ -42,48 +44,42 @@ namespace PlayerPositionsTest
 			m_Reader.ContinueWith(lastTask =>
 			{
 				lastTask.Result.Events.NewTick += Events_NewTick;
-				lastTask.Result.Events.StringTableUpdated += Events_StringTableUpdated;
+				lastTask.Result.Events.PlayerAdded += Events_PlayerAdded;
 				lastTask.Result.SimulateDemo();
 			});
 		}
 
+		private void Events_PlayerAdded(Player p)
+		{
+			p.EnteredPVS -= PlayerEnteredPVS;
+			p.EnteredPVS += PlayerEnteredPVS;
+
+			p.PropertiesUpdated -= PlayerPropertiesUpdated;
+			p.PropertiesUpdated += PlayerPropertiesUpdated;
+
+			p.LeftPVS -= PlayerLeftPVS;
+			p.LeftPVS += PlayerLeftPVS;
+		}
+
 		private void Events_NewTick(WorldState ws)
 		{
-			TickLabel.Dispatcher.Invoke(() =>
+			var tick = ws.Tick;
+			TickLabel.Dispatcher.InvokeAsync(() =>
 			{
-				TickLabel.Content = string.Format("Tick {0}", ws.Tick);
-			});
+				TickLabel.Content = string.Format("Tick {0}", tick);
+			}, DispatcherPriority.DataBind);
 		}
 
-		private void Events_StringTableUpdated(WorldState ws, StringTable st)
-		{
-			if (st.TableName == "userinfo")
-			{
-				foreach (Player p in ws.Players)
-				{
-					p.EnteredPVS -= PlayerEnteredPVS;
-					p.EnteredPVS += PlayerEnteredPVS;
-
-					p.PropertiesUpdated -= PlayerPropertiesUpdated;
-					p.PropertiesUpdated += PlayerPropertiesUpdated;
-
-					p.LeftPVS -= PlayerLeftPVS;
-					p.LeftPVS += PlayerLeftPVS;
-				}
-			}
-		}
-
-		private void PlayerLeftPVS(WorldState ws, Player p)
+		private void PlayerLeftPVS(Player p)
 		{
 			BaseGrid.Dispatcher.Invoke(() =>
 			{
-				Ellipse e = GetPlayerMarker(p);
+				var e = GetPlayerImage(p);
 				e.Visibility = Visibility.Hidden;
 			});
 		}
 
-		Dictionary<string, Ellipse> m_Ellipses = new Dictionary<string, Ellipse>();
-		private void PlayerEnteredPVS(WorldState ws, Player p)
+		private void PlayerEnteredPVS(Player p)
 		{
 			BaseGrid.Dispatcher.Invoke(() =>
 			{
@@ -93,27 +89,140 @@ namespace PlayerPositionsTest
 			});
 		}
 
-		private void PlayerPropertiesUpdated(WorldState ws, Player p)
+		private void PlayerPropertiesUpdated(Player p)
 		{
-			BaseGrid.Dispatcher.Invoke(() =>
-			{
-				UpdatePlayerPosition(p);
-			});
+			UpdatePlayerPosition(p);
 		}
 
+		static string GetImagePath(Team t, Class c)
+		{
+			string teamName;
+			switch (t)
+			{
+				case Team.Blue:
+				teamName = "blu";
+				break;
+
+				case Team.Red:
+				teamName = "red";
+				break;
+
+				default:
+				throw new ArgumentOutOfRangeException(nameof(t));
+			}
+
+			string className;
+			switch (c)
+			{
+				case Class.Scout:
+				className = "scout";
+				break;
+
+				case Class.Soldier:
+				className = "soldier";
+				break;
+
+				case Class.Pyro:
+				className = "pyro";
+				break;
+
+				case Class.Demo:
+				className = "demo";
+				break;
+
+				case Class.Heavy:
+				className = "heavy";
+				break;
+
+				case Class.Engie:
+				className = "engineer";
+				break;
+
+				case Class.Medic:
+				className = "medic";
+				break;
+
+				case Class.Sniper:
+				className = "sniper";
+				break;
+
+				case Class.Spy:
+				className = "spy";
+				break;
+
+				default:
+				throw new ArgumentOutOfRangeException(nameof(c));
+			}
+
+			return string.Format("/classicons/{0}_{1}.png", className, teamName);
+		}
+
+		void UpdatePlayerPosition(Player p)
+		{
+			Debug.Assert(p.InPVS);
+
+			TF2Net.Data.Vector worldPos = p.Position;
+			Team? t = p.Team;
+			Class? c = p.Class;
+
+			var entityIndex = p.EntityIndex;
+
+			BaseGrid.Dispatcher.InvokeAsync(() =>
+			{
+				var e = GetPlayerImage(p);
+				if (worldPos == null || !t.HasValue || !c.HasValue)
+				{
+					e.Visibility = Visibility.Hidden;
+					return;
+				}
+
+				Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
+
+				Thickness newMargin = new Thickness();
+				newMargin.Top = displayPos.Y - 25;
+				newMargin.Left = displayPos.X - 25;
+				e.Margin = newMargin;
+
+				e.Source = new BitmapImage(new Uri(GetImagePath(t.Value, c.Value), UriKind.Relative));
+
+				e.Visibility = Visibility.Visible;
+			}, DispatcherPriority.Render);
+		}
+
+		readonly Dictionary<string, Image> m_Images = new Dictionary<string, Image>();
+		Image GetPlayerImage(Player p)
+		{
+			Image i;
+			if (!m_Images.TryGetValue(p.Info.GUID, out i))
+			{
+				i = new Image();
+				i.Width = 50;
+				i.Height = 50;
+
+				i.SnapsToDevicePixels = false;
+				i.UseLayoutRounding = false;
+
+				i.HorizontalAlignment = HorizontalAlignment.Left;
+				i.VerticalAlignment = VerticalAlignment.Top;
+
+				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.Fant);
+
+				BaseGrid.Children.Add(i);
+
+				m_Images.Add(p.Info.GUID, i);
+			}
+			return i;
+		}
+
+		readonly Dictionary<string, Ellipse> m_Ellipses = new Dictionary<string, Ellipse>();
 		Ellipse GetPlayerMarker(Player p)
 		{
 			Ellipse e;
-			if (!m_Ellipses.TryGetValue(p.GUID, out e))
+			if (!m_Ellipses.TryGetValue(p.Info.GUID, out e))
 			{
 				e = new Ellipse();
 				e.Width = 10;
 				e.Height = 10;
-
-				if (p.EntityIndex == 5)
-					e.Fill = Brushes.Lime;
-				else
-					e.Fill = Brushes.Red;
 
 				e.SnapsToDevicePixels = false;
 				e.UseLayoutRounding = false;
@@ -122,45 +231,9 @@ namespace PlayerPositionsTest
 				e.VerticalAlignment = VerticalAlignment.Top;
 				BaseGrid.Children.Add(e);
 
-				m_Ellipses.Add(p.GUID, e);
+				m_Ellipses.Add(p.Info.GUID, e);
 			}
 			return e;
-		}
-
-		void UpdatePlayerPosition(Player p)
-		{
-			Debug.Assert(p.InPVS);
-
-			Ellipse e = GetPlayerMarker(p);
-
-			TF2Net.Data.Vector worldPos = p.Position;
-			if (worldPos == null)
-			{
-				e.Visibility = Visibility.Hidden;
-				return;
-			}
-
-			Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
-
-			Thickness newMargin = new Thickness();
-			newMargin.Top = displayPos.Y;
-			newMargin.Left = displayPos.X;
-
-			var team = p.Team;
-			if (p.EntityIndex == 5)
-				e.Fill = Brushes.Lime;
-			else if (team == Team.Red)
-				e.Fill = Brushes.Red;
-			else if (team == Team.Blue)
-				e.Fill = Brushes.DarkCyan;
-			else if (team == Team.Spectator)
-				e.Fill = Brushes.White;
-			else
-				e.Fill = Brushes.Orange;
-
-
-			e.Visibility = Visibility.Visible;
-			e.Margin = newMargin;
 		}
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)

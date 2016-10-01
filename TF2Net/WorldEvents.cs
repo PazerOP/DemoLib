@@ -36,19 +36,28 @@ namespace TF2Net
 		public event Action<WorldState> ViewEntityUpdated;
 		public void OnViewEntityUpdated(WorldState ws) { ViewEntityUpdated?.Invoke(ws); }
 
+		public event Action<StringTable> StringTableCreated;
+		public void OnStringTableCreated(StringTable st) { StringTableCreated?.Invoke(st); }
+
 		public event Action<WorldState, StringTable> StringTableUpdated;
 		public void OnStringTableUpdated(WorldState ws, StringTable t) { StringTableUpdated?.Invoke(ws, t); }
 
-		public event Action<WorldState, Entity> EntityCreated;
-		public void OnEntityCreate(WorldState ws, Entity e) { EntityCreated?.Invoke(ws, e); }
+		public event Action<Entity> EntityCreated;
+		public void OnEntityCreate(Entity e) { EntityCreated?.Invoke(e); }
 
-		public event Action<WorldState, Entity> EntityEnteredPVS;
-		public void OnEntityEnteredPVS(WorldState ws, Entity e) { EntityEnteredPVS?.Invoke(ws, e); }
+		public event Action<Entity> EntityEnteredPVS;
+		public void OnEntityEnteredPVS(Entity e) { EntityEnteredPVS?.Invoke(e); }
 
-		public event Action<WorldState, Entity> EntityLeftPVS;
-		public void OnEntityLeftPVS(WorldState ws, Entity e) { EntityLeftPVS?.Invoke(ws, e); }
+		public event Action<Entity> EntityLeftPVS;
+		public void OnEntityLeftPVS(Entity e) { EntityLeftPVS?.Invoke(e); }
 
-		public event Action<WorldState, Entity> EntityDeleted;
-		public void OnEntityDeleted(WorldState ws, Entity e) { EntityDeleted?.Invoke(ws, e); }
+		public event Action<Entity> EntityDeleted;
+		public void OnEntityDeleted(Entity e) { EntityDeleted?.Invoke(e); }
+
+		public event Action<Player> PlayerAdded;
+		public void OnPlayerAdded(Player p) { PlayerAdded?.Invoke(p); }
+		
+		public event Action<Player> PlayerRemoved;
+		public void OnPlayerRemoved(Player p) { PlayerRemoved?.Invoke(p); }
 	}
 }

@@ -177,6 +177,8 @@ namespace TF2Net.NetMessages
 					uint ent = Data.ReadUInt(SourceConstants.MAX_EDICT_BITS);
 
 					//Debug.Assert(ws.Entities[ent] != null);
+					if (ws.Entities[ent] != null)
+						ws.Entities[ent].Dispose();
 					ws.Entities[ent] = null;
 				}
 			}
@@ -219,9 +221,10 @@ namespace TF2Net.NetMessages
 				var propertiesToAdd =
 					decodedBaseline
 					.Except(e.Properties, SendPropDefinitionComparer.Instance)
-					.Select(sp => sp.Clone());
+					.Select(sp => sp.Clone(e));
 
-				e.Properties.AddRange(propertiesToAdd);
+				foreach (var p2a in propertiesToAdd)
+					e.AddProperty(p2a);
 			}
 			else
 			{
@@ -242,6 +245,9 @@ namespace TF2Net.NetMessages
 			if (delete)
 			{
 				//Debug.Assert(ws.Entities[newEntity] != null);
+				if (ws.Entities[newEntity] != null)
+					ws.Entities[newEntity].Dispose();
+
 				ws.Entities[newEntity] = null;
 			}
 		}
@@ -249,8 +255,6 @@ namespace TF2Net.NetMessages
 		static void ApplyEntityUpdate(Entity e, BitStream stream)
 		{
 			var testGuessProps = e.NetworkTable.FlattenedProps;
-
-			bool propertiesUpdated = false;
 
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
@@ -263,16 +267,11 @@ namespace TF2Net.NetMessages
 				SendProp s = e.Properties.SingleOrDefault(x => x.Definition == prop);
 				if (s == null)
 				{
-					s = new SendProp(e.World, prop);
-					e.Properties.Add(s);
+					s = new SendProp(e, prop);
+					e.AddProperty(s);
 				}
 				s.Value = prop.Decode(stream);
-
-				propertiesUpdated = true;
 			}
-
-			if (propertiesUpdated)
-				e.OnPropertiesUpdated();
 		}
 
 		static int ReadFieldIndex(BitStream stream, int lastIndex)

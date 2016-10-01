@@ -147,7 +147,7 @@ namespace TF2Net.Data
 			if (Flags.HasFlag(SendPropFlags.Coord))
 			{
 				throw new NotImplementedException();
-				return true;
+				//return true;
 			}
 			else if (Flags.HasFlag(SendPropFlags.CoordMP))
 			{
@@ -172,7 +172,7 @@ namespace TF2Net.Data
 			else if (Flags.HasFlag(SendPropFlags.Normal))
 			{
 				throw new NotImplementedException();
-				return true;
+				//return true;
 			}
 
 			retVal = default(double);

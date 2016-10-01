@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\BaselineIndex.cs" />
+    <Compile Include="Data\Class.cs" />
     <Compile Include="Data\ClientFrame.cs" />
     <Compile Include="Data\ConnectionState.cs" />
     <Compile Include="Data\Entity.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Data\StringTable.cs" />
     <Compile Include="Data\StringTableEntry.cs" />
     <Compile Include="Data\Team.cs" />
+    <Compile Include="Data\UserInfo.cs" />
     <Compile Include="Data\Vector.cs" />
     <Compile Include="Extensions\AutoDictionary.cs" />
     <Compile Include="Extensions\System.Linq.cs" />

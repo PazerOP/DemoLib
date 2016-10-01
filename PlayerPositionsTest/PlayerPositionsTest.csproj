@@ -118,6 +118,28 @@
       <Name>TF2Net</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="classicons\demo_red.png" />
+    <Resource Include="classicons\engineer_red.png" />
+    <Resource Include="classicons\heavy_red.png" />
+    <Resource Include="classicons\medic_red.png" />
+    <Resource Include="classicons\pyro_red.png" />
+    <Resource Include="classicons\scout_red.png" />
+    <Resource Include="classicons\sniper_red.png" />
+    <Resource Include="classicons\soldier_red.png" />
+    <Resource Include="classicons\spy_red.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="classicons\demo_blu.png" />
+    <Resource Include="classicons\engineer_blu.png" />
+    <Resource Include="classicons\heavy_blu.png" />
+    <Resource Include="classicons\medic_blu.png" />
+    <Resource Include="classicons\pyro_blu.png" />
+    <Resource Include="classicons\scout_blu.png" />
+    <Resource Include="classicons\sniper_blu.png" />
+    <Resource Include="classicons\soldier_blu.png" />
+    <Resource Include="classicons\spy_blu.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

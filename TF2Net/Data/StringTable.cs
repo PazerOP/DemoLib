@@ -9,21 +9,32 @@ using System.Threading.Tasks;
 namespace TF2Net.Data
 {
 	[DebuggerDisplay("Stringtable: {TableName} ({Entries.Count,nq}/{MaxEntries,nq})")]
-	public class StringTable
+	public class StringTable : IEnumerable<StringTableEntry>
 	{
-		public string TableName { get; set; }
+		public WorldState World { get; }
 
-		public ushort MaxEntries { get; set; }
-		public IList<StringTableEntry> Entries { get; }
+		public string TableName { get; }
+
+		public ushort MaxEntries { get; }
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly SortedAutoList<StringTableEntry> m_Entries;
+		public IReadOnlyList<StringTableEntry> Entries { get { return m_Entries; } }
 		
-		public ushort? UserDataSize { get; set; }
-		public byte? UserDataSizeBits { get; set; }
+		public ushort? UserDataSize { get; }
+		public byte? UserDataSizeBits { get; }
 
-		public IList<StringTableEntry> History { get; } = new List<StringTableEntry>();
+		public event Action<StringTable> StringTableUpdated;
 
-		public StringTable()
+		public StringTable(WorldState ws, string tableName, ushort maxEntries, ushort? userDataSize, byte? userDataSizeBits)
 		{
-			Entries = new SortedAutoList<StringTableEntry>(
+			World = ws;
+			TableName = tableName;
+			MaxEntries = maxEntries;
+			UserDataSize = userDataSize;
+			UserDataSizeBits = userDataSizeBits;
+
+			m_Entries = new SortedAutoList<StringTableEntry>(
 				Comparer<StringTableEntry>.Create(
 					(lhs, rhs) =>
 					{
@@ -33,7 +44,19 @@ namespace TF2Net.Data
 					}));
 		}
 
-		private class SortedAutoList<T> : SortedSet<T>, IList<T>
+		public void Add(StringTableEntry entry)
+		{
+			Debug.Assert(entry.Table == this);
+			m_Entries.Add(entry);
+			entry.EntryChanged += Entry_EntryChanged;
+		}
+
+		private void Entry_EntryChanged(StringTableEntry entry)
+		{
+			StringTableUpdated?.Invoke(this);
+		}
+
+		private class SortedAutoList<T> : SortedSet<T>, IList<T>, IReadOnlyList<T>
 		{
 			public T this[int index]
 			{
@@ -65,5 +88,11 @@ namespace TF2Net.Data
 
 			public SortedAutoList(IComparer<T> comparer) : base(comparer) { }
 		}
+
+		public IEnumerator<StringTableEntry> GetEnumerator()
+		{
+			return Entries.GetEnumerator();
+		}
+		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 	}
 }

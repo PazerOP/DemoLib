@@ -11,8 +11,58 @@ namespace TF2Net.Data
 	[DebuggerDisplay("{ID,nq}: {Value}")]
 	public class StringTableEntry
 	{
-		public ushort ID { get; set; }
-		public string Value { get; set; }
-		public BitStream UserData { get; set; }
+		public StringTable Table { get; }
+
+		public event Action<StringTableEntry> EntryChanged;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		ushort m_ID;
+		public ushort ID
+		{
+			get { return m_ID; }
+			set
+			{
+				if (m_ID != value)
+				{
+					m_ID = value;
+					EntryChanged?.Invoke(this);
+				}
+			}
+		}
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		string m_Value;
+		public string Value
+		{
+			get { return m_Value; }
+			set
+			{
+				if (m_Value != value)
+				{
+					m_Value = value;
+					EntryChanged?.Invoke(this);
+				}
+			}
+		}
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		BitStream m_UserData;
+		public BitStream UserData
+		{
+			get { return m_UserData?.Clone(); }
+			set
+			{
+				if (m_UserData != value)
+				{
+					m_UserData = value;
+					EntryChanged?.Invoke(this);
+				}
+			}
+		}
+
+		public StringTableEntry(StringTable table)
+		{
+			Table = table;
+		}
 	}
 }

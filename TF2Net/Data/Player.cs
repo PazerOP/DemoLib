@@ -12,27 +12,12 @@ namespace TF2Net.Data
 	public class Player
 	{
 		public WorldState World { get; }
+
 		public uint EntityIndex { get; }
-
 		public Entity Entity { get { return World.Entities[EntityIndex]; } }
-
-		public string Name { get; set; }
-		public int? UserID { get; set; }
-
-		public string GUID { get; set; }
-
-		public uint? FriendsID { get; set; }
-
-		public string FriendsName { get; set; }
-
-		public bool IsFakePlayer { get; set; }
-		public bool IsHLTV { get; set; }
-
-		public uint?[] CustomFiles { get; } = new uint?[4];
-
-		public uint FilesDownloaded { get; set; }
-
 		public bool InPVS { get { return Entity != null && Entity.InPVS; } }
+
+		public UserInfo Info { get; set; }
 
 		public Vector Position
 		{
@@ -72,76 +57,99 @@ namespace TF2Net.Data
 				return (Team)(int)prop.Value;
 			}
 		}
-
-		public event Action<WorldState, Player> EnteredPVS;
-		public event Action<WorldState, Player> PropertiesUpdated;
-		public event Action<WorldState, Player> LeftPVS;
-
-		public Player(BitStream stream, WorldState ws, uint entityIndex)
+		
+		public Class? Class
 		{
-			EntityIndex = entityIndex;
-			World = ws;
+			get
+			{
+				var prop = Entity.Properties.SingleOrDefault(p => p.Definition.Parent.NetTableName == "DT_TFPlayerClassShared" && p.Definition.Name == "m_iClass");
+				if (prop == null)
+					return null;
 
-			Name = Encoding.ASCII.GetString(stream.ReadBytes(32)).TrimEnd('\0');
-
-			UserID = stream.ReadInt();
-
-			GUID = Encoding.ASCII.GetString(stream.ReadBytes(33)).TrimEnd('\0');
-
-			FriendsID = stream.ReadUInt();
-
-			FriendsName = Encoding.ASCII.GetString(stream.ReadBytes(32)).TrimEnd('\0');
-
-			IsFakePlayer = stream.ReadByte() > 0 ? true : false;
-			IsHLTV = stream.ReadByte() > 0 ? true : false;
-
-			for (byte i = 0; i < 4; i++)
-				CustomFiles[i] = stream.ReadUInt();
-
-			FilesDownloaded = stream.ReadByte();
-			
-			World.Listeners.EntityEnteredPVS += Listeners_EntityEnteredPVS;
-			if (InPVS)
-				Entity.PropertiesUpdated += Entity_PropertiesUpdated;
-
-			World.Listeners.EntityLeftPVS += Listeners_EntityLeftPVS;
+				return (Class)(uint)prop.Value;
+			}
 		}
 
-		private void Listeners_EntityLeftPVS(WorldState ws, Entity e)
+		public event Action<Player> EnteredPVS;
+		public event Action<Player> PropertiesUpdated;
+		public event Action<Player> LeftPVS;
+
+		public Player(UserInfo info, WorldState ws, uint entityIndex)
 		{
-			Debug.Assert(ws == World);
+			EntityIndex = entityIndex;
+			Info = info;
+			World = ws;
+
+			World.Listeners.EntityEnteredPVS -= Listeners_EntityEnteredPVS;
+			World.Listeners.EntityEnteredPVS += Listeners_EntityEnteredPVS;
+
+			World.Listeners.EntityLeftPVS -= Listeners_EntityLeftPVS;
+			World.Listeners.EntityLeftPVS += Listeners_EntityLeftPVS;
+
+			if (InPVS)
+			{
+				Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
+				Entity.PropertiesUpdated += Entity_PropertiesUpdated;
+
+				Entity.PropertyAdded -= Entity_PropertyAdded;
+				Entity.PropertyAdded += Entity_PropertyAdded;
+
+				foreach (var prop in Entity.Properties)
+					Entity_PropertyAdded(Entity, prop);
+
+				Entity_PropertiesUpdated(Entity);
+			}
+		}
+
+		private void Entity_PropertyAdded(Entity e, SendProp prop)
+		{
+			if (prop.Definition.Parent.NetTableName == "DT_TFPlayerClassShared" && prop.Definition.Name == "m_iClass")
+			{
+				prop.ValueChanged -= ClassPropertyChanged;
+				prop.ValueChanged += ClassPropertyChanged;
+			}
+		}
+
+		private void ClassPropertyChanged(SendProp prop)
+		{
+			//Class = (Class)(uint)prop.Value;
+		}
+
+		private void Listeners_EntityLeftPVS(Entity e)
+		{
 			Debug.Assert(e != null);
 			if (e != Entity)
 				return;
 
-			LeftPVS?.Invoke(ws, this);
+			LeftPVS?.Invoke(this);
 			Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
 		}
 
-		private void Listeners_EntityEnteredPVS(WorldState ws, Entity e)
+		private void Listeners_EntityEnteredPVS(Entity e)
 		{
-			Debug.Assert(ws == World);
 			Debug.Assert(e != null);
 			if (e != Entity)
 				return;
 
-			EnteredPVS?.Invoke(ws, this);
+			EnteredPVS?.Invoke(this);
 
 			Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
 			Entity.PropertiesUpdated += Entity_PropertiesUpdated;
+
+			Entity.PropertyAdded -= Entity_PropertyAdded;
+			Entity.PropertyAdded += Entity_PropertyAdded;
 		}
 
-		private void Entity_PropertiesUpdated(WorldState ws, Entity e)
+		private void Entity_PropertiesUpdated(Entity e)
 		{
-			Debug.Assert(ws == World);
 			Debug.Assert(e == Entity);
 
-			PropertiesUpdated?.Invoke(ws, this);
+			PropertiesUpdated?.Invoke(this);
 		}
 
 		public override string ToString()
 		{
-			return string.Format("\"{0}\": {1}", Name, GUID);
+			return string.Format("\"{0}\": {1}", Info.Name, Info.GUID);
 		}
 	}
 }

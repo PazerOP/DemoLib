@@ -20,6 +20,8 @@ namespace TF2Net
 			get { return m_Listeners; }
 			set
 			{
+				Debug.Assert(m_Listeners == null);
+
 				m_Listeners = value;
 				RegisterEventHandlers();
 			}
@@ -34,23 +36,9 @@ namespace TF2Net
 
 		public ServerInfo ServerInfo { get; set; }
 
-		public IEnumerable<Player> Players
-		{
-			get
-			{
-				var userinfoTable = StringTables.Single(st => st.TableName == "userinfo");
-
-				foreach (var user in userinfoTable.Entries)
-				{
-					var localCopy = user.UserData?.Clone();
-					if (localCopy == null)
-						continue;
-
-					localCopy.Cursor = 0;
-					yield return new Player(localCopy, this, uint.Parse(user.Value) + 1);
-				}
-			}
-		}
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly List<Player> m_Players = new List<Player>();
+		public IReadOnlyList<Player> Players { get { return m_Players; } }
 
 		public Entity[] Entities { get; } = new Entity[SourceConstants.MAX_EDICTS];
 
@@ -82,10 +70,58 @@ namespace TF2Net
 
 		public ushort? ViewEntity { get; set; }
 
+		private void Listeners_StringTableCreated(StringTable st)
+		{
+			if (st.TableName == "userinfo")
+				st.StringTableUpdated += UserInfoStringTableUpdated;
+		}
+
+		private void UserInfoStringTableUpdated(StringTable st)
+		{
+			List<Player> all = new List<Player>();
+			foreach (var user in st.Entries)
+			{
+				var localCopy = user.UserData?.Clone();
+				if (localCopy == null)
+					continue;
+
+				localCopy.Cursor = 0;
+				UserInfo decoded = new UserInfo(localCopy);
+
+				uint entityIndex = uint.Parse(user.Value) + 1;
+
+				Player existing = m_Players.SingleOrDefault(p => p.Info.GUID == decoded.GUID);
+				if (existing != null)
+				{
+					Debug.Assert(entityIndex == existing.EntityIndex);
+					existing.Info = decoded;
+					all.Add(existing);
+				}
+				else
+				{
+					Player newPlayer = new Player(decoded, this, entityIndex);
+					m_Players.Add(newPlayer);
+					Listeners.OnPlayerAdded(newPlayer);
+					all.Add(newPlayer);
+				}
+			}
+
+			var toRemove = m_Players.Where(p => !all.Any(p2 => p.Info.GUID == p2.Info.GUID)).ToArray();
+			foreach (Player removed in toRemove)
+			{
+				Listeners.OnPlayerRemoved(removed);
+
+				if (!m_Players.Remove(removed))
+					throw new InvalidOperationException();
+			}
+		}
+
 		void RegisterEventHandlers()
 		{
 			if (Listeners == null)
 				return;
+
+			Listeners.StringTableCreated += Listeners_StringTableCreated;
 		}
 	}
 }
