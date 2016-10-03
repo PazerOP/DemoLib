@@ -80,6 +80,7 @@
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="Extensions\System.Collections.cs" />
     <Compile Include="IWorldEvents.cs" />
+    <Compile Include="PropertyMonitor.cs" />
     <Compile Include="WorldEvents.cs" />
     <Compile Include="NetMessages\Shared\BitAngle.cs" />
     <Compile Include="NetMessages\Shared\BitCoord.cs" />

@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="480" Width="800" Background="Black" Loaded="Window_Loaded">
     <Grid x:Name="BaseGrid">
-        <Image x:Name="MapImage" Margin="0" Source="koth_sawmill.png" RenderOptions.BitmapScalingMode="Fant"/>
+        <Image x:Name="MapImage" Margin="0" Source="koth_sawmill.png" RenderOptions.BitmapScalingMode="HighQuality"/>
         <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="126" Foreground="White"/>
-
+        <ProgressBar x:Name="progress" VerticalAlignment="Bottom" Height="23"/>
     </Grid>
 </Window>

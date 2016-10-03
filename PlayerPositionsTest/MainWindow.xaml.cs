@@ -45,20 +45,18 @@ namespace PlayerPositionsTest
 			{
 				lastTask.Result.Events.NewTick += Events_NewTick;
 				lastTask.Result.Events.PlayerAdded += Events_PlayerAdded;
+
+				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
+
 				lastTask.Result.SimulateDemo();
 			});
 		}
 
 		private void Events_PlayerAdded(Player p)
 		{
-			p.EnteredPVS -= PlayerEnteredPVS;
-			p.EnteredPVS += PlayerEnteredPVS;
-
-			p.PropertiesUpdated -= PlayerPropertiesUpdated;
-			p.PropertiesUpdated += PlayerPropertiesUpdated;
-
-			p.LeftPVS -= PlayerLeftPVS;
+			p.EnteredPVS += UpdatePlayerPosition;			
 			p.LeftPVS += PlayerLeftPVS;
+			p.ClassChanged += UpdatePlayerPosition;
 		}
 
 		private void Events_NewTick(WorldState ws)
@@ -67,6 +65,8 @@ namespace PlayerPositionsTest
 			TickLabel.Dispatcher.InvokeAsync(() =>
 			{
 				TickLabel.Content = string.Format("Tick {0}", tick);
+
+				progress.Value = tick;
 			}, DispatcherPriority.DataBind);
 		}
 
@@ -77,21 +77,6 @@ namespace PlayerPositionsTest
 				var e = GetPlayerImage(p);
 				e.Visibility = Visibility.Hidden;
 			});
-		}
-
-		private void PlayerEnteredPVS(Player p)
-		{
-			BaseGrid.Dispatcher.Invoke(() =>
-			{
-				Ellipse e = GetPlayerMarker(p);
-
-				UpdatePlayerPosition(p);
-			});
-		}
-
-		private void PlayerPropertiesUpdated(Player p)
-		{
-			UpdatePlayerPosition(p);
 		}
 
 		static string GetImagePath(Team t, Class c)
@@ -205,7 +190,7 @@ namespace PlayerPositionsTest
 				i.HorizontalAlignment = HorizontalAlignment.Left;
 				i.VerticalAlignment = VerticalAlignment.Top;
 
-				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.Fant);
+				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.HighQuality);
 
 				BaseGrid.Children.Add(i);
 

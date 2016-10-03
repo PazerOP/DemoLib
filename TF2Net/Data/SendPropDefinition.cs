@@ -31,6 +31,8 @@ namespace TF2Net.Data
 		// If we're SendPropType.Datatable
 		public SendTable Table { get; set; }
 
+		public string FullName { get { return string.Format("{0}.{1}", Parent.NetTableName, Name); } }
+
 		public object Decode(BitStream stream)
 		{
 			switch (Type)
@@ -223,7 +225,7 @@ namespace TF2Net.Data
 		{
 			string bitCount = (BitCount.HasValue && BitCount.Value > 0) ? string.Format("[{0}]", BitCount.Value) : string.Empty;
 
-			return string.Format("{0}{1} \"{2}.{3}\" ({4})", Type, bitCount, Parent.NetTableName, Name, Flags);
+			return string.Format("{0}{1} \"{2}\" ({3})", Type, bitCount, FullName, Flags);
 		}
 
 		public SendPropDefinition Clone()

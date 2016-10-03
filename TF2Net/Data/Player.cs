@@ -19,6 +19,8 @@ namespace TF2Net.Data
 
 		public UserInfo Info { get; set; }
 
+		#region Player Position
+		Vector m_Position;
 		public Vector Position
 		{
 			get
@@ -45,74 +47,98 @@ namespace TF2Net.Data
 				return vec;
 			}
 		}
+		void PositionXYPropertyChanged(SendProp prop)
+		{
+			if (prop.)
+		}
+		void PositionZPropertyChanged(SendProp prop)
+		{
 
+		}
+		event Action<Player> m_PositionChanged;
+		#endregion
+		#region Player Team
 		public Team? Team
 		{
-			get
-			{
-				var prop = Entity.Properties.SingleOrDefault(p => p.Definition.Parent.NetTableName == "DT_BaseEntity" && p.Definition.Name == "m_iTeamNum");
-				if (prop == null)
-					return null;
-
-				return (Team)(int)prop.Value;
-			}
+			get { return (Team?)(int?)Entity.Properties.SingleOrDefault(p => p.Definition.FullName == "DT_BaseEntity.m_iTeamNum")?.Value; }
 		}
-		
+		#endregion
+		#region Player Class
+		Class? m_Class;
 		public Class? Class
 		{
 			get
 			{
-				var prop = Entity.Properties.SingleOrDefault(p => p.Definition.Parent.NetTableName == "DT_TFPlayerClassShared" && p.Definition.Name == "m_iClass");
+				var prop = Entity.Properties.SingleOrDefault(p => p.Definition.FullName == "DT_TFPlayerClassShared.m_iClass");
 				if (prop == null)
 					return null;
 
-				return (Class)(uint)prop.Value;
+				Class retVal = (Class)(uint)prop.Value;
+				Debug.Assert(retVal == m_Class);
+				return retVal;
 			}
 		}
+		void ClassPropertyChanged(SendProp prop)
+		{
+			m_Class = (Class)(uint)prop.Value;
+			m_ClassChanged?.Invoke(this);
+		}
+		event Action<Player> m_ClassChanged;
+		public event Action<Player> ClassChanged
+		{
+			add
+			{
+				if (m_ClassChanged?.GetInvocationList().Contains(value) == true)
+					return;
+				m_ClassChanged += value;
+			}
+			remove { m_ClassChanged -= value; }
+		}
+		#endregion
 
-		public event Action<Player> EnteredPVS;
-		public event Action<Player> PropertiesUpdated;
-		public event Action<Player> LeftPVS;
+		event Action<Player> m_EnteredPVS;
+		public event Action<Player> EnteredPVS
+		{
+			add
+			{
+				if (m_EnteredPVS?.GetInvocationList().Contains(value) == true)
+					return;
+				m_EnteredPVS += value;
+			}
+			remove { m_EnteredPVS -= value; }
+		}
+
+		event Action<Player> m_LeftPVS;
+		public event Action<Player> LeftPVS
+		{
+			add
+			{
+				if (m_LeftPVS?.GetInvocationList().Contains(value) == true)
+					return;
+				m_LeftPVS += value;
+			}
+			remove { m_LeftPVS -= value; }
+		}
 
 		public Player(UserInfo info, WorldState ws, uint entityIndex)
 		{
 			EntityIndex = entityIndex;
 			Info = info;
 			World = ws;
-
-			World.Listeners.EntityEnteredPVS -= Listeners_EntityEnteredPVS;
+			
 			World.Listeners.EntityEnteredPVS += Listeners_EntityEnteredPVS;
-
-			World.Listeners.EntityLeftPVS -= Listeners_EntityLeftPVS;
 			World.Listeners.EntityLeftPVS += Listeners_EntityLeftPVS;
 
 			if (InPVS)
-			{
-				Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
-				Entity.PropertiesUpdated += Entity_PropertiesUpdated;
-
-				Entity.PropertyAdded -= Entity_PropertyAdded;
-				Entity.PropertyAdded += Entity_PropertyAdded;
-
-				foreach (var prop in Entity.Properties)
-					Entity_PropertyAdded(Entity, prop);
-
-				Entity_PropertiesUpdated(Entity);
-			}
+				Listeners_EntityEnteredPVS(Entity);
 		}
 
-		private void Entity_PropertyAdded(Entity e, SendProp prop)
+		private void Entity_PropertyAdded(SendProp prop)
 		{
-			if (prop.Definition.Parent.NetTableName == "DT_TFPlayerClassShared" && prop.Definition.Name == "m_iClass")
-			{
-				prop.ValueChanged -= ClassPropertyChanged;
+			if (prop.Definition.FullName == "DT_TFPlayerClassShared.m_iClass")
 				prop.ValueChanged += ClassPropertyChanged;
-			}
-		}
-
-		private void ClassPropertyChanged(SendProp prop)
-		{
-			//Class = (Class)(uint)prop.Value;
+			else if (prop.Definition.FullName == "DT_TFLocalPlayerExclusive.m_vecOrigin")
+				prop.ValueChanged += PositionXYPropertyChanged;
 		}
 
 		private void Listeners_EntityLeftPVS(Entity e)
@@ -121,8 +147,8 @@ namespace TF2Net.Data
 			if (e != Entity)
 				return;
 
-			LeftPVS?.Invoke(this);
-			Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
+			m_LeftPVS?.Invoke(this);
+			Entity.PropertyAdded -= Entity_PropertyAdded;
 		}
 
 		private void Listeners_EntityEnteredPVS(Entity e)
@@ -131,20 +157,15 @@ namespace TF2Net.Data
 			if (e != Entity)
 				return;
 
-			EnteredPVS?.Invoke(this);
-
-			Entity.PropertiesUpdated -= Entity_PropertiesUpdated;
-			Entity.PropertiesUpdated += Entity_PropertiesUpdated;
-
-			Entity.PropertyAdded -= Entity_PropertyAdded;
+			//if (Info.Name == "Laggy")
+			//	Debugger.Break();
+		
 			Entity.PropertyAdded += Entity_PropertyAdded;
-		}
 
-		private void Entity_PropertiesUpdated(Entity e)
-		{
-			Debug.Assert(e == Entity);
+			foreach (SendProp prop in Entity.Properties)
+				Entity_PropertyAdded(prop);
 
-			PropertiesUpdated?.Invoke(this);
+			m_EnteredPVS?.Invoke(this);
 		}
 
 		public override string ToString()

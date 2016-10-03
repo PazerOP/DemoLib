@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using TF2Net.Data;
 
 namespace TF2Net
@@ -45,14 +47,43 @@ namespace TF2Net
 		public event Action<Entity> EntityCreated;
 		public void OnEntityCreate(Entity e) { EntityCreated?.Invoke(e); }
 
-		public event Action<Entity> EntityEnteredPVS;
-		public void OnEntityEnteredPVS(Entity e) { EntityEnteredPVS?.Invoke(e); }
+		event Action<Entity> m_EntityEnteredPVS;
+		public event Action<Entity> EntityEnteredPVS
+		{
+			add
+			{
+				Debug.Assert(m_EntityEnteredPVS?.GetInvocationList().Contains(value) != true);
+				m_EntityEnteredPVS += value;
+			}
+			remove { m_EntityEnteredPVS -= value; }
+		}
+		public void OnEntityEnteredPVS(Entity e) { m_EntityEnteredPVS?.Invoke(e); }
 
-		public event Action<Entity> EntityLeftPVS;
-		public void OnEntityLeftPVS(Entity e) { EntityLeftPVS?.Invoke(e); }
+		event Action<Entity> m_EntityLeftPVS;
+		public event Action<Entity> EntityLeftPVS
+		{
+			add
+			{
+				if (m_EntityLeftPVS?.GetInvocationList().Contains(value) == true)
+					return;
+				m_EntityLeftPVS += value;
+			}
+			remove { m_EntityLeftPVS -= value; }
+		}
+		public void OnEntityLeftPVS(Entity e) { m_EntityLeftPVS?.Invoke(e); }
 
-		public event Action<Entity> EntityDeleted;
-		public void OnEntityDeleted(Entity e) { EntityDeleted?.Invoke(e); }
+		event Action<Entity> m_EntityDeleted;
+		public event Action<Entity> EntityDeleted
+		{
+			add
+			{
+				if (m_EntityDeleted?.GetInvocationList().Contains(value) == true)
+					return;
+				m_EntityDeleted += value;
+			}
+			remove { m_EntityDeleted -= value; }
+		}
+		public void OnEntityDeleted(Entity e) { m_EntityDeleted?.Invoke(e); }
 
 		public event Action<Player> PlayerAdded;
 		public void OnPlayerAdded(Player p) { PlayerAdded?.Invoke(p); }

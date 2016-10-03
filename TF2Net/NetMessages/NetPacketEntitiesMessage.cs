@@ -265,12 +265,18 @@ namespace TF2Net.NetMessages
 				var prop = testGuessProps[index];
 
 				SendProp s = e.Properties.SingleOrDefault(x => x.Definition == prop);
+
+				bool wasNull = false;
 				if (s == null)
 				{
 					s = new SendProp(e, prop);
-					e.AddProperty(s);
+					wasNull = true;
 				}
+
 				s.Value = prop.Decode(stream);
+
+				if (wasNull)
+					e.AddProperty(s);
 			}
 		}
 

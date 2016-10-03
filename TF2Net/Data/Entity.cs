@@ -40,7 +40,7 @@ namespace TF2Net.Data
 			{
 				if (m_Disposed)
 					throw new ObjectDisposedException(nameof(Entity));
-
+				
 				return m_NetworkTable;
 			}
 			set
@@ -113,8 +113,8 @@ namespace TF2Net.Data
 		}
 		public event Action<Entity> LeftPVS;
 
-		event Action<Entity, SendProp> m_PropertyAdded;
-		public event Action<Entity, SendProp> PropertyAdded
+		event Action<SendProp> m_PropertyAdded;
+		public event Action<SendProp> PropertyAdded
 		{
 			add
 			{
@@ -127,8 +127,6 @@ namespace TF2Net.Data
 			}
 			remove { m_PropertyAdded -= value; }
 		}
-
-		public event Action<Entity> PropertiesUpdated;
 
 		public Entity(WorldState ws, uint index, uint serialNumber)
 		{
@@ -147,19 +145,10 @@ namespace TF2Net.Data
 
 			Debug.Assert(!m_Properties.Any(p => p.Definition == newProp.Definition));
 			Debug.Assert(newProp.Entity == this);
-
-			newProp.ValueChanged += PropertyValueChanged;
+			
 			m_Properties.Add(newProp);
 
-			m_PropertyAdded?.Invoke(this, newProp);
-		}
-
-		private void PropertyValueChanged(SendProp obj)
-		{
-			if (m_Disposed)
-				throw new ObjectDisposedException(nameof(Entity));
-
-			PropertiesUpdated?.Invoke(this);
+			m_PropertyAdded?.Invoke(newProp);
 		}
 
 		public SendProp GetProperty(SendPropDefinition def)

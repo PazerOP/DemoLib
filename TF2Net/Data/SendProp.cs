@@ -20,13 +20,13 @@ namespace TF2Net.Data
 		{
 			add
 			{
+				if (Value != null)
+					value.Invoke(this);
+
 				if (m_ValueChanged?.GetInvocationList().Contains(value) == true)
 					return;
 
 				m_ValueChanged += value;
-
-				if (Value != null)
-					value.Invoke(this);
 			}
 			remove { m_ValueChanged -= value; }
 		}
