@@ -177,8 +177,6 @@ namespace TF2Net.NetMessages
 					uint ent = Data.ReadUInt(SourceConstants.MAX_EDICT_BITS);
 
 					//Debug.Assert(ws.Entities[ent] != null);
-					if (ws.Entities[ent] != null)
-						ws.Entities[ent].Dispose();
 					ws.Entities[ent] = null;
 				}
 			}
@@ -245,9 +243,6 @@ namespace TF2Net.NetMessages
 			if (delete)
 			{
 				//Debug.Assert(ws.Entities[newEntity] != null);
-				if (ws.Entities[newEntity] != null)
-					ws.Entities[newEntity].Dispose();
-
 				ws.Entities[newEntity] = null;
 			}
 		}
@@ -256,6 +251,7 @@ namespace TF2Net.NetMessages
 		{
 			var testGuessProps = e.NetworkTable.FlattenedProps;
 
+			bool atLeastOne = false;
 			int index = -1;
 			while ((index = ReadFieldIndex(stream, index)) != -1)
 			{
@@ -264,7 +260,7 @@ namespace TF2Net.NetMessages
 
 				var prop = testGuessProps[index];
 
-				SendProp s = e.Properties.SingleOrDefault(x => x.Definition == prop);
+				SendProp s = e.GetProperty(prop);
 
 				bool wasNull = false;
 				if (s == null)
@@ -274,10 +270,14 @@ namespace TF2Net.NetMessages
 				}
 
 				s.Value = prop.Decode(stream);
+				atLeastOne = true;
 
 				if (wasNull)
 					e.AddProperty(s);
 			}
+
+			if (atLeastOne)
+				e.OnPropertiesUpdated();
 		}
 
 		static int ReadFieldIndex(BitStream stream, int lastIndex)

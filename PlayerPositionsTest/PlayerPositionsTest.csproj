@@ -106,9 +106,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="koth_sawmill.png" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DemoLib\DemoLib.csproj">
       <Project>{95495901-1a5c-47a2-bb54-8f7ee9004a77}</Project>
       <Name>DemoLib</Name>
@@ -139,6 +136,19 @@
     <Resource Include="classicons\sniper_blu.png" />
     <Resource Include="classicons\soldier_blu.png" />
     <Resource Include="classicons\spy_blu.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images_misc\koth_sawmill.png" />
+    <Resource Include="images_misc\leaderboard_class_demo.png" />
+    <Resource Include="images_misc\leaderboard_class_engineer.png" />
+    <Resource Include="images_misc\leaderboard_class_heavy.png" />
+    <Resource Include="images_misc\leaderboard_class_medic.png" />
+    <Resource Include="images_misc\leaderboard_class_pyro.png" />
+    <Resource Include="images_misc\leaderboard_class_scout.png" />
+    <Resource Include="images_misc\leaderboard_class_sniper.png" />
+    <Resource Include="images_misc\leaderboard_class_soldier.png" />
+    <Resource Include="images_misc\leaderboard_class_spy.png" />
+    <Resource Include="images_misc\leaderboard_dead.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

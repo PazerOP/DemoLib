@@ -54,9 +54,10 @@ namespace PlayerPositionsTest
 
 		private void Events_PlayerAdded(Player p)
 		{
-			p.EnteredPVS += UpdatePlayerPosition;			
+			//p.EnteredPVS += UpdatePlayerPosition;			
 			p.LeftPVS += PlayerLeftPVS;
-			p.ClassChanged += UpdatePlayerPosition;
+
+			p.PropertiesUpdated += UpdatePlayerPosition;
 		}
 
 		private void Events_NewTick(WorldState ws)
@@ -146,9 +147,9 @@ namespace PlayerPositionsTest
 		{
 			Debug.Assert(p.InPVS);
 
-			TF2Net.Data.Vector worldPos = p.Position;
-			Team? t = p.Team;
-			Class? c = p.Class;
+			TF2Net.Data.Vector worldPos = p.Position.Value;
+			Team? t = p.Team.Value;
+			Class? c = p.Class.Value;
 
 			var entityIndex = p.EntityIndex;
 
@@ -191,6 +192,8 @@ namespace PlayerPositionsTest
 				i.VerticalAlignment = VerticalAlignment.Top;
 
 				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.HighQuality);
+
+				Grid.SetColumnSpan(i, 2);
 
 				BaseGrid.Children.Add(i);
 

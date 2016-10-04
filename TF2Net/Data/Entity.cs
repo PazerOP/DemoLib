@@ -2,85 +2,32 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using BitSet;
 
 namespace TF2Net.Data
 {
 	[DebuggerDisplay("{ToString(),nq}")]
-	public class Entity : IDisposable
+	public class Entity
 	{
 		public WorldState World { get; }
 
 		public uint Index { get; }
 		public uint SerialNumber { get; }
-
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		ServerClass m_Class;
-		public ServerClass Class
-		{
-			get
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
-				return m_Class;
-			}
-			set
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
-				m_Class = value;
-			}
-		}
-
-		SendTable m_NetworkTable;
-		public SendTable NetworkTable
-		{
-			get
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-				
-				return m_NetworkTable;
-			}
-			set
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
-				m_NetworkTable = value;
-			}
-		}
+		
+		public ServerClass Class { get; set; }		
+		public SendTable NetworkTable { get; set; }
 
 		readonly List<SendProp> m_Properties = new List<SendProp>();
-		public IReadOnlyList<SendProp> Properties
-		{
-			get
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
-				return m_Properties;
-			}
-		}
+		public IReadOnlyList<SendProp> Properties { get { return m_Properties; } }
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		bool m_InPVS;
 
 		public bool InPVS
 		{
-			get
-			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
-				return m_InPVS;
-			}
+			get { return m_InPVS; }
 			set
 			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-
 				var oldValue = m_InPVS;
 				m_InPVS = value;
 
@@ -102,8 +49,6 @@ namespace TF2Net.Data
 		{
 			add
 			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
 				if (m_EnteredPVS != null)
 					Debug.Assert(!m_EnteredPVS.GetInvocationList().Contains(value));
 
@@ -118,21 +63,28 @@ namespace TF2Net.Data
 		{
 			add
 			{
-				if (m_Disposed)
-					throw new ObjectDisposedException(nameof(Entity));
-				if (m_PropertyAdded != null)
-					Debug.Assert(!m_PropertyAdded.GetInvocationList().Contains(value));
-
+				if (m_PropertyAdded?.GetInvocationList().Contains(value) == true)
+					return;
 				m_PropertyAdded += value;
 			}
 			remove { m_PropertyAdded -= value; }
 		}
 
+		event Action<Entity> m_PropertiesUpdated;
+		public event Action<Entity> PropertiesUpdated
+		{
+			add
+			{
+				if (m_PropertiesUpdated?.GetInvocationList().Contains(value) == true)
+					return;
+				m_PropertiesUpdated += value;
+			}
+			remove { m_PropertiesUpdated -= value; }
+		}
+		public void OnPropertiesUpdated() { m_PropertiesUpdated?.Invoke(this); }
+
 		public Entity(WorldState ws, uint index, uint serialNumber)
 		{
-			if (ws == null)
-				throw new ArgumentNullException(nameof(ws));
-
 			World = ws;
 			Index = index;
 			SerialNumber = serialNumber;
@@ -140,9 +92,6 @@ namespace TF2Net.Data
 
 		public void AddProperty(SendProp newProp)
 		{
-			if (m_Disposed)
-				throw new ObjectDisposedException(nameof(Entity));
-
 			Debug.Assert(!m_Properties.Any(p => p.Definition == newProp.Definition));
 			Debug.Assert(newProp.Entity == this);
 			
@@ -153,9 +102,6 @@ namespace TF2Net.Data
 
 		public SendProp GetProperty(SendPropDefinition def)
 		{
-			if (m_Disposed)
-				throw new ObjectDisposedException(nameof(Entity));
-
 			return Properties.FirstOrDefault(x => x.Definition == def);
 		}
 
@@ -166,32 +112,20 @@ namespace TF2Net.Data
 
 		public bool Equals(Entity other)
 		{
-			if (m_Disposed)
-				throw new ObjectDisposedException(nameof(Entity));
-
 			return (
 				other?.Index == Index &&
 				other.SerialNumber == SerialNumber);
 		}
 		public override bool Equals(object obj)
 		{
+			if (GetHashCode() != obj.GetHashCode())
+				return false;
+
 			return Equals(obj as Entity);
 		}
 		public override int GetHashCode()
 		{
-			if (m_Disposed)
-				throw new ObjectDisposedException(nameof(Entity));
-
 			return (int)(Index + (SerialNumber << SourceConstants.MAX_EDICT_BITS));
-		}
-
-		bool m_Disposed = false;
-		public void Dispose()
-		{
-			m_Disposed = true;
-
-			m_Class = null;
-			m_NetworkTable = null;
 		}
 	}
 }

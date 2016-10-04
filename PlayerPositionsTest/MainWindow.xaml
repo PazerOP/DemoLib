@@ -7,8 +7,21 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="480" Width="800" Background="Black" Loaded="Window_Loaded">
     <Grid x:Name="BaseGrid">
-        <Image x:Name="MapImage" Margin="0" Source="koth_sawmill.png" RenderOptions.BitmapScalingMode="HighQuality"/>
-        <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="126" Foreground="White"/>
-        <ProgressBar x:Name="progress" VerticalAlignment="Bottom" Height="23"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <Image x:Name="MapImage" Margin="0" Source="images_misc/koth_sawmill.png" RenderOptions.BitmapScalingMode="HighQuality" Grid.ColumnSpan="2"/>
+        <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="155,10,0,0" VerticalAlignment="Top" Width="74" Foreground="White" Grid.ColumnSpan="2" Height="10"/>
+        <ProgressBar x:Name="progress" VerticalAlignment="Bottom" Height="23" Grid.ColumnSpan="2"/>
+        <StackPanel HorizontalAlignment="Stretch">
+            <Grid Height="45">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="45"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Image x:Name="DeathImage" Source="images_misc/leaderboard_dead.png" RenderOptions.BitmapScalingMode="HighQuality" />
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>
