@@ -78,6 +78,7 @@ namespace PlayerPositionsTest
 			m_Reader.ContinueWith(lastTask =>
 			{
 				lastTask.Result.Events.NewTick.Add(Events_NewTick);
+				lastTask.Result.Events.NewTick.Add(UpdatePlayerStatuses);
 				lastTask.Result.Events.PlayerAdded.Add(Events_PlayerAdded);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
@@ -85,7 +86,7 @@ namespace PlayerPositionsTest
 				lastTask.Result.SimulateDemo();
 			});
 		}
-
+		
 		private void Events_PlayerAdded(Player p)
 		{
 			//p.EnteredPVS += UpdatePlayerPosition;			
@@ -105,21 +106,70 @@ namespace PlayerPositionsTest
 			}, DispatcherPriority.DataBind);
 		}
 
+		void UpdatePlayerStatuses(WorldState ws)
+		{
+			foreach (Player p in ws.Players)
+			{
+				Team? t = p.Team.Value;
+
+				Class? c = p.Class.Value;
+				if (!c.HasValue)
+					c = Class.Undefined;
+
+				bool? isDead = p.IsDead.Value;
+				if (!isDead.HasValue)
+					continue;
+
+				int? health = p.Health.Value;
+				if (!health.HasValue)
+					continue;
+
+				uint? maxHealth = p.MaxHealth.Value;
+				if (!maxHealth.HasValue)
+					continue;
+
+				if (isDead == true && health > 100)
+					Debugger.Break();
+
+				PlayerStatusesControl.Dispatcher.InvokeAsync(() =>
+				{
+					if (t != Team.Red && t != Team.Blue)
+					{
+						if (Statuses.Remove(Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID)))
+							Debugger.Break();
+						return;
+					}
+					
+					PlayerStatus status = Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID);
+					bool added = false;
+					if (status == null)
+					{
+						status = new PlayerStatus();
+						status.GUID = p.Info.GUID;
+						added = true;
+					}
+
+					status.Nickname = p.Info.Name;
+					status.IsDead = isDead.Value;
+					status.Team = t.Value;
+					status.Health = health.Value;
+					status.MaxHealth = maxHealth.Value;
+
+					status.ClassPortrait = string.Format("{0} {1} {2} alpha", t.Value, c.Value, isDead.Value ? "grey" : "");
+
+					if (added)
+						Statuses.Add(status);
+
+				}, DispatcherPriority.Background);
+			}
+		}
+
 		private void PlayerLeftPVS(Player p)
 		{
 			BaseGrid.Dispatcher.Invoke(() =>
 			{
 				var e = GetPlayerImage(p);
 				e.Visibility = Visibility.Hidden;
-				
-				for (int i = 0; i < Statuses.Count; i++)
-				{
-					if (Statuses[i].GUID == p.Info.GUID)
-					{
-						Statuses.RemoveAt(i);
-						break;
-					}
-				}
 			});
 		}
 
@@ -206,7 +256,7 @@ namespace PlayerPositionsTest
 					!team.HasValue ||
 					!@class.HasValue ||
 					!health.HasValue ||
-					!isDead.HasValue)
+					isDead != false)
 				{
 					e.Visibility = Visibility.Hidden;
 					return;
@@ -222,24 +272,7 @@ namespace PlayerPositionsTest
 				e.Source = ClassIcons[team.Value][@class.Value];
 
 				e.Visibility = Visibility.Visible;
-
-				{
-					PlayerStatus status = Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID);
-					if (status == null)
-					{
-						status = new PlayerStatus();
-						status.GUID = p.Info.GUID;
-						Statuses.Add(status);
-					}
-
-					status.Nickname = p.Info.Name;
-					status.IsDead = isDead.Value;
-					status.Team = team.Value;
-					status.Health = health.Value;
-					status.MaxHealth = maxHealth.Value;
-					status.ClassPortrait = string.Format("{0} {1} {2} alpha", team.Value, @class.Value, isDead.Value ? "grey" : "");
-				}
-			}, DispatcherPriority.Render);
+			}, DispatcherPriority.Background);
 		}
 
 		readonly Dictionary<string, Image> m_Images = new Dictionary<string, Image>();

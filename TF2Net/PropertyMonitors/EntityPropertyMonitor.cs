@@ -8,10 +8,12 @@ using TF2Net.Data;
 
 namespace TF2Net.PropertyMonitors
 {
+	[DebuggerDisplay("{Value}")]
 	internal class EntityPropertyMonitor<T> : IEntityPropertyMonitor<T>
 	{
 		public Entity Entity { get; }
 		public string PropertyName { get; }
+		public SendProp Property { get; private set; }
 
 		Func<object, T> Decoder { get; }
 
@@ -56,6 +58,7 @@ namespace TF2Net.PropertyMonitors
 		{
 			Debug.Assert(Entity == e);
 			e.PropertyAdded.Remove(Entity_PropertyAdded);
+			Property = null;
 		}
 
 		private void Entity_EnteredPVS(Entity e)
@@ -70,11 +73,21 @@ namespace TF2Net.PropertyMonitors
 		private void Entity_PropertyAdded(SendProp prop)
 		{
 			if (prop.Definition.FullName == PropertyName)
-				prop.ValueChanged += Prop_ValueChanged;
+			{
+				Property = prop;
+
+				if (prop.ValueChanged.Add(Prop_ValueChanged))
+				{
+					// First add only
+					if (prop.Value != null)
+						Prop_ValueChanged(prop);
+				}
+			}
 		}
 
 		private void Prop_ValueChanged(SendProp prop)
 		{
+			Debug.Assert((!prop.Entity.InPVS && Property == null) || prop == Property);
 			Value = Decoder(prop.Value);
 			m_ValueChanged = true;
 		}

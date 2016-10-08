@@ -276,7 +276,8 @@ namespace TF2Net.NetMessages
 					wasNull = true;
 				}
 
-				s.Value = prop.Decode(stream);
+				object newValue = prop.Decode(stream);
+				s.Value = newValue;
 				atLeastOne = true;
 
 				if (wasNull)

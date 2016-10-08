@@ -20,8 +20,6 @@ namespace TF2Net.Data
 
 		public UserInfo Info { get; set; }
 
-		List<Action<Player>> ValueChangedDelegates { get; } = new List<Action<Player>>();
-
 		public IPlayerPropertyMonitor<Vector> Position { get; }
 		public IPlayerPropertyMonitor<Team?> Team { get; }
 		public IPlayerPropertyMonitor<Class?> Class { get; }
@@ -33,6 +31,7 @@ namespace TF2Net.Data
 		public IPlayerPropertyMonitor<int?> Score { get; }
 		public IPlayerPropertyMonitor<int?> Deaths { get; }
 		public IPlayerPropertyMonitor<bool?> Connected { get; }
+		public IPlayerPropertyMonitor<PlayerState?> PlayerState { get; }
 
 		SingleEvent<Action<Player>> m_EnteredPVS { get; } = new SingleEvent<Action<Player>>();
 		public event Action<Player> EnteredPVS
@@ -78,7 +77,13 @@ namespace TF2Net.Data
 					new PlayerPropertyMonitor<int?>("DT_BasePlayer.m_iHealth", this, o => Convert.ToInt32(o)),
 				});
 
-			Class = new PlayerPropertyMonitor<Class?>("DT_TFPlayerClassShared.m_iClass", this, o => (Class)Convert.ToInt32(o));
+			Class = new MultiPlayerPropertyMonitor<Class?>(this,
+				new IPropertyMonitor<Class?>[] {
+					new PlayerResourcePropertyMonitor<Class?>("m_iPlayerClass", this, o => (Class)Convert.ToInt32(o)),
+					new PlayerPropertyMonitor<Class?>("DT_TFPlayerClassShared.m_iClass", this, o => (Class)Convert.ToInt32(o))
+				});
+
+			PlayerState = new PlayerPropertyMonitor<PlayerState?>("DT_TFPlayerShared.m_nPlayerState", this, o => (PlayerState)(uint)(o));			
 			MaxHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxHealth", this, o => Convert.ToUInt32(o));
 			MaxBuffedHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxBuffedHealth", this, o => Convert.ToUInt32(o));
 			Ping = new PlayerResourcePropertyMonitor<int?>("m_iPing", this, o => Convert.ToInt32(o));
@@ -125,24 +130,20 @@ namespace TF2Net.Data
 		{
 			Debug.Assert(e == Entity);
 			PropertiesUpdated.Invoke(this);
-
-			foreach (var action in ValueChangedDelegates)
-				action(this);
-
-			ValueChangedDelegates.Clear();
 		}
 
 		public override string ToString()
 		{
 			return string.Format("\"{0}\": {1}", Info.Name, Info.GUID);
 		}
-		
-		[DebuggerDisplay("{PropertyName,nq}: {Value}")]
+
+		[DebuggerDisplay("{Value}")]
 		class PlayerPropertyMonitor<T> : IPlayerPropertyMonitor<T>
 		{
 			bool m_ValueChanged = false;
 			public T Value { get; private set; }
 			object IPropertyMonitor.Value { get { return Value; } }
+			public SendProp Property { get; private set; }
 
 			public string PropertyName { get; }
 			public Player Player { get; }
@@ -208,26 +209,41 @@ namespace TF2Net.Data
 			private void Entity_PropertyAdded(SendProp prop)
 			{
 				if (prop.Definition.FullName == PropertyName)
-					prop.ValueChanged += Prop_ValueChanged;
+				{
+					Property = prop;
+
+					if (prop.ValueChanged.Add(Prop_ValueChanged))
+					{
+						// First add only
+						if (prop.Value != null)
+							Prop_ValueChanged(prop);
+					}
+				}
 			}
 
 			private void Prop_ValueChanged(SendProp prop)
 			{
-				Value = Decoder(prop.Value);
+				Debug.Assert((!prop.Entity.InPVS && Property == null) || prop == Property);
+				var newValue = Decoder(prop.Value);
+				//Debug.Assert(Value?.Equals(newValue) != true);
+				Value = newValue;
 				m_ValueChanged = true;
 			}
 
 			private void Player_LeftPVS(Player p)
 			{
 				p.Entity.PropertyAdded.Remove(Entity_PropertyAdded);
+				Property = null;
 			}
 		}
-		
+
+		[DebuggerDisplay("{Value}")]
 		class PlayerPositionPropertyMonitor : IPlayerPropertyMonitor<Vector>
 		{
 			readonly Vector m_Value = new Vector();
 			public Vector Value { get { return m_Value.Clone(); } }
 			object IPropertyMonitor.Value { get { return Value; } }
+			public SendProp Property { get { return null; } }
 
 			public Player Player { get; }
 			public Entity Entity { get { return Player.Entity; } }
@@ -294,12 +310,14 @@ namespace TF2Net.Data
 			}
 		}
 
+		[DebuggerDisplay("{Value}")]
 		class PlayerResourcePropertyMonitor<T> : IPlayerPropertyMonitor<T>
 		{
 			public Player Player { get; }
 			public Entity Entity { get { return Player.Entity; } }
 
 			public string PropertyName { get; }
+			public SendProp Property { get { return InternalPropertyMonitor.Property; } }
 			Func<object, T> Decoder { get; }
 
 			public T Value { get { return InternalPropertyMonitor.Value; } }
@@ -353,6 +371,7 @@ namespace TF2Net.Data
 			}
 		}
 
+		[DebuggerDisplay("{Value}")]
 		class MultiPlayerPropertyMonitor<T> : MultiPropertyMonitor<T>, IPlayerPropertyMonitor<T>
 		{
 			public Player Player { get; }

@@ -130,6 +130,8 @@ namespace PlayerPositionsTest
 				throw new ArgumentException(nameof(value));
 
 			string str = (string)value;
+			if (str.IndexOf("undefined", StringComparison.OrdinalIgnoreCase) >= 0)
+				return "class_portraits/alpha/silhouette.png";
 
 			Class? c = null;
 			for (int i = 1; i <= 9; i++)

@@ -40,20 +40,7 @@ namespace TF2Net.Data
 			}
 		}
 
-		SingleEvent<Action<SendProp>> m_ValueChanged { get; } = new SingleEvent<Action<SendProp>>();
-		public event Action<SendProp> ValueChanged
-		{
-			add
-			{
-				CheckDisposed();
-
-				if (Value != null)
-					value.Invoke(this);
-
-				m_ValueChanged.Add(value);
-			}
-			remove { m_ValueChanged.Remove(value); }
-		}
+		public SingleEvent<Action<SendProp>> ValueChanged { get; } = new SingleEvent<Action<SendProp>>();
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		object m_Value;
@@ -69,9 +56,10 @@ namespace TF2Net.Data
 				CheckDisposed();
 				if (value?.GetHashCode() != m_Value?.GetHashCode() || !value.Equals(m_Value))
 				{
+					Debug.Assert(value?.Equals(m_Value) != true);
 					m_Value = value;
 					m_LastChangedTick = Entity.World.Tick;
-					m_ValueChanged?.Invoke(this);
+					ValueChanged.Invoke(this);
 				}
 			}
 		}

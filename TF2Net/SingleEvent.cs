@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TF2Net
 {
+	[DebuggerDisplay("{DebugCount} Delegates")]
 	public class SingleEvent<T>
 	{
 		readonly Lazy<ConcurrentDictionary<Delegate, object>> m_Delegates = new Lazy<ConcurrentDictionary<Delegate, object>>();
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		uint DebugCount { get { return m_Delegates.IsValueCreated ? (uint)m_Delegates.Value.Count : 0; } }
 
 		public SingleEvent()
 		{
@@ -34,7 +39,10 @@ namespace TF2Net
 		public void Invoke(params object[] args)
 		{
 			foreach (Delegate d in m_Delegates.Value.Keys)
+			{
+				var test = d.Target;
 				d.DynamicInvoke(args);
+			}
 		}
 	}
 }

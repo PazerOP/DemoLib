@@ -1,7 +1,7 @@
 ﻿using System;
 using TF2Net.Data;
 
-namespace TF2Net
+namespace TF2Net.PropertyMonitors
 {
 	public interface IPlayerPropertyMonitor<T> : IEntityPropertyMonitor<T>, IPlayerPropertyMonitor
 	{
@@ -31,6 +31,7 @@ namespace TF2Net
 	public interface IPropertyMonitor
 	{
 		object Value { get; }
+		SendProp Property { get; }
 		string PropertyName { get; }
 		SingleEvent<Action<IPropertyMonitor>> ValueChanged { get; }
 	}
