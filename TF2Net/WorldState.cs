@@ -73,7 +73,7 @@ namespace TF2Net
 		private void Listeners_StringTableCreated(StringTable st)
 		{
 			if (st.TableName == "userinfo")
-				st.StringTableUpdated += UserInfoStringTableUpdated;
+				st.StringTableUpdated.Add(UserInfoStringTableUpdated);
 		}
 
 		private void UserInfoStringTableUpdated(StringTable st)
@@ -101,7 +101,7 @@ namespace TF2Net
 				{
 					Player newPlayer = new Player(decoded, this, entityIndex);
 					m_Players.Add(newPlayer);
-					Listeners.OnPlayerAdded(newPlayer);
+					Listeners.PlayerAdded.Invoke(newPlayer);
 					all.Add(newPlayer);
 				}
 			}
@@ -109,7 +109,7 @@ namespace TF2Net
 			var toRemove = m_Players.Where(p => !all.Any(p2 => p.Info.GUID == p2.Info.GUID)).ToArray();
 			foreach (Player removed in toRemove)
 			{
-				Listeners.OnPlayerRemoved(removed);
+				Listeners.PlayerRemoved.Invoke(removed);
 
 				if (!m_Players.Remove(removed))
 					throw new InvalidOperationException();
@@ -121,7 +121,7 @@ namespace TF2Net
 			if (Listeners == null)
 				return;
 
-			Listeners.StringTableCreated += Listeners_StringTableCreated;
+			Listeners.StringTableCreated.Add(Listeners_StringTableCreated);
 		}
 	}
 }

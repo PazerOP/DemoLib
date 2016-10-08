@@ -61,7 +61,7 @@ namespace DemoLib
 
 		public void SimulateDemo()
 		{
-			m_Events.NewTick += TickTimer;
+			m_Events.NewTick.Add(TickTimer);
 
 			WorldState ws = new WorldState();
 			ws.Listeners = m_Events;
@@ -73,10 +73,10 @@ namespace DemoLib
 					DemoDataTablesCommand dt = (DemoDataTablesCommand)cmd;
 
 					ws.ServerClasses = dt.ServerClasses;
-					m_Events.OnServerClassesLoaded(ws);
+					m_Events.ServerClassesLoaded.Invoke(ws);
 
 					ws.SendTables = dt.SendTables;
-					m_Events.OnSendTablesLoaded(ws);
+					m_Events.SendTablesLoaded.Invoke(ws);
 				}
 				else if (cmd.Type == DemoCommandType.dem_signon ||
 					cmd.Type == DemoCommandType.dem_packet)

@@ -56,7 +56,7 @@ namespace TF2Net.NetMessages
 				}
 			}
 
-			ws.Listeners.OnGameEvent(ws, retVal);
+			ws.Listeners.GameEvent.Invoke(ws, retVal);
 		}
 	}
 }

@@ -1,0 +1,6 @@
+﻿<m:PlayerStatusesList xmlns:m="clr-namespace:PlayerPositionsTest">
+    <m:PlayerStatus Nickname="pazer" GUID="asdf01" Health="65" MaxHealth="125" Team="Red" IsDead="False" ClassPortrait="heavy red"/>
+    <m:PlayerStatus Nickname="Jerm" GUID="asdf02" Health="105" MaxHealth="125" Team="Blue" IsDead="False" ClassPortrait="sniper Blue" />
+    <m:PlayerStatus Nickname="Uncle Dane" GUID="asdf03" Health="4" MaxHealth="125" Team="Red" IsDead="False" ClassPortrait="Medic Red" />
+    <m:PlayerStatus Nickname="GrumpyGrandpaKoala" GUID="asdf04" Health="56" MaxHealth="300" Team="Red" IsDead="False" ClassPortrait="Medic Red" />
+</m:PlayerStatusesList>

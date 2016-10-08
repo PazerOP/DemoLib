@@ -24,7 +24,7 @@ namespace TF2Net.Data
 		public ushort? UserDataSize { get; }
 		public byte? UserDataSizeBits { get; }
 
-		public event Action<StringTable> StringTableUpdated;
+		public SingleEvent<Action<StringTable>> StringTableUpdated { get; } = new SingleEvent<Action<StringTable>>();
 
 		public StringTable(WorldState ws, string tableName, ushort maxEntries, ushort? userDataSize, byte? userDataSizeBits)
 		{
@@ -48,12 +48,12 @@ namespace TF2Net.Data
 		{
 			Debug.Assert(entry.Table == this);
 			m_Entries.Add(entry);
-			entry.EntryChanged += Entry_EntryChanged;
+			entry.EntryChanged.Add(Entry_EntryChanged);
 		}
 
 		private void Entry_EntryChanged(StringTableEntry entry)
 		{
-			StringTableUpdated?.Invoke(this);
+			StringTableUpdated.Invoke(this);
 		}
 
 		private class SortedAutoList<T> : SortedSet<T>, IList<T>, IReadOnlyList<T>

@@ -53,7 +53,7 @@ namespace TF2Net.NetMessages
 			foreach (var cvar in Cvars)
 			{
 				ws.ConVars[cvar.Key] = cvar.Value;
-				ws.Listeners.OnServerSetConVar(ws, cvar);
+				ws.Listeners.ServerSetConVar.Invoke(ws, cvar);
 			}
 		}
 	}

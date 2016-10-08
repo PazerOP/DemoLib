@@ -106,7 +106,7 @@ namespace TF2Net.NetMessages
 				throw new InvalidOperationException("Attempted to create a stringtable that already exists!");
 			
 			ws.StringTables.Add(table);
-			ws.Listeners.OnStringTableCreated(table);
+			ws.Listeners.StringTableCreated.Invoke(table);
 		}
 	}
 }

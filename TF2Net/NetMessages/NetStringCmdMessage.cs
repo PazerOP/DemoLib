@@ -25,7 +25,7 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			ws.Listeners.OnServerConCommand(ws, Command);
+			ws.Listeners.ServerConCommand.Invoke(ws, Command);
 		}
 	}
 }

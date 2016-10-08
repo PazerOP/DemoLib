@@ -6,35 +6,35 @@ namespace TF2Net
 {
 	public interface IWorldEvents
 	{
-		event Action<WorldState> GameEventsListLoaded;
-		event Action<WorldState, IReadOnlyGameEvent> GameEvent;
+		SingleEvent<Action<WorldState>> GameEventsListLoaded { get; }
+		SingleEvent<Action<WorldState, IReadOnlyGameEvent>> GameEvent { get; }
 
-		event Action<WorldState> ServerClassesLoaded;
-		event Action<WorldState> SendTablesLoaded;
+		SingleEvent<Action<WorldState>> ServerClassesLoaded { get; }
+		SingleEvent<Action<WorldState>> SendTablesLoaded { get; }
 
 		/// <summary>
 		/// A "Print Message" command from the server.
 		/// </summary>
-		event Action<WorldState, string> ServerTextMessage;
+		SingleEvent<Action<WorldState, string>> ServerTextMessage { get; }
 
-		event Action<WorldState> ServerInfoLoaded;
+		SingleEvent<Action<WorldState>> ServerInfoLoaded { get; }
 
-		event Action<WorldState> NewTick;
+		SingleEvent<Action<WorldState>> NewTick { get; }
 
-		event Action<WorldState, KeyValuePair<string, string>> ServerSetConVar;
-		event Action<WorldState, string> ServerConCommand;
+		SingleEvent<Action<WorldState, KeyValuePair<string, string>>> ServerSetConVar { get; }
+		SingleEvent<Action<WorldState, string>> ServerConCommand { get; }
 
-		event Action<WorldState> ViewEntityUpdated;
+		SingleEvent<Action<WorldState>> ViewEntityUpdated { get; }
 
-		event Action<StringTable> StringTableCreated;
-		event Action<WorldState, StringTable> StringTableUpdated;
+		SingleEvent<Action<StringTable>> StringTableCreated { get; }
+		SingleEvent<Action<WorldState, StringTable>> StringTableUpdated { get; }
 
-		event Action<Entity> EntityCreated;
-		event Action<Entity> EntityEnteredPVS;
-		event Action<Entity> EntityLeftPVS;
-		event Action<Entity> EntityDeleted;
+		SingleEvent<Action<Entity>> EntityCreated { get; }
+		SingleEvent<Action<Entity>> EntityEnteredPVS { get; }
+		SingleEvent<Action<Entity>> EntityLeftPVS { get; }
+		SingleEvent<Action<Entity>> EntityDeleted { get; }
 
-		event Action<Player> PlayerAdded;
-		event Action<Player> PlayerRemoved;
+		SingleEvent<Action<Player>> PlayerAdded { get; }
+		SingleEvent<Action<Player>> PlayerRemoved { get; }
 	}
 }

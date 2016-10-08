@@ -13,7 +13,7 @@ namespace TF2Net.Data
 	{
 		public StringTable Table { get; }
 
-		public event Action<StringTableEntry> EntryChanged;
+		public SingleEvent<Action<StringTableEntry>> EntryChanged { get; } = new SingleEvent<Action<StringTableEntry>>();
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		ushort m_ID;

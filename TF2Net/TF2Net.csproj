@@ -54,6 +54,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PropertyMonitors\EntityPropertyMonitor.cs" />
+    <Compile Include="PropertyMonitors\MultiPropertyMonitor.cs" />
+    <Compile Include="SingleEvent.cs" />
     <Compile Include="Data\BaselineIndex.cs" />
     <Compile Include="Data\Class.cs" />
     <Compile Include="Data\ClientFrame.cs" />
@@ -64,6 +67,7 @@
     <Compile Include="Data\FlattenedProp.cs" />
     <Compile Include="Data\GameEvent.cs" />
     <Compile Include="Data\GameEventDeclaration.cs" />
+    <Compile Include="Data\LifeState.cs" />
     <Compile Include="Data\Player.cs" />
     <Compile Include="Data\SendProp.cs" />
     <Compile Include="Data\SendPropDefinition.cs" />
@@ -79,6 +83,7 @@
     <Compile Include="Extensions\AutoDictionary.cs" />
     <Compile Include="Extensions\System.Linq.cs" />
     <Compile Include="Extensions\System.Collections.cs" />
+    <Compile Include="IPropertyMonitor.cs" />
     <Compile Include="IWorldEvents.cs" />
     <Compile Include="WorldEvents.cs" />
     <Compile Include="NetMessages\Shared\BitAngle.cs" />

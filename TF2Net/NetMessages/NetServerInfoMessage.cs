@@ -70,7 +70,7 @@ namespace TF2Net.NetMessages
 		public void ApplyWorldState(WorldState ws)
 		{
 			ws.ServerInfo = Info;
-			ws.Listeners.OnServerInfoLoaded(ws);
+			ws.Listeners.ServerInfoLoaded.Invoke(ws);
 		}
 	}
 }

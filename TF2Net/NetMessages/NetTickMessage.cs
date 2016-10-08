@@ -37,7 +37,7 @@ namespace TF2Net.NetMessages
 			ws.LastFrameTime = HostFrameTime;
 			ws.LastFrameTimeStdDev = HostFrameTimeStdDev;
 
-			ws.Listeners.OnNewTick(ws);
+			ws.Listeners.NewTick.Invoke(ws);
 		}
 	}
 }

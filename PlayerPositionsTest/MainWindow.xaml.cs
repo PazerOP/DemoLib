@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,8 +28,41 @@ namespace PlayerPositionsTest
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromArgb(255, 189, 59, 59));
-		readonly SolidColorBrush BluBrush = new SolidColorBrush(Color.FromArgb(255, 91, 122, 140));
+		//readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromArgb(255, 189, 59, 59));
+		//readonly SolidColorBrush BluBrush = new SolidColorBrush(Color.FromArgb(255, 91, 122, 140));
+
+		static readonly IReadOnlyDictionary<Team, IReadOnlyDictionary<Class, ImageSource>> ClassIcons;
+
+		static MainWindow()
+		{
+			Dictionary<Team, IReadOnlyDictionary<Class, ImageSource>> classIcons = new Dictionary<Team, IReadOnlyDictionary<Class, ImageSource>>();
+
+			Func<Team, IReadOnlyDictionary<Class, ImageSource>> GenerateTeamDict =
+				(Team t) =>
+				{
+					Dictionary<Class, ImageSource> retVal = new Dictionary<Class, ImageSource>();
+					for (int i = 1; i <= 9; i++)
+					{
+						Class c = (Class)i;
+						retVal.Add(c, new BitmapImage(GetClassIconUri(t, c)));
+					}
+					return retVal;
+				};
+
+			classIcons.Add(Team.Red, GenerateTeamDict(Team.Red));
+			classIcons.Add(Team.Blue, GenerateTeamDict(Team.Blue));
+			ClassIcons = classIcons;
+		}
+		
+		public PlayerStatusesList Statuses
+		{
+			get { return (PlayerStatusesList)GetValue(StatusesProperty); }
+			set { SetValue(StatusesProperty, value); }
+		}
+
+		// Using a DependencyProperty as the backing store for Statuses.  This enables animation, styling, binding, etc...
+		public static readonly DependencyProperty StatusesProperty =
+			DependencyProperty.Register("Statuses", typeof(PlayerStatusesList), typeof(MainWindow), new PropertyMetadata(new PlayerStatusesList()));
 
 		Task<DemoReader> m_Reader;
 		public MainWindow()
@@ -43,8 +77,8 @@ namespace PlayerPositionsTest
 
 			m_Reader.ContinueWith(lastTask =>
 			{
-				lastTask.Result.Events.NewTick += Events_NewTick;
-				lastTask.Result.Events.PlayerAdded += Events_PlayerAdded;
+				lastTask.Result.Events.NewTick.Add(Events_NewTick);
+				lastTask.Result.Events.PlayerAdded.Add(Events_PlayerAdded);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
 
@@ -55,9 +89,9 @@ namespace PlayerPositionsTest
 		private void Events_PlayerAdded(Player p)
 		{
 			//p.EnteredPVS += UpdatePlayerPosition;			
-			p.LeftPVS += PlayerLeftPVS;
+			p.LeftPVS.Add(PlayerLeftPVS);
 
-			p.PropertiesUpdated += UpdatePlayerPosition;
+			p.PropertiesUpdated.Add(UpdatePlayerPosition);
 		}
 
 		private void Events_NewTick(WorldState ws)
@@ -77,10 +111,19 @@ namespace PlayerPositionsTest
 			{
 				var e = GetPlayerImage(p);
 				e.Visibility = Visibility.Hidden;
+				
+				for (int i = 0; i < Statuses.Count; i++)
+				{
+					if (Statuses[i].GUID == p.Info.GUID)
+					{
+						Statuses.RemoveAt(i);
+						break;
+					}
+				}
 			});
 		}
 
-		static string GetImagePath(Team t, Class c)
+		static Uri GetClassIconUri(Team t, Class c)
 		{
 			string teamName;
 			switch (t)
@@ -140,7 +183,7 @@ namespace PlayerPositionsTest
 				throw new ArgumentOutOfRangeException(nameof(c));
 			}
 
-			return string.Format("/classicons/{0}_{1}.png", className, teamName);
+			return new Uri(string.Format("/classicons/{0}_{1}.png", className, teamName), UriKind.Relative);
 		}
 
 		void UpdatePlayerPosition(Player p)
@@ -148,15 +191,22 @@ namespace PlayerPositionsTest
 			Debug.Assert(p.InPVS);
 
 			TF2Net.Data.Vector worldPos = p.Position.Value;
-			Team? t = p.Team.Value;
-			Class? c = p.Class.Value;
+			Team? team = p.Team.Value;
+			Class? @class = p.Class.Value;
+			bool? isDead = p.IsDead.Value;
+			int? health = p.Health.Value;
+			uint? maxHealth = p.MaxHealth.Value;
 
 			var entityIndex = p.EntityIndex;
 
 			BaseGrid.Dispatcher.InvokeAsync(() =>
 			{
 				var e = GetPlayerImage(p);
-				if (worldPos == null || !t.HasValue || !c.HasValue)
+				if (worldPos == null ||
+					!team.HasValue ||
+					!@class.HasValue ||
+					!health.HasValue ||
+					!isDead.HasValue)
 				{
 					e.Visibility = Visibility.Hidden;
 					return;
@@ -164,14 +214,31 @@ namespace PlayerPositionsTest
 
 				Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
 
-				Thickness newMargin = new Thickness();
+				Thickness newMargin = e.Margin;
 				newMargin.Top = displayPos.Y - 25;
 				newMargin.Left = displayPos.X - 25;
 				e.Margin = newMargin;
 
-				e.Source = new BitmapImage(new Uri(GetImagePath(t.Value, c.Value), UriKind.Relative));
+				e.Source = ClassIcons[team.Value][@class.Value];
 
 				e.Visibility = Visibility.Visible;
+
+				{
+					PlayerStatus status = Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID);
+					if (status == null)
+					{
+						status = new PlayerStatus();
+						status.GUID = p.Info.GUID;
+						Statuses.Add(status);
+					}
+
+					status.Nickname = p.Info.Name;
+					status.IsDead = isDead.Value;
+					status.Team = team.Value;
+					status.Health = health.Value;
+					status.MaxHealth = maxHealth.Value;
+					status.ClassPortrait = string.Format("{0} {1} {2} alpha", team.Value, @class.Value, isDead.Value ? "grey" : "");
+				}
 			}, DispatcherPriority.Render);
 		}
 
@@ -222,10 +289,6 @@ namespace PlayerPositionsTest
 				m_Ellipses.Add(p.Info.GUID, e);
 			}
 			return e;
-		}
-
-		private void Window_Loaded(object sender, RoutedEventArgs e)
-		{
 		}
 
 		Point TranslateCoordinate(Point world)

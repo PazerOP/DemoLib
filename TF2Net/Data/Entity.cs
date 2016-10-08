@@ -7,117 +7,109 @@ using BitSet;
 namespace TF2Net.Data
 {
 	[DebuggerDisplay("{ToString(),nq}")]
-	public class Entity
+	public class Entity : IDisposable
 	{
-		public WorldState World { get; }
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly WorldState m_World;
+		public WorldState World { get { CheckDisposed(); return m_World; } }
 
-		public uint Index { get; }
-		public uint SerialNumber { get; }
-		
-		public ServerClass Class { get; set; }		
-		public SendTable NetworkTable { get; set; }
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly uint m_Index;
+		public uint Index { get { CheckDisposed(); return m_Index; } }
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly uint m_SerialNumber;
+		public uint SerialNumber { get { CheckDisposed(); return m_SerialNumber; } }
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		ServerClass m_Class;
+		public ServerClass Class
+		{
+			get { CheckDisposed(); return m_Class; }
+			set { CheckDisposed(); m_Class = value; }
+		}
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		SendTable m_NetworkTable;
+		public SendTable NetworkTable
+		{
+			get { CheckDisposed(); return m_NetworkTable; }
+			set { CheckDisposed(); m_NetworkTable = value; }
+		}
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly List<SendProp> m_Properties = new List<SendProp>();
-		public IReadOnlyList<SendProp> Properties { get { return m_Properties; } }
+		public IReadOnlyList<SendProp> Properties { get { CheckDisposed(); return m_Properties; } }
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		bool m_InPVS;
-
 		public bool InPVS
 		{
-			get { return m_InPVS; }
+			get { CheckDisposed(); return m_InPVS; }
 			set
 			{
+				CheckDisposed();
 				var oldValue = m_InPVS;
 				m_InPVS = value;
 
 				if (value && !oldValue)
 				{
-					m_EnteredPVS?.Invoke(this);
-					World.Listeners.OnEntityEnteredPVS(this);
+					EnteredPVS.Invoke(this);
+					World.Listeners.EntityEnteredPVS.Invoke(this);
 				}
 				else if (!value && oldValue)
 				{
-					LeftPVS?.Invoke(this);
-					World.Listeners.OnEntityLeftPVS(this);
+					LeftPVS.Invoke(this);
+					World.Listeners.EntityLeftPVS.Invoke(this);
 				}
 			}
 		}
 
-		event Action<Entity> m_EnteredPVS;
-		public event Action<Entity> EnteredPVS
-		{
-			add
-			{
-				if (m_EnteredPVS != null)
-					Debug.Assert(!m_EnteredPVS.GetInvocationList().Contains(value));
+		public SingleEvent<Action<Entity>> EnteredPVS { get; } = new SingleEvent<Action<Entity>>();
+		public SingleEvent<Action<Entity>> LeftPVS { get; } = new SingleEvent<Action<Entity>>();
 
-				m_EnteredPVS += value;
-			}
-			remove { m_EnteredPVS -= value; }
-		}
-		public event Action<Entity> LeftPVS;
-
-		event Action<SendProp> m_PropertyAdded;
-		public event Action<SendProp> PropertyAdded
-		{
-			add
-			{
-				if (m_PropertyAdded?.GetInvocationList().Contains(value) == true)
-					return;
-				m_PropertyAdded += value;
-			}
-			remove { m_PropertyAdded -= value; }
-		}
-
-		event Action<Entity> m_PropertiesUpdated;
-		public event Action<Entity> PropertiesUpdated
-		{
-			add
-			{
-				if (m_PropertiesUpdated?.GetInvocationList().Contains(value) == true)
-					return;
-				m_PropertiesUpdated += value;
-			}
-			remove { m_PropertiesUpdated -= value; }
-		}
-		public void OnPropertiesUpdated() { m_PropertiesUpdated?.Invoke(this); }
+		public SingleEvent<Action<SendProp>> PropertyAdded { get; } = new SingleEvent<Action<SendProp>>();		
+		public SingleEvent<Action<Entity>> PropertiesUpdated { get; } = new SingleEvent<Action<Entity>>();
 
 		public Entity(WorldState ws, uint index, uint serialNumber)
 		{
-			World = ws;
-			Index = index;
-			SerialNumber = serialNumber;
+			m_World = ws;
+			m_Index = index;
+			m_SerialNumber = serialNumber;
 		}
 
 		public void AddProperty(SendProp newProp)
 		{
+			CheckDisposed();
 			Debug.Assert(!m_Properties.Any(p => p.Definition == newProp.Definition));
 			Debug.Assert(newProp.Entity == this);
 			
 			m_Properties.Add(newProp);
-
-			m_PropertyAdded?.Invoke(newProp);
+			PropertyAdded.Invoke(newProp);
 		}
 
 		public SendProp GetProperty(SendPropDefinition def)
 		{
+			CheckDisposed();
 			return Properties.FirstOrDefault(x => x.Definition == def);
 		}
 
 		public override string ToString()
 		{
+			CheckDisposed();
 			return string.Format("{0}({1}): {2}", Index, SerialNumber, Class.Classname);
 		}
 
 		public bool Equals(Entity other)
 		{
+			CheckDisposed();
 			return (
 				other?.Index == Index &&
 				other.SerialNumber == SerialNumber);
 		}
 		public override bool Equals(object obj)
 		{
+			CheckDisposed();
 			if (GetHashCode() != obj.GetHashCode())
 				return false;
 
@@ -125,7 +117,25 @@ namespace TF2Net.Data
 		}
 		public override int GetHashCode()
 		{
+			CheckDisposed();
 			return (int)(Index + (SerialNumber << SourceConstants.MAX_EDICT_BITS));
+		}
+
+		void CheckDisposed()
+		{
+			if (m_Disposed)
+				throw new ObjectDisposedException(nameof(Entity));
+		}
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		bool m_Disposed = false;
+		public void Dispose()
+		{
+			CheckDisposed();
+			m_Disposed = true;
+
+			foreach (SendProp prop in m_Properties)
+				prop.Dispose();
 		}
 	}
 }

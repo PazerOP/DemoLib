@@ -48,7 +48,7 @@ namespace TF2Net.NetMessages
 			StringTable found = ws.StringTables[TableID];
 			StringTableParser.ParseUpdate(Data, found, (ushort)ChangedEntries);
 
-			ws.Listeners.OnStringTableUpdated(ws, found);
+			ws.Listeners.StringTableUpdated.Invoke(ws, found);
 		}
 	}
 }

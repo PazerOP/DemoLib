@@ -4,6 +4,22 @@
              xmlns:local="clr-namespace:PlayerPositionsTest"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="RedMainBrush" Color="#FFBD3B3B"/>
+        <SolidColorBrush x:Key="RedHighlightBrush" Color="#FFF08149"/>
+        <SolidColorBrush x:Key="RedMediumBrush" Color="#9D312F"/>
+        <SolidColorBrush x:Key="RedAltMediumBrush" Color="#913A1E" />
+        <SolidColorBrush x:Key="RedDarkBrush" Color="#462D26" />
+        <SolidColorBrush x:Key="RedAltDarkBrush" Color="#6A4535" />
+
+        <SolidColorBrush x:Key="BluMainBrush" Color="#FF5B7A8C"/>
+        <SolidColorBrush x:Key="BluHighlightBrush" Color="#EF9849" />
+        <SolidColorBrush x:Key="BluMediumBrush" Color="#395c78" />
+        <SolidColorBrush x:Key="BluAltMediumBrush" Color="#768a88" />
+        <SolidColorBrush x:Key="BluDarkBrush" Color="#34302d" />
+        <SolidColorBrush x:Key="BluAltDarkBrush" Color="#6b6a65" />
+
+        <SolidColorBrush x:Key="NeutralDarkBrush" Color="#c1a18a" />
+        <SolidColorBrush x:Key="NeutralMediumBrush" Color="#dabdab" />
+        <SolidColorBrush x:Key="NeutralLightBrush" Color="#f5e7de" />
     </Application.Resources>
 </Application>

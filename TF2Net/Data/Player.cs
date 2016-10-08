@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BitSet;
+using TF2Net.PropertyMonitors;
 
 namespace TF2Net.Data
 {
@@ -21,48 +22,34 @@ namespace TF2Net.Data
 
 		List<Action<Player>> ValueChangedDelegates { get; } = new List<Action<Player>>();
 
-		public IPropertyMonitor<Vector> Position { get; }
-		public IPropertyMonitor<Team?> Team { get; }
-		public IPropertyMonitor<Class?> Class { get; }
+		public IPlayerPropertyMonitor<Vector> Position { get; }
+		public IPlayerPropertyMonitor<Team?> Team { get; }
+		public IPlayerPropertyMonitor<Class?> Class { get; }
+		public IPlayerPropertyMonitor<bool?> IsDead { get; }
+		public IPlayerPropertyMonitor<int?> Health { get; }
+		public IPlayerPropertyMonitor<uint?> MaxHealth { get; }
+		public IPlayerPropertyMonitor<uint?> MaxBuffedHealth { get; }
+		public IPlayerPropertyMonitor<int?> Ping { get; }
+		public IPlayerPropertyMonitor<int?> Score { get; }
+		public IPlayerPropertyMonitor<int?> Deaths { get; }
+		public IPlayerPropertyMonitor<bool?> Connected { get; }
 
-		event Action<Player> m_EnteredPVS;
+		SingleEvent<Action<Player>> m_EnteredPVS { get; } = new SingleEvent<Action<Player>>();
 		public event Action<Player> EnteredPVS
 		{
 			add
 			{
-				if (m_EnteredPVS?.GetInvocationList().Contains(value) == true)
+				if (!m_EnteredPVS.Add(value))
 					return;
-				m_EnteredPVS += value;
 
 				if (InPVS)
 					value?.Invoke(this);
 			}
-			remove { m_EnteredPVS -= value; }
+			remove { m_EnteredPVS.Remove(value); }
 		}
 
-		event Action<Player> m_LeftPVS;
-		public event Action<Player> LeftPVS
-		{
-			add
-			{
-				if (m_LeftPVS?.GetInvocationList().Contains(value) == true)
-					return;
-				m_LeftPVS += value;
-			}
-			remove { m_LeftPVS -= value; }
-		}
-
-		event Action<Player> m_PropertiesUpdated;
-		public event Action<Player> PropertiesUpdated
-		{
-			add
-			{
-				if (m_PropertiesUpdated?.GetInvocationList().Contains(value) == true)
-					return;
-				m_PropertiesUpdated += value;
-			}
-			remove { m_PropertiesUpdated -= value; }
-		}
+		public SingleEvent<Action<Player>> LeftPVS { get; } = new SingleEvent<Action<Player>>();
+		public SingleEvent<Action<Player>> PropertiesUpdated { get; } = new SingleEvent<Action<Player>>();
 
 		public Player(UserInfo info, WorldState ws, uint entityIndex)
 		{
@@ -70,15 +57,46 @@ namespace TF2Net.Data
 			Info = info;
 			World = ws;
 
-			Position = new PositionPropertyMonitor(this);
-			Class = new PropertyMonitor<Class?>("DT_TFPlayerClassShared.m_iClass", this, o => (Class)(uint)o);
-			Team = new PropertyMonitor<Team?>("DT_BaseEntity.m_iTeamNum", this, o => (Team)(int)o);
+			#region Property Monitors
+			Position = new PlayerPositionPropertyMonitor(this);
 
-			World.Listeners.EntityEnteredPVS += Listeners_EntityEnteredPVS;
-			World.Listeners.EntityLeftPVS += Listeners_EntityLeftPVS;
+			Team = new MultiPlayerPropertyMonitor<Team?>(this,
+				new IPropertyMonitor<Team?>[] {
+					new PlayerResourcePropertyMonitor<Team?>("m_iTeam", this, o => (Team)Convert.ToInt32(o)),
+					new PlayerPropertyMonitor<Team?>("DT_BaseEntity.m_iTeamNum", this, o => (Team)Convert.ToInt32(o))
+				});
+
+			IsDead = new MultiPlayerPropertyMonitor<bool?>(this,
+				new IPropertyMonitor<bool?>[] {
+					new PlayerResourcePropertyMonitor<bool?>("m_bAlive", this, o => Convert.ToInt32(o) == 0),
+					new PlayerPropertyMonitor<bool?>("DT_BasePlayer.m_lifeState", this, o => (LifeState)Convert.ToInt32(o) != LifeState.Alive)
+				});
+
+			Health = new MultiPlayerPropertyMonitor<int?>(this,
+				new IPropertyMonitor<int?>[] {
+					new PlayerResourcePropertyMonitor<int?>("m_iHealth", this, o => Convert.ToInt32(o)),
+					new PlayerPropertyMonitor<int?>("DT_BasePlayer.m_iHealth", this, o => Convert.ToInt32(o)),
+				});
+
+			Class = new PlayerPropertyMonitor<Class?>("DT_TFPlayerClassShared.m_iClass", this, o => (Class)Convert.ToInt32(o));
+			MaxHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxHealth", this, o => Convert.ToUInt32(o));
+			MaxBuffedHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxBuffedHealth", this, o => Convert.ToUInt32(o));
+			Ping = new PlayerResourcePropertyMonitor<int?>("m_iPing", this, o => Convert.ToInt32(o));
+			Score = new PlayerResourcePropertyMonitor<int?>("m_iScore", this, o => Convert.ToInt32(o));
+			Deaths = new PlayerResourcePropertyMonitor<int?>("m_iDeaths", this, o => Convert.ToInt32(o));
+			Connected = new PlayerResourcePropertyMonitor<bool?>("m_bConnected", this, o => Convert.ToInt32(o) != 0);
+			#endregion
+
+			World.Listeners.EntityEnteredPVS.Add(Listeners_EntityEnteredPVS);
+			World.Listeners.EntityLeftPVS.Add(Listeners_EntityLeftPVS);
 
 			if (InPVS)
 				Listeners_EntityEnteredPVS(Entity);
+		}
+
+		void InitPropertyMonitors()
+		{
+
 		}
 
 		private void Listeners_EntityLeftPVS(Entity e)
@@ -87,9 +105,9 @@ namespace TF2Net.Data
 			if (e != Entity)
 				return;
 
-			e.PropertiesUpdated -= Entity_PropertiesUpdated;
+			e.PropertiesUpdated.Remove(Entity_PropertiesUpdated);
 
-			m_LeftPVS?.Invoke(this);
+			LeftPVS.Invoke(this);
 		}
 
 		private void Listeners_EntityEnteredPVS(Entity e)
@@ -98,7 +116,7 @@ namespace TF2Net.Data
 			if (e != Entity)
 				return;
 
-			e.PropertiesUpdated += Entity_PropertiesUpdated;
+			e.PropertiesUpdated.Add(Entity_PropertiesUpdated);
 
 			m_EnteredPVS?.Invoke(this);
 		}
@@ -106,7 +124,7 @@ namespace TF2Net.Data
 		private void Entity_PropertiesUpdated(Entity e)
 		{
 			Debug.Assert(e == Entity);
-			m_PropertiesUpdated?.Invoke(this);
+			PropertiesUpdated.Invoke(this);
 
 			foreach (var action in ValueChangedDelegates)
 				action(this);
@@ -118,31 +136,17 @@ namespace TF2Net.Data
 		{
 			return string.Format("\"{0}\": {1}", Info.Name, Info.GUID);
 		}
-
-		public interface IPropertyMonitor<T>
-		{
-			T Value { get; }
-			event Action<Player> ValueChanged;
-
-			string PropertyName { get; }
-			Player Player { get; }
-		}
+		
 		[DebuggerDisplay("{PropertyName,nq}: {Value}")]
-		class PropertyMonitor<T> : IPropertyMonitor<T>
+		class PlayerPropertyMonitor<T> : IPlayerPropertyMonitor<T>
 		{
-			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			T m_Value;
+			bool m_ValueChanged = false;
+			public T Value { get; private set; }
+			object IPropertyMonitor.Value { get { return Value; } }
 
-			public T Value
-			{
-				get
-				{
-					Debug.Assert(DebugValue?.Equals(m_Value) != false);
-					return m_Value;
-				}
-			}
 			public string PropertyName { get; }
 			public Player Player { get; }
+			public Entity Entity { get { return Player.Entity; } }
 
 			object DebugValue
 			{
@@ -159,35 +163,35 @@ namespace TF2Net.Data
 
 			Func<object, T> Decoder { get; }
 
-			bool m_ValueChanged = false;
-			event Action<Player> m_ValueChangedEvent;
-			public event Action<Player> ValueChanged
-			{
-				add
-				{
-					if (m_ValueChangedEvent?.GetInvocationList().Contains(value) == true)
-						return;
-					m_ValueChangedEvent += value;
-				}
-				remove { m_ValueChangedEvent -= value; }
-			}
+			SingleEvent<Action<IPropertyMonitor>> IPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor>>();
+			SingleEvent<Action<IPropertyMonitor<T>>> IPropertyMonitor<T>.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor<T>>>();
+			SingleEvent<Action<IEntityPropertyMonitor>> IEntityPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor>>();
+			SingleEvent<Action<IEntityPropertyMonitor<T>>> IEntityPropertyMonitor<T>.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor<T>>>();
+			SingleEvent<Action<IPlayerPropertyMonitor>> IPlayerPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor>>();
+			public SingleEvent<Action<IPlayerPropertyMonitor<T>>> ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor<T>>>();
 
-			public PropertyMonitor(string propertyName, Player player, Func<object, T> decoder)
+			public PlayerPropertyMonitor(string propertyName, Player player, Func<object, T> decoder)
 			{
+				ValueChanged.Add((self) => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add((self) => ((IPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add((self) => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add((self) => ((IEntityPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add((self) => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
+
 				Player = player;
 				PropertyName = propertyName;
 				Decoder = decoder;
 
 				player.EnteredPVS += Player_EnteredPVS;
-				player.LeftPVS += Player_LeftPVS;
-				player.PropertiesUpdated += Player_PropertiesUpdated;
+				player.LeftPVS.Add(Player_LeftPVS);
+				player.PropertiesUpdated.Add(Player_PropertiesUpdated);
 			}
 
-			private void Player_PropertiesUpdated(Player obj)
+			private void Player_PropertiesUpdated(Player p)
 			{
 				if (m_ValueChanged)
 				{
-					m_ValueChangedEvent?.Invoke(Player);
+					ValueChanged.Invoke(this);
 					m_ValueChanged = false;
 				}
 			}
@@ -195,7 +199,7 @@ namespace TF2Net.Data
 			private void Player_EnteredPVS(Player p)
 			{
 				Entity e = p.Entity;
-				e.PropertyAdded += Entity_PropertyAdded;
+				e.PropertyAdded.Add(Entity_PropertyAdded);
 
 				foreach (SendProp prop in e.Properties)
 					Entity_PropertyAdded(prop);
@@ -209,99 +213,165 @@ namespace TF2Net.Data
 
 			private void Prop_ValueChanged(SendProp prop)
 			{
-				m_Value = Decoder(prop.Value);
+				Value = Decoder(prop.Value);
 				m_ValueChanged = true;
 			}
 
 			private void Player_LeftPVS(Player p)
 			{
-				p.Entity.PropertyAdded -= Entity_PropertyAdded;
+				p.Entity.PropertyAdded.Remove(Entity_PropertyAdded);
 			}
 		}
 		
-		class PositionPropertyMonitor : IPropertyMonitor<Vector>
+		class PlayerPositionPropertyMonitor : IPlayerPropertyMonitor<Vector>
 		{
-			Vector m_Value = new Vector();
+			readonly Vector m_Value = new Vector();
 			public Vector Value { get { return m_Value.Clone(); } }
-
-			event Action<Player> m_ValueChanged;
-			public event Action<Player> ValueChanged
-			{
-				add
-				{
-					if (m_ValueChanged?.GetInvocationList().Contains(value) == true)
-						return;
-					m_ValueChanged += value;
-				}
-				remove { m_ValueChanged -= value; }
-			}
+			object IPropertyMonitor.Value { get { return Value; } }
 
 			public Player Player { get; }
+			public Entity Entity { get { return Player.Entity; } }
 			public string PropertyName { get { return null; } }
 
-			IPropertyMonitor<Vector> LocalOriginXY { get; }
-			IPropertyMonitor<double> LocalOriginZ { get; }
-			IPropertyMonitor<Vector> NonLocalOriginXY { get; }
-			IPropertyMonitor<double> NonLocalOriginZ { get; }
+			IPlayerPropertyMonitor<Vector> LocalOriginXY { get; }
+			IPlayerPropertyMonitor<double> LocalOriginZ { get; }
+			IPlayerPropertyMonitor<Vector> NonLocalOriginXY { get; }
+			IPlayerPropertyMonitor<double> NonLocalOriginZ { get; }
+
+			SingleEvent<Action<IPropertyMonitor>> IPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor>>();
+			SingleEvent<Action<IPropertyMonitor<Vector>>> IPropertyMonitor<Vector>.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor<Vector>>>();
+			SingleEvent<Action<IEntityPropertyMonitor>> IEntityPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor>>();
+			SingleEvent<Action<IEntityPropertyMonitor<Vector>>> IEntityPropertyMonitor<Vector>.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor<Vector>>>();
+			SingleEvent<Action<IPlayerPropertyMonitor>> IPlayerPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor>>();
+			public SingleEvent<Action<IPlayerPropertyMonitor<Vector>>> ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor<Vector>>>();
 
 			bool m_PositionChanged = false;
 
-			public PositionPropertyMonitor(Player player)
+			public PlayerPositionPropertyMonitor(Player player)
 			{
+				ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPropertyMonitor<Vector>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor<Vector>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
+
 				Player = player;
 
-				LocalOriginXY = new PropertyMonitor<Vector>("DT_TFLocalPlayerExclusive.m_vecOrigin", Player, o => (Vector)o);
-				LocalOriginZ = new PropertyMonitor<double>("DT_TFLocalPlayerExclusive.m_vecOrigin[2]", Player, o => (double)o);
-				NonLocalOriginXY = new PropertyMonitor<Vector>("DT_TFNonLocalPlayerExclusive.m_vecOrigin", Player, o => (Vector)o);
-				NonLocalOriginZ = new PropertyMonitor<double>("DT_TFNonLocalPlayerExclusive.m_vecOrigin[2]", Player, o => (double)o);
+				LocalOriginXY = new PlayerPropertyMonitor<Vector>("DT_TFLocalPlayerExclusive.m_vecOrigin", Player, o => (Vector)o);
+				LocalOriginZ = new PlayerPropertyMonitor<double>("DT_TFLocalPlayerExclusive.m_vecOrigin[2]", Player, o => (double)o);
+				NonLocalOriginXY = new PlayerPropertyMonitor<Vector>("DT_TFNonLocalPlayerExclusive.m_vecOrigin", Player, o => (Vector)o);
+				NonLocalOriginZ = new PlayerPropertyMonitor<double>("DT_TFNonLocalPlayerExclusive.m_vecOrigin[2]", Player, o => (double)o);
 
-				LocalOriginXY.ValueChanged += LocalOriginXY_ValueChanged;
-				LocalOriginZ.ValueChanged += LocalOriginZ_ValueChanged;
-				NonLocalOriginXY.ValueChanged += NonLocalOriginXY_ValueChanged;
-				NonLocalOriginZ.ValueChanged += NonLocalOriginZ_ValueChanged;
+				LocalOriginXY.ValueChanged.Add(OriginXY_ValueChanged);
+				LocalOriginZ.ValueChanged.Add(OriginZ_ValueChanged);
+				NonLocalOriginXY.ValueChanged.Add(OriginXY_ValueChanged);
+				NonLocalOriginZ.ValueChanged.Add(OriginZ_ValueChanged);
 
-				Player.PropertiesUpdated += Player_PropertiesUpdated;
+				Player.PropertiesUpdated.Add(Player_PropertiesUpdated);
 			}
-
-			private void NonLocalOriginZ_ValueChanged(Player p)
+			
+			private void OriginZ_ValueChanged(IPlayerPropertyMonitor<double> z)
 			{
-				Debug.Assert(Player == p);
-				m_Value.Z = NonLocalOriginZ.Value;
+				m_Value.Z = z.Value;
 				m_PositionChanged = true;
 			}
-
-			private void NonLocalOriginXY_ValueChanged(Player p)
+			private void OriginXY_ValueChanged(IPlayerPropertyMonitor<Vector> xy)
 			{
-				Debug.Assert(Player == p);
-				m_Value.X = NonLocalOriginXY.Value.X;
-				m_Value.Y = NonLocalOriginXY.Value.Y;
-				m_PositionChanged = true;
-			}
-
-			private void LocalOriginZ_ValueChanged(Player p)
-			{
-				Debug.Assert(Player == p);
-				m_Value.Z = LocalOriginZ.Value;
-				m_PositionChanged = true;
-			}
-
-			private void LocalOriginXY_ValueChanged(Player p)
-			{
-				Debug.Assert(Player == p);
-				m_Value.X = LocalOriginXY.Value.X;
-				m_Value.Y = LocalOriginXY.Value.Y;
+				var value = xy.Value;
+				m_Value.X = value.X;
+				m_Value.Y = value.Y;
 				m_PositionChanged = true;
 			}
 
 			private void Player_PropertiesUpdated(Player p)
 			{
 				Debug.Assert(Player == p);
-
 				if (m_PositionChanged)
 				{
+					ValueChanged.Invoke(this);
 					m_PositionChanged = false;
-					m_ValueChanged?.Invoke(Player);
 				}
+			}
+		}
+
+		class PlayerResourcePropertyMonitor<T> : IPlayerPropertyMonitor<T>
+		{
+			public Player Player { get; }
+			public Entity Entity { get { return Player.Entity; } }
+
+			public string PropertyName { get; }
+			Func<object, T> Decoder { get; }
+
+			public T Value { get { return InternalPropertyMonitor.Value; } }
+			object IPropertyMonitor.Value { get { return Value; } }
+
+			Entity PlayerResourceEntity { get; }
+
+			EntityPropertyMonitor<T> InternalPropertyMonitor { get; }
+
+			SingleEvent<Action<IPropertyMonitor>> IPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor>>();
+			SingleEvent<Action<IPropertyMonitor<T>>> IPropertyMonitor<T>.ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor<T>>>();
+			SingleEvent<Action<IEntityPropertyMonitor>> IEntityPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor>>();
+			SingleEvent<Action<IEntityPropertyMonitor<T>>> IEntityPropertyMonitor<T>.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor<T>>>();
+			SingleEvent<Action<IPlayerPropertyMonitor>> IPlayerPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor>>();
+			public SingleEvent<Action<IPlayerPropertyMonitor<T>>> ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor<T>>>();
+
+			public PlayerResourcePropertyMonitor(string propertyName, Player player, Func<object, T> decoder)
+			{
+				ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
+
+				PropertyName = propertyName;
+				Player = player;
+				Decoder = decoder;
+
+				PlayerResourceEntity = player.World.Entities.Single(e => e?.Class.Classname == "CTFPlayerResource");
+
+				string specificProperty = string.Format("{0}.{1:D3}", PropertyName, Player.EntityIndex);
+
+				var props = PlayerResourceEntity.Properties.Select(prop => prop.Definition.FullName.Remove(prop.Definition.FullName.Length - 4))
+					.Except("m_iHealth")
+					.Except("m_iPing")
+					.Except("m_iScore")
+					.Except("m_iDeaths")
+					.Except("m_bConnected")
+					.Except("m_iTeam")
+					.Except("m_bAlive")
+					.Distinct();
+
+				InternalPropertyMonitor = new EntityPropertyMonitor<T>(specificProperty, PlayerResourceEntity, Decoder);
+				InternalPropertyMonitor.ValueChanged.Add(InternalValueChanged);
+			}
+
+			private void InternalValueChanged(IPropertyMonitor p)
+			{
+				Debug.Assert(InternalPropertyMonitor == p);
+				ValueChanged.Invoke(this);
+			}
+		}
+
+		class MultiPlayerPropertyMonitor<T> : MultiPropertyMonitor<T>, IPlayerPropertyMonitor<T>
+		{
+			public Player Player { get; }
+			public Entity Entity { get { return Player.Entity; } }
+
+			SingleEvent<Action<IEntityPropertyMonitor>> IEntityPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor>>();
+			SingleEvent<Action<IEntityPropertyMonitor<T>>> IEntityPropertyMonitor<T>.ValueChanged { get; } = new SingleEvent<Action<IEntityPropertyMonitor<T>>>();
+			SingleEvent<Action<IPlayerPropertyMonitor>> IPlayerPropertyMonitor.ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor>>();
+			public new SingleEvent<Action<IPlayerPropertyMonitor<T>>> ValueChanged { get; } = new SingleEvent<Action<IPlayerPropertyMonitor<T>>>();
+
+			public MultiPlayerPropertyMonitor(Player p, IEnumerable<IPropertyMonitor<T>> propertyMonitors) : base(propertyMonitors)
+			{
+				ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IEntityPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				ValueChanged.Add(self => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
+
+				Player = p;
 			}
 		}
 	}

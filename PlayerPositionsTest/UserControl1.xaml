@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="PlayerPositionsTest.UserControl1"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PlayerPositionsTest"
+             mc:Ignorable="d" 
+             d:DesignHeight="45" d:DesignWidth="300"
+        xmlns:TF2NetData="clr-namespace:TF2Net.Data;assembly=TF2Net" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}">
+    <Grid>
+        <Grid.Resources>
+            <local:StringToPortraitConverter x:Key="StrToPortrait"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="45"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="65"/>
+        </Grid.ColumnDefinitions>
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Red}">
+                        <Setter Property="Background" Value="#BFBD3B3B"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Blue}">
+                        <Setter Property="Background" Value="#BF5B7A8C"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+        <Rectangle Panel.ZIndex="100" Opacity="0.5" Grid.Column="1" Grid.ColumnSpan="2" Visibility="{Binding IsDead, Converter={StaticResource BoolToVis}}">
+            <Rectangle.Style>
+                <Style TargetType="Rectangle">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Red}">
+                            <Setter Property="Fill" Value="{StaticResource RedDarkBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Blue}">
+                            <Setter Property="Fill" Value="{StaticResource BluDarkBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Rectangle.Style>
+        </Rectangle>
+
+        <Image x:Name="ClassImage" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding ClassPortrait, Converter={StaticResource StrToPortrait}, FallbackValue='class_portraits/alpha/silhouette.png'}" />
+        <Label x:Name="PlayerLabel" Content="{Binding Nickname}" Grid.Column="1" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Verdana" FontSize="20"/>
+
+        <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Grid.Column="2" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22"/>
+        <ProgressBar Grid.Column="2" Panel.ZIndex="49" Orientation="Vertical" Foreground="{StaticResource NeutralDarkBrush}" Value="{Binding Health}" Maximum="{Binding MaxHealth}" BorderBrush="{x:Null}" BorderThickness="0">
+            <ProgressBar.Style>
+                <Style TargetType="ProgressBar">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Red}">
+                            <Setter Property="Background" Value="{StaticResource RedDarkBrush}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Blue}">
+                            <Setter Property="Background" Value="{StaticResource BluDarkBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ProgressBar.Style>
+        </ProgressBar>
+        <Image x:Name="DeathImage" Panel.ZIndex="101" Grid.Column="2" Source="images_misc/leaderboard_dead.png" RenderOptions.BitmapScalingMode="HighQuality" Visibility="{Binding IsDead, Converter={StaticResource BoolToVis}}" />
+    </Grid>
+</UserControl>

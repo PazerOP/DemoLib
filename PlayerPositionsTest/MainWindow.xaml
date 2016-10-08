@@ -5,7 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlayerPositionsTest"
         mc:Ignorable="d"
-        Title="MainWindow" Height="480" Width="800" Background="Black" Loaded="Window_Loaded">
+        Title="MainWindow" Height="480" Width="800" Background="Black" SnapsToDevicePixels="False" UseLayoutRounding="False" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PlayerStatusTemplate.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid x:Name="BaseGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
@@ -13,15 +20,7 @@
         </Grid.ColumnDefinitions>
         <Image x:Name="MapImage" Margin="0" Source="images_misc/koth_sawmill.png" RenderOptions.BitmapScalingMode="HighQuality" Grid.ColumnSpan="2"/>
         <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="155,10,0,0" VerticalAlignment="Top" Width="74" Foreground="White" Grid.ColumnSpan="2" Height="10"/>
-        <ProgressBar x:Name="progress" VerticalAlignment="Bottom" Height="23" Grid.ColumnSpan="2"/>
-        <StackPanel HorizontalAlignment="Stretch">
-            <Grid Height="45">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="45"/>
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <Image x:Name="DeathImage" Source="images_misc/leaderboard_dead.png" RenderOptions.BitmapScalingMode="HighQuality" />
-            </Grid>
-        </StackPanel>
+        <ProgressBar x:Name="progress" Grid.ColumnSpan="2" Height="23" VerticalAlignment="Bottom"/>
+        <ItemsControl x:Name="PlayerStatusesControl" ItemsSource="{Binding}" DataContext="{Binding Statuses}" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}" ItemTemplate="{StaticResource PlayerStatusTemplate}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" />
     </Grid>
 </Window>

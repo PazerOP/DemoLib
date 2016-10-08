@@ -177,6 +177,9 @@ namespace TF2Net.NetMessages
 					uint ent = Data.ReadUInt(SourceConstants.MAX_EDICT_BITS);
 
 					//Debug.Assert(ws.Entities[ent] != null);
+					if (ws.Entities[ent] != null)
+						ws.Entities[ent].Dispose();
+
 					ws.Entities[ent] = null;
 				}
 			}
@@ -243,6 +246,10 @@ namespace TF2Net.NetMessages
 			if (delete)
 			{
 				//Debug.Assert(ws.Entities[newEntity] != null);
+
+				if (ws.Entities[newEntity] != null)
+					ws.Entities[newEntity].Dispose();
+
 				ws.Entities[newEntity] = null;
 			}
 		}
@@ -277,7 +284,7 @@ namespace TF2Net.NetMessages
 			}
 
 			if (atLeastOne)
-				e.OnPropertiesUpdated();
+				e.PropertiesUpdated.Invoke(e);
 		}
 
 		static int ReadFieldIndex(BitStream stream, int lastIndex)
