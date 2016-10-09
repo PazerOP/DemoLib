@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using BitSet;
+using TF2Net.Data;
 
 namespace TF2Net.NetMessages
 {

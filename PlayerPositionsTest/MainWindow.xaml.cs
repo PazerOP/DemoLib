@@ -31,20 +31,20 @@ namespace PlayerPositionsTest
 		//readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromArgb(255, 189, 59, 59));
 		//readonly SolidColorBrush BluBrush = new SolidColorBrush(Color.FromArgb(255, 91, 122, 140));
 
-		static readonly IReadOnlyDictionary<Team, IReadOnlyDictionary<Class, ImageSource>> ClassIcons;
+		static readonly IReadOnlyDictionary<Team, IReadOnlyDictionary<Class, string>> ClassIcons;
 
 		static MainWindow()
 		{
-			Dictionary<Team, IReadOnlyDictionary<Class, ImageSource>> classIcons = new Dictionary<Team, IReadOnlyDictionary<Class, ImageSource>>();
+			Dictionary<Team, IReadOnlyDictionary<Class, string>> classIcons = new Dictionary<Team, IReadOnlyDictionary<Class, string>>();
 
-			Func<Team, IReadOnlyDictionary<Class, ImageSource>> GenerateTeamDict =
+			Func<Team, IReadOnlyDictionary<Class, string>> GenerateTeamDict =
 				(Team t) =>
 				{
-					Dictionary<Class, ImageSource> retVal = new Dictionary<Class, ImageSource>();
+					Dictionary<Class, string> retVal = new Dictionary<Class, string>();
 					for (int i = 1; i <= 9; i++)
 					{
 						Class c = (Class)i;
-						retVal.Add(c, new BitmapImage(GetClassIconUri(t, c)));
+						retVal.Add(c, GetClassIconUri(t, c));
 					}
 					return retVal;
 				};
@@ -71,7 +71,7 @@ namespace PlayerPositionsTest
 
 			m_Reader = Task.Run(() =>
 			{
-				var stream = File.Open(@"D:\Steam\steamapps\common\Team Fortress 2\tf\demos\testdemo.dem", FileMode.Open, FileAccess.Read);
+				var stream = File.Open("demos/cp_process_final.dem", FileMode.Open, FileAccess.Read);
 				return DemoReader.FromStream(stream);
 			});
 
@@ -79,20 +79,12 @@ namespace PlayerPositionsTest
 			{
 				lastTask.Result.Events.NewTick.Add(Events_NewTick);
 				lastTask.Result.Events.NewTick.Add(UpdatePlayerStatuses);
-				lastTask.Result.Events.PlayerAdded.Add(Events_PlayerAdded);
+				lastTask.Result.Events.NewTick.Add(UpdatePlayerPositions);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
 
 				lastTask.Result.SimulateDemo();
 			});
-		}
-		
-		private void Events_PlayerAdded(Player p)
-		{
-			//p.EnteredPVS += UpdatePlayerPosition;			
-			p.LeftPVS.Add(PlayerLeftPVS);
-
-			p.PropertiesUpdated.Add(UpdatePlayerPosition);
 		}
 
 		private void Events_NewTick(WorldState ws)
@@ -102,8 +94,63 @@ namespace PlayerPositionsTest
 			{
 				TickLabel.Content = string.Format("Tick {0}", tick);
 
-				progress.Value = tick;
+				if (ws.EndTick.HasValue)
+				{
+					progress.Maximum = ws.EndTick.Value - ws.BaseTick;
+					progress.Value = ws.Tick - ws.BaseTick;
+					progress.IsIndeterminate = false;
+				}
 			}, DispatcherPriority.DataBind);
+		}
+
+		void UpdatePlayerPositions(WorldState ws)
+		{
+			foreach (Player p in ws.Players)
+			{
+				TF2Net.Data.Vector worldPos = p.Position.Value;
+				Team? t = p.Team.Value;
+				Class? c = p.Class.Value;
+				bool? isDead = p.IsDead.Value;
+
+				if (worldPos == null ||
+					(t != Team.Red && t != Team.Blue) ||
+					(!c.HasValue || c.Value == Class.Undefined || c.Value == Class.Civilian) ||
+					(!isDead.HasValue || isDead == true) ||
+					!p.InPVS)
+				{
+					BaseGrid.Dispatcher.InvokeAsync(() =>
+					{
+						var i = GetPlayerImage(p);
+						i.Visibility = Visibility.Hidden;
+					});
+
+					continue;
+				}
+
+				BaseGrid.Dispatcher.InvokeAsync(() =>
+				{
+					var i = GetPlayerImage(p);
+					Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
+
+					Thickness newMargin = i.Margin;
+					newMargin.Top = displayPos.Y - 25;
+					newMargin.Left = displayPos.X - 25;
+					i.Margin = newMargin;
+
+					{
+						string existingSource = null;
+						BitmapImage src = i.Source as BitmapImage;
+						if (src != null)
+							existingSource = src.UriSource.AbsoluteUri;
+
+						string newSource = ClassIcons[t.Value][c.Value];
+						if (existingSource != newSource)
+							i.Source = new BitmapImage(new Uri(newSource));
+					}
+					
+					i.Visibility = Visibility.Visible;
+				});
+			}
 		}
 
 		void UpdatePlayerStatuses(WorldState ws)
@@ -128,15 +175,11 @@ namespace PlayerPositionsTest
 				if (!maxHealth.HasValue)
 					continue;
 
-				if (isDead == true && health > 100)
-					Debugger.Break();
-
 				PlayerStatusesControl.Dispatcher.InvokeAsync(() =>
 				{
 					if (t != Team.Red && t != Team.Blue)
 					{
-						if (Statuses.Remove(Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID)))
-							Debugger.Break();
+						Statuses.Remove(Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID));
 						return;
 					}
 					
@@ -173,7 +216,7 @@ namespace PlayerPositionsTest
 			});
 		}
 
-		static Uri GetClassIconUri(Team t, Class c)
+		static string GetClassIconUri(Team t, Class c)
 		{
 			string teamName;
 			switch (t)
@@ -233,46 +276,7 @@ namespace PlayerPositionsTest
 				throw new ArgumentOutOfRangeException(nameof(c));
 			}
 
-			return new Uri(string.Format("/classicons/{0}_{1}.png", className, teamName), UriKind.Relative);
-		}
-
-		void UpdatePlayerPosition(Player p)
-		{
-			Debug.Assert(p.InPVS);
-
-			TF2Net.Data.Vector worldPos = p.Position.Value;
-			Team? team = p.Team.Value;
-			Class? @class = p.Class.Value;
-			bool? isDead = p.IsDead.Value;
-			int? health = p.Health.Value;
-			uint? maxHealth = p.MaxHealth.Value;
-
-			var entityIndex = p.EntityIndex;
-
-			BaseGrid.Dispatcher.InvokeAsync(() =>
-			{
-				var e = GetPlayerImage(p);
-				if (worldPos == null ||
-					!team.HasValue ||
-					!@class.HasValue ||
-					!health.HasValue ||
-					isDead != false)
-				{
-					e.Visibility = Visibility.Hidden;
-					return;
-				}
-
-				Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
-
-				Thickness newMargin = e.Margin;
-				newMargin.Top = displayPos.Y - 25;
-				newMargin.Left = displayPos.X - 25;
-				e.Margin = newMargin;
-
-				e.Source = ClassIcons[team.Value][@class.Value];
-
-				e.Visibility = Visibility.Visible;
-			}, DispatcherPriority.Background);
+			return string.Format("pack://siteoforigin:,,,/images/classicons/{0}_{1}.png", className, teamName);
 		}
 
 		readonly Dictionary<string, Image> m_Images = new Dictionary<string, Image>();
@@ -293,47 +297,27 @@ namespace PlayerPositionsTest
 
 				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.HighQuality);
 
-				Grid.SetColumnSpan(i, 2);
+				Grid.SetColumn(i, 1);
 
-				BaseGrid.Children.Add(i);
+				IconsGrid.Children.Add(i);
 
 				m_Images.Add(p.Info.GUID, i);
 			}
 			return i;
 		}
 
-		readonly Dictionary<string, Ellipse> m_Ellipses = new Dictionary<string, Ellipse>();
-		Ellipse GetPlayerMarker(Player p)
-		{
-			Ellipse e;
-			if (!m_Ellipses.TryGetValue(p.Info.GUID, out e))
-			{
-				e = new Ellipse();
-				e.Width = 10;
-				e.Height = 10;
-
-				e.SnapsToDevicePixels = false;
-				e.UseLayoutRounding = false;
-				e.Stroke = Brushes.Black;
-				e.HorizontalAlignment = HorizontalAlignment.Left;
-				e.VerticalAlignment = VerticalAlignment.Top;
-				BaseGrid.Children.Add(e);
-
-				m_Ellipses.Add(p.Info.GUID, e);
-			}
-			return e;
-		}
-
 		Point TranslateCoordinate(Point world)
 		{
-			const double height = 1024 * 8.5;
-			const double width = height * (16.0 / 9.0);
+			const double height = 1024 * 8.4;
+			const double originalWidth = height * (16.0 / 9.0);
+			double width = height * (MapImage.ActualWidth / MapImage.ActualHeight);
 			
-			var topLeftWorld = new Point(-8636, 4301);
+			var centerWorld = new Point(-7516 + (originalWidth / 2), 4299 - (height / 2));
+			var topLeftWorld = new Point(centerWorld.X - (width / 2), centerWorld.Y + (height / 2));
 			var bottomRightWorld = new Point(topLeftWorld.X + width, topLeftWorld.Y - height);
 
-			var widthBoost = Math.Max(0, (BaseGrid.ActualWidth - MapImage.ActualWidth) / 2);
-			var heightBoost = Math.Max(0, (BaseGrid.ActualHeight - MapImage.ActualHeight) / 2);
+			var widthBoost = Math.Max(0, (IconsGrid.ActualWidth - MapImage.ActualWidth) / 2);
+			var heightBoost = Math.Max(0, (IconsGrid.ActualHeight - MapImage.ActualHeight) / 2);
 
 			return new Point(
 				Rescale(0, MapImage.ActualWidth, topLeftWorld.X, bottomRightWorld.X, world.X) + widthBoost,

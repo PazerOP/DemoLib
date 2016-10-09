@@ -3,18 +3,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TF2Net
 {
-	[DebuggerDisplay("{DebugCount} Delegates")]
-	public class SingleEvent<T>
+	public class SingleEvent<T> where T : class
 	{
-		readonly Lazy<ConcurrentDictionary<Delegate, object>> m_Delegates = new Lazy<ConcurrentDictionary<Delegate, object>>();
-
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		uint DebugCount { get { return m_Delegates.IsValueCreated ? (uint)m_Delegates.Value.Count : 0; } }
+		readonly List<WeakReference> m_Keys = new List<WeakReference>();
+		readonly ConditionalWeakTable<object, List<Delegate>> m_Delegates = new ConditionalWeakTable<object, List<Delegate>>();
 
 		public SingleEvent()
 		{
@@ -24,24 +22,81 @@ namespace TF2Net
 
 		public bool Add(T input)
 		{
+			CleanKeysList();
 			Delegate forceCast = (Delegate)(object)input;
 
-			return m_Delegates.Value.TryAdd(forceCast, null);
+			object target = forceCast.Target;
+			Debug.Assert(target != null);
+
+			List<Delegate> delegates = m_Delegates.GetValue(target, key =>
+			{
+				lock (m_Keys)
+				{
+					if (!m_Keys.Contains(target))
+						m_Keys.Add(new WeakReference(target));
+				}
+
+				return new List<Delegate>();
+			});
+
+			lock (delegates)
+			{
+				if (delegates.Contains(forceCast))
+					return false;
+
+				delegates.Add(forceCast);
+			}
+
+			return true;
 		}
 		public bool Remove(T input)
 		{
 			Delegate forceCast = (Delegate)(object)input;
 
-			object dummy;
-			return m_Delegates.Value.TryRemove(forceCast, out dummy);
+			object target = forceCast.Target;
+			Debug.Assert(target != null);
+
+			List<Delegate> values;
+			m_Delegates.TryGetValue(target, out values);
+
+			lock (values)
+				return values.Remove(forceCast);
+		}
+
+		void CleanKeysList()
+		{
+			lock (m_Keys)
+			{
+				for (int i = 0; i < m_Keys.Count; i++)
+				{
+					if (!m_Keys[i].IsAlive)
+						m_Keys.RemoveAt(i--);
+				}
+			}
 		}
 
 		public void Invoke(params object[] args)
 		{
-			foreach (Delegate d in m_Delegates.Value.Keys)
+			if (m_Keys.Count > 0)
 			{
-				var test = d.Target;
-				d.DynamicInvoke(args);
+				IEnumerable<Delegate> all = Enumerable.Empty<Delegate>();
+
+				lock (m_Keys)
+				{
+					IEnumerable<object> validObjects = m_Keys.Select(k => k.Target).Where(t => t != null);
+					foreach (object o in validObjects)
+					{
+						List<Delegate> delegates;
+						if (m_Delegates.TryGetValue(o, out delegates))
+							all = all.Concat(delegates);
+					}
+				}
+
+				foreach (Delegate d in all)
+				{
+					var test = d.Target;
+					d.DynamicInvoke(args);
+				}
 			}
 		}
 	}

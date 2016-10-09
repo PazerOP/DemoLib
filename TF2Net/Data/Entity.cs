@@ -91,7 +91,9 @@ namespace TF2Net.Data
 		public SendProp GetProperty(SendPropDefinition def)
 		{
 			CheckDisposed();
-			return Properties.FirstOrDefault(x => x.Definition == def);
+			var retVal = Properties.FirstOrDefault(x => x.Definition == def);
+			Debug.Assert(retVal == null || retVal.Entity == this);
+			return retVal;
 		}
 
 		public override string ToString()

@@ -64,6 +64,19 @@ namespace DemoLib
 			m_Events.NewTick.Add(TickTimer);
 
 			WorldState ws = new WorldState();
+
+			// Find the last tick in the demo
+			for (int i = Commands.Count - 1; i >= 0; i--)
+			{
+				DemoPacketCommand pkt = Commands[i] as DemoPacketCommand;
+				if (pkt == null)
+					continue;
+
+				ws.EndTick = pkt.Messages.OfType<NetTickMessage>().LastOrDefault()?.Tick;
+				if (ws.EndTick.HasValue)
+					break;
+			}
+
 			ws.Listeners = m_Events;
 
 			foreach (DemoCommand cmd in Commands)
@@ -84,9 +97,12 @@ namespace DemoLib
 					DemoPacketCommand p = (DemoPacketCommand)cmd;
 
 					foreach (INetMessage netMsg in p.Messages)
-					{
 						netMsg.ApplyWorldState(ws);
-					}
+				}
+				else if (cmd.Type == DemoCommandType.dem_synctick)
+				{
+					DemoSyncTickCommand st = (DemoSyncTickCommand)cmd;
+					ws.BaseTick = ws.Tick - (ulong)st.Tick;
 				}
 			}
 		}

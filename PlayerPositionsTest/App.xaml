@@ -18,8 +18,13 @@
         <SolidColorBrush x:Key="BluDarkBrush" Color="#34302d" />
         <SolidColorBrush x:Key="BluAltDarkBrush" Color="#6b6a65" />
 
-        <SolidColorBrush x:Key="NeutralDarkBrush" Color="#c1a18a" />
-        <SolidColorBrush x:Key="NeutralMediumBrush" Color="#dabdab" />
-        <SolidColorBrush x:Key="NeutralLightBrush" Color="#f5e7de" />
+        <Color x:Key="NeutralDark" R="193" G="161" B="138" A="255" />
+        <SolidColorBrush x:Key="NeutralDarkBrush" Color="{StaticResource NeutralDark}" />
+        
+        <Color x:Key="NeutralMedium" R="218" G="189" B="171" A="255" />
+        <SolidColorBrush x:Key="NeutralMediumBrush" Color="{StaticResource NeutralMedium}" />
+
+        <Color x:Key="NeutralLight" R="245" G="231" B="222" A="255"/>
+        <SolidColorBrush x:Key="NeutralLightBrush" Color="{StaticResource NeutralLight}" />
     </Application.Resources>
 </Application>

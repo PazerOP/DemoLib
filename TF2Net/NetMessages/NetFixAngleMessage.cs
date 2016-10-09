@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BitSet;
+using TF2Net.Data;
 
 namespace TF2Net.NetMessages
 {

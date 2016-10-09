@@ -71,6 +71,7 @@
     <Compile Include="UserControl1.xaml.cs">
       <DependentUpon>UserControl1.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewboxVerticalStretch.cs" />
     <DesignDataWithDesignTimeCreatableTypes Include="DesignData\PlayerStatusSampleData.xaml">
       <SubType>Designer</SubType>
     </DesignDataWithDesignTimeCreatableTypes>
@@ -119,6 +120,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="demos\cp_process_final.dem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="images\maps\cp_process_final.xcf" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -140,62 +145,62 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="classicons\demo_red.png">
+    <None Include="images\classicons\demo_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\engineer_red.png">
+    </None>
+    <None Include="images\classicons\engineer_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\heavy_red.png">
+    </None>
+    <None Include="images\classicons\heavy_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\medic_red.png">
+    </None>
+    <None Include="images\classicons\medic_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\pyro_red.png">
+    </None>
+    <None Include="images\classicons\pyro_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\scout_red.png">
+    </None>
+    <None Include="images\classicons\scout_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\sniper_red.png">
+    </None>
+    <None Include="images\classicons\sniper_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\soldier_red.png">
+    </None>
+    <None Include="images\classicons\soldier_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\spy_red.png">
+    </None>
+    <None Include="images\classicons\spy_red.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="classicons\demo_blu.png">
+    <None Include="images\classicons\demo_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\engineer_blu.png">
+    </None>
+    <None Include="images\classicons\engineer_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\heavy_blu.png">
+    </None>
+    <None Include="images\classicons\heavy_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\medic_blu.png">
+    </None>
+    <None Include="images\classicons\medic_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\pyro_blu.png">
+    </None>
+    <None Include="images\classicons\pyro_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\scout_blu.png">
+    </None>
+    <None Include="images\classicons\scout_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\sniper_blu.png">
+    </None>
+    <None Include="images\classicons\sniper_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\soldier_blu.png">
+    </None>
+    <None Include="images\classicons\soldier_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="classicons\spy_blu.png">
+    </None>
+    <None Include="images\classicons\spy_blu.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="class_portraits\alpha\all_class.png">
@@ -288,6 +293,22 @@
     <Content Include="class_portraits\alpha\spy_grey.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="images\killicons\black\negative_1.png" />
+    <Resource Include="images\killicons\black\negative_2.png" />
+    <Resource Include="images\killicons\black\negative_3.png" />
+    <Resource Include="images\killicons\white\ambassador.png" />
+    <Resource Include="images\killicons\white\crit_bg.png" />
+    <Resource Include="images\killicons\white\group_1.png" />
+    <Resource Include="images\killicons\white\group_2.png" />
+    <Resource Include="images\killicons\white\group_3.png" />
+    <Resource Include="images\killicons\white\knife_taunt.png" />
+    <Resource Include="images\killicons\white\natascha.png" />
+    <Resource Include="images\killicons\white\rocket.png" />
+    <None Include="images\maps\cp_process_final.png" />
+    <None Include="images\maps\cp_process_final_cropped.png" />
+    <None Include="images\maps\cp_process_final_cropped_centered.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="images_misc\koth_sawmill.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

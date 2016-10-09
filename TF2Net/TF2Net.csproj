@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConditionalHashSet.cs" />
     <Compile Include="Data\PlayerState.cs" />
     <Compile Include="PropertyMonitors\EntityPropertyMonitor.cs" />
     <Compile Include="PropertyMonitors\MultiPropertyMonitor.cs" />
@@ -120,7 +121,7 @@
     <Compile Include="NetMessages\Shared\StringTableParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data\SourceConstants.cs" />
-    <Compile Include="WorldState.cs" />
+    <Compile Include="Data\WorldState.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BitSet\BitSet.csproj">

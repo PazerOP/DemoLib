@@ -8,10 +8,11 @@
             <local:StringToPortraitConverter x:Key="StrToPortrait"/>
             <local:BooleanToVisibilityConverter x:Key="BoolToVis" />
             <local:BooleanToVisibilityConverter x:Key="BoolToVisInv" True="Hidden" False="Visible"/>
+            <local:ViewboxVerticalStretch x:Key="ViewboxVerticalStretch" />
         </DataTemplate.Resources>
-        <Grid Height="40" Margin="5,5,5,0">
+        <Grid MaxHeight="40" Margin="5,5,5,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="{Binding ActualHeight, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="65"/>
             </Grid.ColumnDefinitions>
@@ -27,7 +28,7 @@
                     </Style.Triggers>
                 </Style>
             </Grid.Style>
-            <Rectangle Panel.ZIndex="100" Opacity="0.5" Grid.Column="1" Grid.ColumnSpan="2" Visibility="{Binding IsDead, Converter={StaticResource BoolToVis}}">
+            <Rectangle Panel.ZIndex="100" Opacity="0.5" Grid.Column="0" Grid.ColumnSpan="3" Visibility="{Binding IsDead, Converter={StaticResource BoolToVis}}">
                 <Rectangle.Style>
                     <Style TargetType="Rectangle">
                         <Style.Triggers>
@@ -44,12 +45,16 @@
 
             <Image x:Name="ClassImage" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding ClassPortrait, Converter={StaticResource StrToPortrait}, FallbackValue='class_portraits/alpha/silhouette.png'}" />
 
-            <Viewbox Grid.Column="1" StretchDirection="DownOnly" Margin="5,0">
+            <Viewbox Grid.Column="1" StretchDirection="DownOnly" Margin="5,2.5">
                 <Label x:Name="PlayerLabel" Content="{Binding Nickname}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Verdana" FontSize="20"/>
             </Viewbox>
 
-            <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Grid.Column="2" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
-            <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Grid.Column="2" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
+            <Viewbox Panel.ZIndex="50" Grid.Column="2" StretchDirection="DownOnly">
+                <Grid>
+                    <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
+                    <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
+                </Grid>
+            </Viewbox>
 
             <ProgressBar x:Name="HealthBar" Grid.Column="2" Panel.ZIndex="2" Orientation="Vertical" Foreground="{StaticResource NeutralDarkBrush}" Value="{Binding Health}" Maximum="{Binding MaxHealth}" BorderBrush="{x:Null}" BorderThickness="0" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}" Background="Transparent"/>
             <Rectangle x:Name="HealthBackground" Grid.Column="2" Panel.ZIndex="1">
