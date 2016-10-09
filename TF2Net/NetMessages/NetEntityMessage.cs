@@ -44,6 +44,8 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
+			Entity target = ws.Entities[EntityIndex];
+			Console.WriteLine("hi");
 		}
 	}
 }

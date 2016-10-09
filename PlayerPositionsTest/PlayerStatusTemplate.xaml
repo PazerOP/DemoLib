@@ -52,7 +52,11 @@
             <Viewbox Panel.ZIndex="50" Grid.Column="2" StretchDirection="DownOnly">
                 <Grid>
                     <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
-                    <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
+                    <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}">
+                        <Label.Effect>
+                            <BlurEffect Radius="2"/>
+                        </Label.Effect>
+                    </Label>
                 </Grid>
             </Viewbox>
 

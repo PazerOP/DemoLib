@@ -68,9 +68,6 @@
     </ApplicationDefinition>
     <Compile Include="BooleanConverter.cs" />
     <Compile Include="BooleanToVisibilityConverter.cs" />
-    <Compile Include="UserControl1.xaml.cs">
-      <DependentUpon>UserControl1.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ViewboxVerticalStretch.cs" />
     <DesignDataWithDesignTimeCreatableTypes Include="DesignData\PlayerStatusSampleData.xaml">
       <SubType>Designer</SubType>
@@ -91,10 +88,6 @@
       <SubType>Designer</SubType>
     </DesignDataWithDesignTimeCreatableTypes>
     <Page Include="PlayerStatusTemplate.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControl1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -121,6 +114,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="demos\cp_process_final.dem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="demos\testdemo.dem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="images\maps\cp_process_final.xcf" />

@@ -36,6 +36,29 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
+			return;
+			BitStream local = Data.Clone();
+			local.Cursor = 0;
+
+			for (int i = 0; i < EntryCount; i++)
+			{
+				double delay = 0;
+				if (local.ReadBool())
+					delay = local.ReadInt(8) / 100.0;
+
+				if (local.ReadBool())
+				{
+					uint classID = local.ReadUInt(ws.ClassBits);
+
+					ServerClass serverClass = ws.ServerClasses[(int)classID];
+					SendTable sendTable = ws.SendTables.Single(st => st.NetTableName == serverClass.DatatableName);
+					var flattened = sendTable.FlattenedProps;
+
+					var tempents = ws.SendTables.Where(st => st.NetTableName.StartsWith("DT_TE"));
+
+					Console.WriteLine("help mom");
+				}
+			}
 		}
 	}
 }

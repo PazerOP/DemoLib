@@ -80,11 +80,20 @@ namespace PlayerPositionsTest
 				lastTask.Result.Events.NewTick.Add(Events_NewTick);
 				lastTask.Result.Events.NewTick.Add(UpdatePlayerStatuses);
 				lastTask.Result.Events.NewTick.Add(UpdatePlayerPositions);
+				lastTask.Result.Events.GameEvent.Add(GameEventTriggered);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
 
 				lastTask.Result.SimulateDemo();
 			});
+		}
+
+		private void GameEventTriggered(WorldState ws, IReadOnlyGameEvent e)
+		{
+			if (e.Declaration.Name == "player_hurt")
+				Debugger.Break();
+
+			Debug.WriteLine(e.Declaration.Name);
 		}
 
 		private void Events_NewTick(WorldState ws)

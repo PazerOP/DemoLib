@@ -33,6 +33,7 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
+			Console.WriteLine("hi");
 			//throw new NotImplementedException();
 		}
 	}
