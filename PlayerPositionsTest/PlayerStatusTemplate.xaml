@@ -20,10 +20,26 @@
                 <Style TargetType="Grid">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Red}">
-                            <Setter Property="Background" Value="#BFBD3B3B"/>
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <!--BD3B3B-->
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                                        <GradientStop Color="#FFC94040" Offset="0"/>
+                                        <GradientStop Color="#FFAF3838" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Blue}">
-                            <Setter Property="Background" Value="#BF5B7A8C"/>
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <!--5B7A8C-->
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                                        <GradientStop Color="#FF618396" Offset="0"/>
+                                        <GradientStop Color="#FF516C7C" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -46,13 +62,9 @@
             <Image x:Name="ClassImage" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding ClassPortrait, Converter={StaticResource StrToPortrait}, FallbackValue='class_portraits/alpha/silhouette.png'}" />
 
             <Viewbox Grid.Column="1" StretchDirection="DownOnly" Margin="5,2.5">
-                <Label x:Name="PlayerLabel" Content="{Binding Nickname}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Verdana" FontSize="20"/>
-            </Viewbox>
-
-            <Viewbox Panel.ZIndex="50" Grid.Column="2" StretchDirection="DownOnly">
                 <Grid>
-                    <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
-                    <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}">
+                    <Label Panel.ZIndex="50" x:Name="PlayerLabel" Content="{Binding Nickname}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Verdana" FontSize="20"/>
+                    <Label x:Name="PlayerLabelShadow" Panel.ZIndex="49" Content="{Binding Nickname}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Verdana" FontSize="20">
                         <Label.Effect>
                             <BlurEffect Radius="2"/>
                         </Label.Effect>
@@ -60,22 +72,57 @@
                 </Grid>
             </Viewbox>
 
-            <ProgressBar x:Name="HealthBar" Grid.Column="2" Panel.ZIndex="2" Orientation="Vertical" Foreground="{StaticResource NeutralDarkBrush}" Value="{Binding Health}" Maximum="{Binding MaxHealth}" BorderBrush="{x:Null}" BorderThickness="0" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}" Background="Transparent"/>
+            <Viewbox Panel.ZIndex="50" Grid.Column="2" StretchDirection="DownOnly">
+                <Grid>
+                    <Label x:Name="HealthLabel" Panel.ZIndex="50" Content="{Binding Health}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
+                    <Label x:Name="HealthLabelShadow" Panel.ZIndex="49" Content="{Binding Health}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4,4,0,0" FontFamily="Tahoma" FontSize="22" Visibility="{Binding Visibility, ElementName=HealthLabel}">
+                        <Label.Effect>
+                            <BlurEffect Radius="2"/>
+                        </Label.Effect>
+                    </Label>
+                </Grid>
+            </Viewbox>
+
+            <ProgressBar x:Name="HealthBar" Grid.Column="2" Panel.ZIndex="2" Orientation="Vertical" Value="{Binding Health}" Maximum="{Binding MaxHealth}" BorderBrush="{x:Null}" BorderThickness="0" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}" Background="Transparent">
+                <ProgressBar.Foreground>
+                    <!--C1A18A-->
+                    <LinearGradientBrush EndPoint="0,0.5" StartPoint="1,0.5">
+                        <GradientStop Color="#CCAA92" Offset="0"/>
+                        <GradientStop Color="#B29580" Offset="1"/>
+                    </LinearGradientBrush>
+                </ProgressBar.Foreground>
+            </ProgressBar>
             <Rectangle x:Name="HealthBackground" Grid.Column="2" Panel.ZIndex="1">
                 <Rectangle.Style>
                     <Style TargetType="Rectangle">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Red}">
-                                <Setter Property="Fill" Value="{StaticResource RedDarkBrush}" />
+                                <Setter Property="Fill">
+                                    <Setter.Value>
+                                        <!--462D26-->
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#51342C" Offset="1"/>
+                                            <GradientStop Color="#38241E" Offset="0" />
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Team}" Value="{x:Static TF2NetData:Team.Blue}">
-                                <Setter Property="Fill" Value="{StaticResource BluDarkBrush}"/>
+                                <Setter Property="Fill">
+                                    <Setter.Value>
+                                        <!--34302D-->
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#3F3A37" Offset="1"/>
+                                            <GradientStop Color="#262321" Offset="0" />
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Rectangle.Style>
             </Rectangle>
-            
+
             <ProgressBar x:Name="OverhealHealthBar" Grid.Column="2" Background="Transparent" Panel.ZIndex="3" Foreground="Green" BorderBrush="{x:Null}" BorderThickness="0" Value="{Binding Health}" Maximum="{Binding MaxOverheal}" Minimum="{Binding MaxHealth}" Orientation="Vertical" Visibility="{Binding IsDead, Converter={StaticResource BoolToVisInv}}"/>
 
             <Image x:Name="DeathImage" Panel.ZIndex="101" Grid.Column="2" Source="images_misc/leaderboard_dead.png" RenderOptions.BitmapScalingMode="HighQuality" Visibility="{Binding IsDead, Converter={StaticResource BoolToVis}}" />

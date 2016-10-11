@@ -20,6 +20,7 @@ using System.Windows.Threading;
 using DemoLib;
 using TF2Net;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace PlayerPositionsTest
 {
@@ -53,16 +54,13 @@ namespace PlayerPositionsTest
 			classIcons.Add(Team.Blue, GenerateTeamDict(Team.Blue));
 			ClassIcons = classIcons;
 		}
-		
-		public PlayerStatusesList Statuses
-		{
-			get { return (PlayerStatusesList)GetValue(StatusesProperty); }
-			set { SetValue(StatusesProperty, value); }
-		}
+
+		public PlayerStatusesList RedStatuses { get; } = new PlayerStatusesList();
+		public PlayerStatusesList BlueStatuses { get; } = new PlayerStatusesList();
 
 		// Using a DependencyProperty as the backing store for Statuses.  This enables animation, styling, binding, etc...
-		public static readonly DependencyProperty StatusesProperty =
-			DependencyProperty.Register("Statuses", typeof(PlayerStatusesList), typeof(MainWindow), new PropertyMetadata(new PlayerStatusesList()));
+		//public static readonly DependencyProperty StatusesProperty =
+		//	DependencyProperty.Register("Statuses", typeof(PlayerStatusesList), typeof(MainWindow), new PropertyMetadata(new PlayerStatusesList()));
 
 		Task<DemoReader> m_Reader;
 		public MainWindow()
@@ -80,6 +78,9 @@ namespace PlayerPositionsTest
 				lastTask.Result.Events.NewTick.Add(Events_NewTick);
 				lastTask.Result.Events.NewTick.Add(UpdatePlayerStatuses);
 				lastTask.Result.Events.NewTick.Add(UpdatePlayerPositions);
+
+				lastTask.Result.Events.NewTick.Add(UpdateRocketPositions);
+
 				lastTask.Result.Events.GameEvent.Add(GameEventTriggered);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
@@ -127,7 +128,7 @@ namespace PlayerPositionsTest
 					(!isDead.HasValue || isDead == true) ||
 					!p.InPVS)
 				{
-					BaseGrid.Dispatcher.InvokeAsync(() =>
+					IconsGrid.Dispatcher.InvokeAsync(() =>
 					{
 						var i = GetPlayerImage(p);
 						i.Visibility = Visibility.Hidden;
@@ -136,7 +137,7 @@ namespace PlayerPositionsTest
 					continue;
 				}
 
-				BaseGrid.Dispatcher.InvokeAsync(() =>
+				IconsGrid.Dispatcher.InvokeAsync(() =>
 				{
 					var i = GetPlayerImage(p);
 					Point displayPos = TranslateCoordinate(new Point(worldPos.X, worldPos.Y));
@@ -161,7 +162,6 @@ namespace PlayerPositionsTest
 				});
 			}
 		}
-
 		void UpdatePlayerStatuses(WorldState ws)
 		{
 			foreach (Player p in ws.Players)
@@ -184,15 +184,16 @@ namespace PlayerPositionsTest
 				if (!maxHealth.HasValue)
 					continue;
 
-				PlayerStatusesControl.Dispatcher.InvokeAsync(() =>
+				Dispatcher.InvokeAsync(() =>
 				{
 					if (t != Team.Red && t != Team.Blue)
 					{
-						Statuses.Remove(Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID));
+						RedStatuses.Remove(RedStatuses.SingleOrDefault(s => s.GUID == p.Info.GUID));
+						BlueStatuses.Remove(BlueStatuses.SingleOrDefault(s => s.GUID == p.Info.GUID));
 						return;
 					}
 					
-					PlayerStatus status = Statuses.SingleOrDefault(s => s.GUID == p.Info.GUID);
+					PlayerStatus status = t == Team.Red ? RedStatuses.SingleOrDefault(s => s.GUID == p.Info.GUID) : BlueStatuses.SingleOrDefault(s => s.GUID == p.Info.GUID);
 					bool added = false;
 					if (status == null)
 					{
@@ -210,19 +211,113 @@ namespace PlayerPositionsTest
 					status.ClassPortrait = string.Format("{0} {1} {2} alpha", t.Value, c.Value, isDead.Value ? "grey" : "");
 
 					if (added)
-						Statuses.Add(status);
+					{
+						if (t == Team.Red)
+							RedStatuses.Add(status);
+						else
+							BlueStatuses.Add(status);
+					}
 
 				}, DispatcherPriority.Background);
 			}
+
+			RedTeamHealth.Dispatcher.InvokeAsync(() =>
+			{
+				int health = 0;
+				uint maxHealth = 0;
+				foreach (PlayerStatus status in RedStatuses)
+				{
+					maxHealth += status.MaxOverheal;
+					if (status.IsDead)
+						continue;
+					health += status.Health;
+				}
+
+				RedTeamHealth.Maximum = maxHealth;
+				RedTeamHealth.Value = health;
+			});
+			BlueTeamHealth.Dispatcher.InvokeAsync(() =>
+			{
+				int health = 0;
+				uint maxHealth = 0;
+				foreach (PlayerStatus status in BlueStatuses)
+				{
+					maxHealth += status.MaxOverheal;
+					if (status.IsDead)
+						continue;
+					health += status.Health;
+				}
+
+				BlueTeamHealth.Maximum = maxHealth;
+				BlueTeamHealth.Value = health;
+			});
 		}
 
-		private void PlayerLeftPVS(Player p)
+		Dictionary<TFRocket, Image> m_OldRockets = new Dictionary<TFRocket, Image>();
+		void UpdateRocketPositions(WorldState ws)
 		{
-			BaseGrid.Dispatcher.Invoke(() =>
+			Dictionary<TFRocket, Image> newRockets = new Dictionary<TFRocket, Image>();
+			foreach (Entity e in ws.EntitiesInPVS)
 			{
-				var e = GetPlayerImage(p);
-				e.Visibility = Visibility.Hidden;
-			});
+				if (e.Class.Classname != "CTFProjectile_Rocket")
+					continue;
+
+				TFRocket rocket = new TFRocket(e);
+				TF2Net.Data.Vector position = rocket.Position.Value;
+				if (position == null)
+					continue;
+
+				TF2Net.Data.Vector angle = rocket.Angle.Value;
+				if (angle == null)
+					continue;
+
+				Team? team = rocket.Team.Value;
+				if (team != Team.Red && team != Team.Blue)
+					continue;
+
+				Image elip;
+				if (!m_OldRockets.TryGetValue(rocket, out elip))
+				{
+					IconsGrid.Dispatcher.Invoke(() =>
+					{
+						elip = new Image();
+
+						if (team.Value == Team.Red)
+							elip.Source = new BitmapImage(new Uri("pack://siteoforigin:,,,/images/projectiles/pill_red.png"));
+						else
+							elip.Source = new BitmapImage(new Uri("pack://siteoforigin:,,,/images/projectiles/pill_blue.png"));
+
+						elip.Width = 15;
+						elip.Height = 15;
+						elip.SetValue(RenderOptions.BitmapScalingModeProperty, BitmapScalingMode.HighQuality);
+						elip.HorizontalAlignment = HorizontalAlignment.Left;
+						elip.VerticalAlignment = VerticalAlignment.Top;
+
+						RotateTransform rotate = new RotateTransform(angle.X);
+						elip.RenderTransform = rotate;
+
+						IconsGrid.Children.Add(elip);
+					});
+				}
+				else
+					m_OldRockets.Remove(rocket);
+
+				elip.Dispatcher.InvokeAsync(() =>
+				{
+					Point adjusted = TranslateCoordinate(new Point(position.X, position.Y));
+					Thickness m = elip.Margin;
+					m.Left = adjusted.X - 7.5;
+					m.Top = adjusted.Y - 7.5;
+					elip.Margin = m;
+				});
+
+				newRockets.Add(rocket, elip);
+			}
+
+			foreach (var kvPair in m_OldRockets)
+				IconsGrid.Dispatcher.InvokeAsync(() => IconsGrid.Children.Remove(kvPair.Value));
+
+			m_OldRockets = newRockets;
 		}
 
 		static string GetClassIconUri(Team t, Class c)
@@ -306,7 +401,7 @@ namespace PlayerPositionsTest
 
 				RenderOptions.SetBitmapScalingMode(i, BitmapScalingMode.HighQuality);
 
-				Grid.SetColumn(i, 1);
+				Panel.SetZIndex(i, 50);
 
 				IconsGrid.Children.Add(i);
 

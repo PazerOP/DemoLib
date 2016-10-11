@@ -15,7 +15,7 @@
         <SolidColorBrush x:Key="BluHighlightBrush" Color="#EF9849" />
         <SolidColorBrush x:Key="BluMediumBrush" Color="#395c78" />
         <SolidColorBrush x:Key="BluAltMediumBrush" Color="#768a88" />
-        <SolidColorBrush x:Key="BluDarkBrush" Color="#34302d" />
+        <SolidColorBrush x:Key="BluDarkBrush" Color="#34302D" />
         <SolidColorBrush x:Key="BluAltDarkBrush" Color="#6b6a65" />
 
         <Color x:Key="NeutralDark" R="193" G="161" B="138" A="255" />

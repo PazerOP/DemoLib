@@ -305,6 +305,15 @@
     <None Include="images\maps\cp_process_final_cropped_centered.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="images\projectiles\pill_blue.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="images\projectiles\pill_red.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="images\projectiles\rocket.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="images_misc\koth_sawmill.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

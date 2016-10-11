@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TF2Net.Data;
 
-namespace TF2Net.PropertyMonitors
+namespace TF2Net.Monitors
 {
 	[DebuggerDisplay("{Value}")]
 	class MultiPropertyMonitor<T> : IPropertyMonitor<T>

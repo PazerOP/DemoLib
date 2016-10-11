@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BitSet;
-using TF2Net.PropertyMonitors;
+using TF2Net.Monitors;
 
 namespace TF2Net.Data
 {

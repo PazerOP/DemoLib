@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using BitSet;
+using TF2Net.Monitors;
 
 namespace TF2Net.Data
 {
 	[DebuggerDisplay("{ToString(),nq}")]
-	public class Entity : IDisposable
+	public class Entity : IDisposable, IEquatable<Entity>
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly WorldState m_World;
@@ -71,11 +72,15 @@ namespace TF2Net.Data
 		public SingleEvent<Action<SendProp>> PropertyAdded { get; } = new SingleEvent<Action<SendProp>>();		
 		public SingleEvent<Action<Entity>> PropertiesUpdated { get; } = new SingleEvent<Action<Entity>>();
 
+		public IEntityPropertyMonitor<Team?> Team { get; }
+
 		public Entity(WorldState ws, uint index, uint serialNumber)
 		{
 			m_World = ws;
 			m_Index = index;
 			m_SerialNumber = serialNumber;
+
+			Team = new EntityPropertyMonitor<Team?>("DT_BaseEntity.m_iTeamNum", this, o => (Team)(int)o);
 		}
 
 		public void AddProperty(SendProp newProp)

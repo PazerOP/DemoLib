@@ -39,15 +39,28 @@ namespace TF2Net.Data
 		public ServerInfo ServerInfo { get; set; }
 
 		public Entity[] Entities { get; } = new Entity[SourceConstants.MAX_EDICTS];
+		public IEnumerable<Entity> EntitiesInPVS
+		{
+			get
+			{
+				for (int i = 0; i < SourceConstants.MAX_EDICTS; i++)
+				{
+					Entity e = Entities[i];
+					if (e?.InPVS == true)
+						yield return e;
+				}
+			}
+		}
 
 		public IList<StringTable> StringTables { get; } = new List<StringTable>();
 
 		public IDictionary<string, string> ConVars { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-		public byte ClassBits { get { return (byte)Math.Ceiling(Math.Log(ServerClasses.Count, 2)); } }
+		
+		public ushort? ViewEntity { get; set; }
 
 		public IList<ServerClass> ServerClasses { get; set; }
 		public IList<SendTable> SendTables { get; set; }
+		public byte ClassBits { get { return (byte)Math.Ceiling(Math.Log(ServerClasses.Count, 2)); } }
 
 		public IList<GameEventDeclaration> EventDeclarations { get; set; }
 
@@ -59,14 +72,11 @@ namespace TF2Net.Data
 					.Entries.Select(e => new KeyValuePair<ServerClass, BitStream>(ServerClasses[int.Parse(e.Value)], e.UserData));
 			}
 		}
-
 		public IList<SendProp>[][] InstanceBaselines { get; } = new IList<SendProp>[2][]
 		{
 			new IList<SendProp>[SourceConstants.MAX_EDICTS],
 			new IList<SendProp>[SourceConstants.MAX_EDICTS],
 		};
-
-		public ushort? ViewEntity { get; set; }
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly List<Player> m_CachedPlayers = new List<Player>();
@@ -134,48 +144,6 @@ namespace TF2Net.Data
 
 				Console.WriteLine(touched);
 			}
-		}
-
-		private void UserInfoStringTableUpdated(StringTable st)
-		{
-#if false
-			List<Player> all = new List<Player>();
-			foreach (var user in st.Entries)
-			{
-				var localCopy = user.UserData?.Clone();
-				if (localCopy == null)
-					continue;
-
-				localCopy.Cursor = 0;
-				UserInfo decoded = new UserInfo(localCopy);
-
-				uint entityIndex = uint.Parse(user.Value) + 1;
-
-				Player existing = m_Players.SingleOrDefault(p => p.Info.GUID == decoded.GUID);
-				if (existing != null)
-				{
-					Debug.Assert(entityIndex == existing.EntityIndex);
-					existing.Info = decoded;
-					all.Add(existing);
-				}
-				else
-				{
-					Player newPlayer = new Player(decoded, this, entityIndex);
-					m_Players.Add(newPlayer);
-					Listeners.PlayerAdded.Invoke(newPlayer);
-					all.Add(newPlayer);
-				}
-			}
-
-			var toRemove = m_Players.Where(p => !all.Any(p2 => p.Info.GUID == p2.Info.GUID)).ToArray();
-			foreach (Player removed in toRemove)
-			{
-				Listeners.PlayerRemoved.Invoke(removed);
-
-				if (!m_Players.Remove(removed))
-					throw new InvalidOperationException();
-			}
-#endif
 		}
 
 		void RegisterEventHandlers()

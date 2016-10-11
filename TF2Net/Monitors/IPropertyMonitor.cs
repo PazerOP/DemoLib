@@ -1,7 +1,7 @@
 ﻿using System;
 using TF2Net.Data;
 
-namespace TF2Net.PropertyMonitors
+namespace TF2Net.Monitors
 {
 	public interface IPlayerPropertyMonitor<T> : IEntityPropertyMonitor<T>, IPlayerPropertyMonitor
 	{
