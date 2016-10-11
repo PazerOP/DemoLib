@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net
 {
@@ -37,5 +38,7 @@ namespace TF2Net
 		public SingleEvent<Action<WorldState, StringTable>> StringTableUpdated { get; } = new SingleEvent<Action<WorldState, StringTable>>();
 
 		public SingleEvent<Action<WorldState>> ViewEntityUpdated { get; } = new SingleEvent<Action<WorldState>>();
+
+		public SingleEvent<Action<IBaseEntity>> TempEntityCreated { get; } = new SingleEvent<Action<IBaseEntity>>();
 	}
 }

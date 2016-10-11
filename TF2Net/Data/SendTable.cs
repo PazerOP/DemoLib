@@ -27,8 +27,6 @@ namespace TF2Net.Data
 
 		public bool Unknown1 { get; set; }
 		
-		IEnumerable<FlattenedProp> AllProperties { get { return Flatten(Excludes); } }
-		
 		IEnumerable<SendPropDefinition> Excludes
 		{
 			get
@@ -45,51 +43,6 @@ namespace TF2Net.Data
 				}
 			}
 		}
-
-#if DEBUG
-		IEnumerable<FlattenedProp> DataTables
-		{
-			get
-			{
-				var datatablesFirst = Properties.OrderByDescending(p => p.Type,
-				   Comparer<SendPropType>.Create((p1, p2) =>
-				   {
-					   bool isDT1 = p1 == SendPropType.Datatable;
-					   bool isDT2 = p2 == SendPropType.Datatable;
-
-					   if (isDT1 == isDT2)
-						   return 0;
-
-					   if (isDT1)
-						   return 1;
-					   else if (isDT2)
-						   return -1;
-
-					   throw new InvalidOperationException();
-				   }));
-
-				foreach (SendPropDefinition prop in datatablesFirst)
-				{
-					if (prop.Type == SendPropType.Datatable)
-					{
-						if (!prop.Table.Properties.Any(p => p.Type == SendPropType.Datatable))
-						{
-							FlattenedProp flatProp = new FlattenedProp();
-							flatProp.Property = prop;
-							flatProp.FullName = flatProp.Property.Name.Insert(0, NetTableName + '.');
-							yield return flatProp;
-						}
-
-						foreach (FlattenedProp childProp in prop.Table.DataTables)
-						{
-							childProp.FullName = childProp.FullName.Insert(0, NetTableName + '.');
-							yield return childProp;
-						}
-					}
-				}
-			}
-		}
-#endif
 
 		IEnumerable<FlattenedProp> Flatten(IEnumerable<SendPropDefinition> excludes)
 		{
@@ -135,41 +88,6 @@ namespace TF2Net.Data
 					flatProp.FullName = flatProp.Property.Name.Insert(0, NetTableName + '.');
 					yield return flatProp;
 				}
-			}
-		}
-
-		public IEnumerable<FlattenedProp> SortedProperties
-		{
-			get
-			{
-				var allProperties = AllProperties.ToList();
-
-				//var allChangesOften = allProperties.Where(p => p.Property.Flags.HasFlag(SendPropFlags.ChangesOften));
-
-				if (allProperties.Count < 2)
-					return allProperties;
-
-				int start = 0;
-				for (int i = start + 1; i < allProperties.Count; i++)
-				{
-					if (allProperties[start].Property.Flags.HasFlag(SendPropFlags.ChangesOften))
-					{
-						start++;
-						continue;
-					}
-
-					if (allProperties[i].Property.Flags.HasFlag(SendPropFlags.ChangesOften))
-					{
-						var temp = allProperties[i];
-						allProperties[i] = allProperties[start];
-						allProperties[start] = temp;
-
-						start++;
-						continue;
-					}
-				}
-
-				return allProperties;
 			}
 		}
 

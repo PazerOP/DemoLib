@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using TF2Net.Entities;
 
 namespace TF2Net.Data
 {
@@ -8,8 +9,8 @@ namespace TF2Net.Data
 	public class SendProp : ICloneable, IDisposable
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly Entity m_Entity;
-		public Entity Entity
+		readonly IEntity m_Entity;
+		public IEntity Entity
 		{
 			get
 			{
@@ -64,13 +65,13 @@ namespace TF2Net.Data
 			}
 		}
 
-		public SendProp(Entity e, SendPropDefinition definition)
+		public SendProp(IEntity e, SendPropDefinition definition)
 		{
 			m_Entity = e;
 			m_Definition = definition;
 		}
 
-		public SendProp Clone(Entity forEnt)
+		public SendProp Clone(IEntity forEnt)
 		{
 			CheckDisposed();
 			SendProp cloned = new SendProp(forEnt, Definition);

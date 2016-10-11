@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net.Monitors
 {
@@ -44,7 +45,7 @@ namespace TF2Net.Monitors
 				Entity_EnteredPVS(Entity);
 		}
 
-		private void Entity_PropertiesUpdated(Entity e)
+		private void Entity_PropertiesUpdated(IPropertySet e)
 		{
 			Debug.Assert(Entity == e);
 			if (m_ValueChanged)
@@ -87,7 +88,8 @@ namespace TF2Net.Monitors
 
 		private void Prop_ValueChanged(SendProp prop)
 		{
-			Debug.Assert((!prop.Entity.InPVS && Property == null) || prop == Property);
+			Debug.Assert(ReferenceEquals(prop.Entity, Entity));
+			Debug.Assert((!Entity.InPVS && Property == null) || prop == Property);
 			Value = Decoder(prop.Value);
 			m_ValueChanged = true;
 		}

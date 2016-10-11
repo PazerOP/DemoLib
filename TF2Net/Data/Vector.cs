@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace TF2Net.Data
 {
 	[DebuggerDisplay("{ToString(),nq}")]
-	public class Vector : ICloneable
+	public class Vector : IReadOnlyVector, ICloneable
 	{
 		public double X { get; set; }
 		public double Y { get; set; }
@@ -27,6 +27,12 @@ namespace TF2Net.Data
 			X = xyz[0];
 			Y = xyz[1];
 			Z = xyz[2];
+		}
+		public Vector(IReadOnlyVector v)
+		{
+			X = v.X;
+			Y = v.Y;
+			Z = v.Z;
 		}
 
 		public double this[int i]

@@ -55,7 +55,7 @@ namespace PlayerPositionsTest
 					AlphaRed = string.Format("class_portraits/alpha/{0}.png", cls);
 					AlphaRedDead = string.Format("class_portraits/alpha/{0}_grey.png", cls);
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					Debugger.Break();
 					throw;

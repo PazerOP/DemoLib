@@ -1,30 +1,28 @@
-﻿<Application x:Class="PlayerPositionsTest.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:PlayerPositionsTest"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-        <SolidColorBrush x:Key="RedMainBrush" Color="#FFBD3B3B"/>
-        <SolidColorBrush x:Key="RedHighlightBrush" Color="#FFF08149"/>
-        <SolidColorBrush x:Key="RedMediumBrush" Color="#9D312F"/>
-        <SolidColorBrush x:Key="RedAltMediumBrush" Color="#913A1E" />
-        <SolidColorBrush x:Key="RedDarkBrush" Color="#462D26" />
-        <SolidColorBrush x:Key="RedAltDarkBrush" Color="#6A4535" />
+﻿<Application x:Class="PlayerPositionsTest.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:PlayerPositionsTest" StartupUri="MainWindow.xaml">
+	<Application.Resources>
+		<SolidColorBrush x:Key="RedMainBrush" Color="#FFBD3B3B" />
+		<SolidColorBrush x:Key="RedHighlightBrush" Color="#FFF08149" />
+		<SolidColorBrush x:Key="RedMediumBrush" Color="#9D312F" />
+		<SolidColorBrush x:Key="RedAltMediumBrush" Color="#913A1E" />
+		<SolidColorBrush x:Key="RedDarkBrush" Color="#462D26" />
+		<SolidColorBrush x:Key="RedAltDarkBrush" Color="#6A4535" />
 
-        <SolidColorBrush x:Key="BluMainBrush" Color="#FF5B7A8C"/>
-        <SolidColorBrush x:Key="BluHighlightBrush" Color="#EF9849" />
-        <SolidColorBrush x:Key="BluMediumBrush" Color="#395c78" />
-        <SolidColorBrush x:Key="BluAltMediumBrush" Color="#768a88" />
-        <SolidColorBrush x:Key="BluDarkBrush" Color="#34302D" />
-        <SolidColorBrush x:Key="BluAltDarkBrush" Color="#6b6a65" />
+		<SolidColorBrush x:Key="BluMainBrush" Color="#FF5B7A8C" />
+		<SolidColorBrush x:Key="BluHighlightBrush" Color="#EF9849" />
+		<SolidColorBrush x:Key="BluMediumBrush" Color="#395c78" />
+		<SolidColorBrush x:Key="BluAltMediumBrush" Color="#768a88" />
+		<SolidColorBrush x:Key="BluDarkBrush" Color="#34302D" />
+		<SolidColorBrush x:Key="BluAltDarkBrush" Color="#6b6a65" />
 
-        <Color x:Key="NeutralDark" R="193" G="161" B="138" A="255" />
-        <SolidColorBrush x:Key="NeutralDarkBrush" Color="{StaticResource NeutralDark}" />
-        
-        <Color x:Key="NeutralMedium" R="218" G="189" B="171" A="255" />
-        <SolidColorBrush x:Key="NeutralMediumBrush" Color="{StaticResource NeutralMedium}" />
+		<Color x:Key="NeutralDark" R="193" G="161" B="138" A="255" />
+		<SolidColorBrush x:Key="NeutralDarkBrush" Color="{StaticResource NeutralDark}" />
 
-        <Color x:Key="NeutralLight" R="245" G="231" B="222" A="255"/>
-        <SolidColorBrush x:Key="NeutralLightBrush" Color="{StaticResource NeutralLight}" />
-    </Application.Resources>
+		<Color x:Key="NeutralMedium" R="218" G="189" B="171" A="255" />
+		<SolidColorBrush x:Key="NeutralMediumBrush" Color="{StaticResource NeutralMedium}" />
+
+		<Color x:Key="NeutralLight" R="245" G="231" B="222" A="255" />
+		<SolidColorBrush x:Key="NeutralLightBrush" Color="{StaticResource NeutralLight}" />
+
+		<PathGeometry x:Key="ExplosionPath" Figures="M59.093 45.862l20.443-13.101L59.787 30.67L65.12 7.695L51.118 22.186l-3.894-16.37l-5.893 15.278   L25.318 0.461l5.06 25.859l-14.264-3.171c0 0 4.321 8.283 6.74 13.269L0 34.82l20.679 12.089l-5.939 6.115l9.608-1.756l-6.812 24.1   l20.259-16.933l5.241 13.09l5.41-10.47l17.43 18.02l-8.699-24.141l19.139 1.937L59.093 45.862z" FillRule="NonZero" />
+	</Application.Resources>
 </Application>

@@ -9,6 +9,7 @@ using TF2Net.NetMessages;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using TF2Net.Extensions;
+using TF2Net.Entities;
 
 namespace TF2Net.Data
 {

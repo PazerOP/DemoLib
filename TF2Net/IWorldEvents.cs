@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net
 {
@@ -36,5 +37,7 @@ namespace TF2Net
 
 		SingleEvent<Action<Player>> PlayerAdded { get; }
 		SingleEvent<Action<Player>> PlayerRemoved { get; }
+
+		SingleEvent<Action<IBaseEntity>> TempEntityCreated { get; }
 	}
 }

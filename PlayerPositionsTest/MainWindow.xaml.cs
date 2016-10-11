@@ -15,12 +15,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using DemoLib;
 using TF2Net;
 using TF2Net.Data;
 using TF2Net.Entities;
+using TF2Net.Entities.TempEntities;
 
 namespace PlayerPositionsTest
 {
@@ -81,6 +83,8 @@ namespace PlayerPositionsTest
 
 				lastTask.Result.Events.NewTick.Add(UpdateRocketPositions);
 
+				lastTask.Result.Events.TempEntityCreated.Add(TempEntCreated);
+
 				lastTask.Result.Events.GameEvent.Add(GameEventTriggered);
 
 				progress.Dispatcher.Invoke(() => progress.Maximum = lastTask.Result.Header.m_PlaybackTicks.Value);
@@ -97,6 +101,57 @@ namespace PlayerPositionsTest
 			Debug.WriteLine(e.Declaration.Name);
 		}
 
+		void TempEntCreated(IBaseEntity e)
+		{
+			if (e.Class.Classname == TFExplosion.CLASSNAME)
+				Explosion(new TFExplosion(e));
+			else
+			{
+				if (e.Class.Classname != "CTEPlayerAnimEvent" &&
+					e.Class.Classname != "CTEDust" &&
+					e.Class.Classname != "CTEWorldDecal")
+				{
+					Debug.WriteLine(string.Format("Tempent: {0}", e.Class.Classname));
+				}
+			}
+		}
+
+		void Explosion(TFExplosion exp)
+		{
+			TF2Net.Data.Vector origin = new TF2Net.Data.Vector(exp.Origin);
+			exp = null;
+
+			IconsGrid.Dispatcher.InvokeAsync(() =>
+			{
+				Viewbox vb = new Viewbox();
+
+				DoubleAnimation a;
+				{
+					System.Windows.Shapes.Path explosion = new System.Windows.Shapes.Path();
+					explosion.Data = (Geometry)FindResource("ExplosionPath");
+					explosion.Fill = Brushes.Orange;
+					vb.Child = explosion;
+					
+					a = new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.75)));
+					explosion.BeginAnimation(OpacityProperty, a);
+				}
+
+				vb.Width = 35;
+				vb.Height = 35;
+
+				SetPosition(new Point(origin.X, origin.Y), vb);
+
+				IconsGrid.Children.Add(vb);
+
+				// Automatically remove the control
+				{
+					EventHandler handler = (sender, eventArgs) => IconsGrid.Children.Remove(vb);
+
+					DispatcherTimer t = new DispatcherTimer(a.Duration.TimeSpan + TimeSpan.FromSeconds(1), DispatcherPriority.Normal, handler, IconsGrid.Dispatcher);
+				}
+			});
+		}
+
 		private void Events_NewTick(WorldState ws)
 		{
 			var tick = ws.Tick;
@@ -107,8 +162,8 @@ namespace PlayerPositionsTest
 				if (ws.EndTick.HasValue)
 				{
 					progress.Maximum = ws.EndTick.Value - ws.BaseTick;
-					progress.Value = ws.Tick - ws.BaseTick;
 					progress.IsIndeterminate = false;
+					progress.Value = ws.Tick - ws.BaseTick;
 				}
 			}, DispatcherPriority.DataBind);
 		}
@@ -234,7 +289,9 @@ namespace PlayerPositionsTest
 				}
 
 				RedTeamHealth.Maximum = maxHealth;
-				RedTeamHealth.Value = health;
+
+				double delta = health - RedTeamHealth.Value;
+				RedTeamHealth.Value = RedTeamHealth.Value + delta / 32;
 			});
 			BlueTeamHealth.Dispatcher.InvokeAsync(() =>
 			{
@@ -249,7 +306,9 @@ namespace PlayerPositionsTest
 				}
 
 				BlueTeamHealth.Maximum = maxHealth;
-				BlueTeamHealth.Value = health;
+
+				double delta = health - BlueTeamHealth.Value;
+				BlueTeamHealth.Value = BlueTeamHealth.Value + delta / 32;
 			});
 		}
 
@@ -408,6 +467,21 @@ namespace PlayerPositionsTest
 				m_Images.Add(p.Info.GUID, i);
 			}
 			return i;
+		}
+
+		void SetPosition(Point world, FrameworkElement element)
+		{
+			Thickness m = element.Margin;
+			m.Bottom = m.Right = 0;
+
+			Point translated = TranslateCoordinate(world);
+
+			m.Left = translated.X - element.Width / 2;
+			m.Top = translated.Y - element.Height / 2;
+
+			element.Margin = m;
+			element.HorizontalAlignment = HorizontalAlignment.Left;
+			element.VerticalAlignment = VerticalAlignment.Top;
 		}
 
 		Point TranslateCoordinate(Point world)

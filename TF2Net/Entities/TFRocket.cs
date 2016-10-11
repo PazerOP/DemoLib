@@ -8,23 +8,18 @@ using TF2Net.Monitors;
 
 namespace TF2Net.Entities
 {
-	public class TFRocket : IEquatable<TFRocket>, IEquatable<Entity>
+	public class TFRocket : EntityWrapper, IEquatable<TFRocket>, IEquatable<Entity>
 	{
-		public Entity Entity { get; }
-
 		public IEntityPropertyMonitor<Vector> Position { get; }
 		public IEntityPropertyMonitor<Vector> Angle { get; }
 		public IEntityPropertyMonitor<Team?> Team { get { return Entity.Team; } }
+		public IEntityPropertyMonitor<EHandle> Launcher { get; }
 
-		public TFRocket(Entity e)
+		public TFRocket(Entity e) : base(e, "CTFProjectile_Rocket")
 		{
-			if (e.Class.Classname != "CTFProjectile_Rocket")
-				throw new ArgumentException("Entity is not a rocket!");
-
-			Entity = e;
-
 			Position = new EntityPropertyMonitor<Vector>("DT_TFBaseRocket.m_vecOrigin", Entity, o => (Vector)o);
 			Angle = new EntityPropertyMonitor<Vector>("DT_TFBaseRocket.m_angRotation", Entity, o => (Vector)o);
+			Launcher = new EntityPropertyMonitor<EHandle>("DT_TFBaseRocket.m_hLauncher", Entity, o => new EHandle(e.World, (uint)o));
 		}
 
 		public bool Equals(TFRocket other)

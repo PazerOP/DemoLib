@@ -1,5 +1,6 @@
 ﻿using System;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net.Monitors
 {

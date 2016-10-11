@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net.Monitors
 {

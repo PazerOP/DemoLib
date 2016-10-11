@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BitSet;
+using TF2Net.Entities;
 using TF2Net.Monitors;
 
 namespace TF2Net.Data
@@ -99,16 +100,12 @@ namespace TF2Net.Data
 				Listeners_EntityEnteredPVS(Entity);
 		}
 
-		void InitPropertyMonitors()
-		{
-
-		}
-
 		private void Listeners_EntityLeftPVS(Entity e)
 		{
 			Debug.Assert(e != null);
 			if (e != Entity)
 				return;
+			Debug.Assert(ReferenceEquals(e, Entity));
 
 			e.PropertiesUpdated.Remove(Entity_PropertiesUpdated);
 
@@ -120,15 +117,16 @@ namespace TF2Net.Data
 			Debug.Assert(e != null);
 			if (e != Entity)
 				return;
+			Debug.Assert(ReferenceEquals(e, Entity));
 
 			e.PropertiesUpdated.Add(Entity_PropertiesUpdated);
 
 			m_EnteredPVS?.Invoke(this);
 		}
 
-		private void Entity_PropertiesUpdated(Entity e)
+		private void Entity_PropertiesUpdated(IPropertySet e)
 		{
-			Debug.Assert(e == Entity);
+			Debug.Assert(ReferenceEquals(e, Entity));
 			PropertiesUpdated.Invoke(this);
 		}
 
@@ -223,7 +221,8 @@ namespace TF2Net.Data
 
 			private void Prop_ValueChanged(SendProp prop)
 			{
-				Debug.Assert((!prop.Entity.InPVS && Property == null) || prop == Property);
+				Debug.Assert(ReferenceEquals(prop.Entity, Entity));
+				Debug.Assert((!Entity.InPVS && Property == null) || prop == Property);
 				var newValue = Decoder(prop.Value);
 				//Debug.Assert(Value?.Equals(newValue) != true);
 				Value = newValue;

@@ -7,14 +7,12 @@ using TF2Net.Data;
 
 namespace TF2Net.Entities
 {
-	public class Pill
+	public class Pill : EntityWrapper
 	{
-		public Entity Entity { get; }
+		public const string CLASSNAME = "CTFGrenadePipebombProjectile";
 
-		public Pill(Entity e)
+		public Pill(Entity e) : base(e, CLASSNAME)
 		{
-			if (e.Class.Classname != "CTFGrenadePipebombProjectile")
-				throw new ArgumentException("Entity is not a pill!");
 		}
 	}
 }

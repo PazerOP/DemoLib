@@ -55,19 +55,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConditionalHashSet.cs" />
+    <Compile Include="Data\EHandle.cs" />
+    <Compile Include="Data\IReadOnlyVector.cs" />
     <Compile Include="Data\PlayerState.cs" />
     <Compile Include="Data\UserMessageType.cs" />
+    <Compile Include="Entities\IEntity.cs" />
+    <Compile Include="Entities\EntityWrapper.cs" />
+    <Compile Include="Entities\IPropertySet.cs" />
     <Compile Include="Entities\Pill.cs" />
+    <Compile Include="Entities\TempEntities\TFExplosion.cs" />
     <Compile Include="Entities\TFRocket.cs" />
     <Compile Include="Monitors\EntityMonitor.cs" />
     <Compile Include="Monitors\EntityPropertyMonitor.cs" />
     <Compile Include="Monitors\MultiPropertyMonitor.cs" />
+    <Compile Include="NetMessages\Shared\EntityCoder.cs" />
     <Compile Include="SingleEvent.cs" />
     <Compile Include="Data\BaselineIndex.cs" />
     <Compile Include="Data\Class.cs" />
     <Compile Include="Data\ClientFrame.cs" />
     <Compile Include="Data\ConnectionState.cs" />
-    <Compile Include="Data\Entity.cs" />
+    <Compile Include="Entities\Entity.cs" />
     <Compile Include="Data\EntityData.cs" />
     <Compile Include="Data\EntityUpdateType.cs" />
     <Compile Include="Data\FlattenedProp.cs" />

@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using BitSet;
 using TF2Net.Data;
+using TF2Net.Entities;
+using TF2Net.NetMessages.Shared;
 
 namespace TF2Net.NetMessages
 {
@@ -73,19 +75,6 @@ namespace TF2Net.NetMessages
 			return ret;
 		}
 
-		static uint ReadUBitVar(BitStream stream)
-		{
-			switch (stream.ReadByte(2))
-			{
-				case 0:		return stream.ReadUInt(4);
-				case 1:		return stream.ReadUInt(8);
-				case 2:		return stream.ReadUInt(12);
-				case 3:		return stream.ReadUInt(32);
-			}
-
-			throw new Exception("Should never get here...");
-		}
-
 		public void ApplyWorldState(WorldState ws)
 		{
 			if (ws.SignonState.State == ConnectionState.Spawn)
@@ -131,7 +120,7 @@ namespace TF2Net.NetMessages
 			int newEntity = -1;
 			for (int i = 0; i < UpdatedEntries; i++)
 			{
-				newEntity += 1 + (int)ReadUBitVar(Data);
+				newEntity += 1 + (int)EntityCoder.ReadUBitVar(Data);
 
 				// Leave PVS flag
 				if (!Data.ReadBool())
@@ -140,9 +129,12 @@ namespace TF2Net.NetMessages
 					if (Data.ReadBool())
 					{
 						Entity e = ReadEnterPVS(ws, Data, (uint)newEntity);
-						
-						ApplyEntityUpdate(e, Data);
-						
+
+						EntityCoder.ApplyEntityUpdate(e, Data);
+
+						if (ws.Entities[e.Index] != null && !ReferenceEquals(e, ws.Entities[e.Index]))
+							ws.Entities[e.Index].Dispose();
+
 						ws.Entities[e.Index] = e;
 
 						if (UpdateBaseline)
@@ -154,7 +146,7 @@ namespace TF2Net.NetMessages
 					{
 						// Preserve/update
 						Entity e = ws.Entities[(uint)newEntity];// ws.Entities.Single(ent => ent.Index == newEntity);
-						ApplyEntityUpdate(e, Data);
+						EntityCoder.ApplyEntityUpdate(e, Data);
 					}
 				}
 				else
@@ -205,16 +197,17 @@ namespace TF2Net.NetMessages
 
 		Entity ReadEnterPVS(WorldState ws, BitStream stream, uint entityIndex)
 		{
-			uint serverClassID = stream.ReadUInt(ws.ClassBits);
+			ServerClass serverClass = ws.ServerClasses[(int)stream.ReadUInt(ws.ClassBits)];
+			SendTable networkTable = ws.SendTables.Single(st => st.NetTableName == serverClass.DatatableName);
 			uint serialNumber = stream.ReadUInt(SourceConstants.NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS);
 
 			Entity e;
 			{
 				Entity existing = ws.Entities[entityIndex];
-				e = (existing == null || existing.SerialNumber != serialNumber) ? new Entity(ws, entityIndex, serialNumber) : existing;
+				e = (existing == null || existing.SerialNumber != serialNumber) ?
+					new Entity(ws, serverClass, networkTable, entityIndex, serialNumber) :
+					existing;
 			}
-			e.Class = ws.ServerClasses[(int)serverClassID];
-			e.NetworkTable = ws.SendTables.Single(st => st.NetTableName == e.Class.DatatableName);
 
 			var decodedBaseline = ws.InstanceBaselines[(int)Baseline.Value][entityIndex];
 			if (decodedBaseline != null)
@@ -233,7 +226,7 @@ namespace TF2Net.NetMessages
 				if (baseline != null)
 				{
 					baseline.Cursor = 0;
-					ApplyEntityUpdate(e, baseline);
+					EntityCoder.ApplyEntityUpdate(e, baseline);
 					Debug.Assert((baseline.Length - baseline.Cursor) < 8);
 				}
 			}
@@ -252,83 +245,6 @@ namespace TF2Net.NetMessages
 
 				ws.Entities[newEntity] = null;
 			}
-		}
-		
-		static void ApplyEntityUpdate(Entity e, BitStream stream)
-		{
-			var testGuessProps = e.NetworkTable.FlattenedProps;
-
-			bool atLeastOne = false;
-			int index = -1;
-			while ((index = ReadFieldIndex(stream, index)) != -1)
-			{
-				Debug.Assert(index < testGuessProps.Length);
-				Debug.Assert(index < SourceConstants.MAX_DATATABLE_PROPS);
-
-				var prop = testGuessProps[index];
-
-				SendProp s = e.GetProperty(prop);
-
-				bool wasNull = false;
-				if (s == null)
-				{
-					s = new SendProp(e, prop);
-					wasNull = true;
-				}
-
-				object newValue = prop.Decode(stream);
-				s.Value = newValue;
-				atLeastOne = true;
-
-				if (wasNull)
-					e.AddProperty(s);
-			}
-
-			if (atLeastOne)
-				e.PropertiesUpdated.Invoke(e);
-		}
-
-		static int ReadFieldIndex(BitStream stream, int lastIndex)
-		{
-#if true
-			if (!stream.ReadBool())
-				return -1;
-			
-			var diff = ReadUBitVar(stream);
-			return (int)(lastIndex + diff + 1);
-#else
-			if (stream.ReadBool())
-				return lastIndex + 1;
-
-			int ret = 0;
-			if (stream.ReadBool())
-			{
-				ret = stream.ReadInt(3);  // read 3 bits
-			}
-			else
-			{
-				ret = stream.ReadInt(7); // read 7 bits
-				switch (ret & (32 | 64))
-				{
-					case 32:
-					ret = (ret & ~96) | stream.ReadInt(2) << 5;
-					break;
-					case 64:
-					ret = (ret & ~96) | stream.ReadInt(4) << 5;
-					break;
-					case 96:
-					ret = (ret & ~96) | stream.ReadInt(7) << 5;
-					break;
-				}
-			}
-
-			if (ret == 0xFFF)
-			{ // end marker is 4095 for cs:go
-				return -1;
-			}
-
-			return lastIndex + 1 + ret;
-#endif
 		}
 	}
 }

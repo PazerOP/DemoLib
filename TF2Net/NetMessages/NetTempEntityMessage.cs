@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BitSet;
 using TF2Net.Data;
+using TF2Net.Entities;
 
 namespace TF2Net.NetMessages
 {
@@ -36,28 +37,71 @@ namespace TF2Net.NetMessages
 
 		public void ApplyWorldState(WorldState ws)
 		{
-			return;
-			BitStream local = Data.Clone();
-			local.Cursor = 0;
-
-			for (int i = 0; i < EntryCount; i++)
+			List<IBaseEntity> tempents = new List<IBaseEntity>();
 			{
-				double delay = 0;
-				if (local.ReadBool())
-					delay = local.ReadInt(8) / 100.0;
+				BitStream local = Data.Clone();
+				local.Cursor = 0;
 
-				if (local.ReadBool())
+				TempEntity e = null;
+				for (int i = 0; i < EntryCount; i++)
 				{
-					uint classID = local.ReadUInt(ws.ClassBits);
+					double delay = 0;
+					if (local.ReadBool())
+						delay = local.ReadInt(8) / 100.0;
 
-					ServerClass serverClass = ws.ServerClasses[(int)classID];
-					SendTable sendTable = ws.SendTables.Single(st => st.NetTableName == serverClass.DatatableName);
-					var flattened = sendTable.FlattenedProps;
+					if (local.ReadBool())
+					{
+						uint classID = local.ReadUInt(ws.ClassBits);
 
-					var tempents = ws.SendTables.Where(st => st.NetTableName.StartsWith("DT_TE"));
+						ServerClass serverClass = ws.ServerClasses[(int)classID - 1];
+						SendTable sendTable = ws.SendTables.Single(st => st.NetTableName == serverClass.DatatableName);
+						var flattened = sendTable.FlattenedProps;
 
-					Console.WriteLine("help mom");
+						e = new TempEntity(ws, serverClass, sendTable);
+						EntityCoder.ApplyEntityUpdate(e, local);
+						tempents.Add(e);
+					}
+					else
+					{
+						Debug.Assert(e != null);
+						EntityCoder.ApplyEntityUpdate(e, local);
+					}
 				}
+			}
+
+			foreach (IBaseEntity te in tempents)
+			{
+				ws.Listeners.TempEntityCreated.Invoke(te);
+			}
+		}
+
+		[DebuggerDisplay("{Class,nq}")]
+		class TempEntity : IEntity
+		{
+			readonly List<SendProp> m_Properties = new List<SendProp>();
+			public IReadOnlyList<SendProp> Properties { get { return m_Properties; } }
+
+			public SingleEvent<Action<IPropertySet>> PropertiesUpdated { get; } = new SingleEvent<Action<IPropertySet>>();
+			public SingleEvent<Action<SendProp>> PropertyAdded { get; } = new SingleEvent<Action<SendProp>>();
+
+			public WorldState World { get; }
+			public ServerClass Class { get; }
+			public SendTable NetworkTable { get; }
+
+			public TempEntity(WorldState ws, ServerClass sClass, SendTable table)
+			{
+				World = ws;
+				Class = sClass;
+				NetworkTable = table;
+			}
+
+			public void AddProperty(SendProp newProp)
+			{
+				Debug.Assert(!m_Properties.Any(p => ReferenceEquals(p.Definition, newProp.Definition)));
+				Debug.Assert(ReferenceEquals(newProp.Entity, this));
+
+				m_Properties.Add(newProp);
+				PropertyAdded.Invoke(newProp);
 			}
 		}
 	}

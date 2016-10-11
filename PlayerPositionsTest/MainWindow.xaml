@@ -1,61 +1,54 @@
-﻿<Window x:Class="PlayerPositionsTest.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:PlayerPositionsTest"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="480" Width="800" Background="Black" SnapsToDevicePixels="False" UseLayoutRounding="False" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="PlayerStatusTemplate.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="5*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="23" />
-        </Grid.RowDefinitions>
-        <Grid Grid.Column="1">
-            <Image x:Name="MapImage" Margin="0" Source="pack://siteoforigin:,,,/images/maps/cp_process_final_cropped_centered.png" RenderOptions.BitmapScalingMode="HighQuality" Panel.ZIndex="49"/>
-            <Grid x:Name="IconsGrid" Panel.ZIndex="50"/>
-        </Grid>
+﻿<Window x:Class="PlayerPositionsTest.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:PlayerPositionsTest" mc:Ignorable="d" Title="MainWindow" Height="480" Width="800" Background="Black" SnapsToDevicePixels="False" UseLayoutRounding="False" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="PlayerStatusTemplate.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="2*" />
+			<ColumnDefinition Width="5*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*" />
+			<RowDefinition Height="23" />
+		</Grid.RowDefinitions>
+		<Grid Grid.Column="1">
+			<Image x:Name="MapImage" Margin="0" Source="pack://siteoforigin:,,,/images/maps/cp_process_final_cropped_centered.png" RenderOptions.BitmapScalingMode="HighQuality" Panel.ZIndex="49" />
+			<Grid x:Name="IconsGrid" Panel.ZIndex="50" />
+		</Grid>
 
-        <Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="155,10,0,0" VerticalAlignment="Top" Width="74" Foreground="White" Grid.ColumnSpan="2" Height="10"/>
-        <ProgressBar x:Name="progress" Grid.ColumnSpan="2" Grid.Row="1" Height="23" VerticalAlignment="Bottom" Value="0" Minimum="0" IsIndeterminate="True"/>
+		<Label x:Name="TickLabel" HorizontalAlignment="Left" Margin="155,10,0,0" VerticalAlignment="Top" Width="74" Foreground="White" Grid.ColumnSpan="2" Height="10" />
+		<ProgressBar x:Name="progress" Grid.ColumnSpan="2" Grid.Row="1" Height="23" VerticalAlignment="Bottom" Value="0" Minimum="0" IsIndeterminate="True" />
 
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ItemsControl ItemsSource="{Binding}" DataContext="{Binding RedStatuses}" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}" ItemTemplate="{StaticResource PlayerStatusTemplate}" VerticalAlignment="Bottom" Margin="0,0,0,5" >
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="1" Rows="{Binding RedStatuses.Count}" VerticalAlignment="Top" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-            <Grid Grid.Row="1">
-                <StackPanel>
-                    <ProgressBar x:Name="RedTeamHealth" Height="23" />
-                    <ProgressBar x:Name="BlueTeamHealth" Height="23" />
-                </StackPanel>
-            </Grid>
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding}" DataContext="{Binding BlueStatuses}" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}" ItemTemplate="{StaticResource PlayerStatusTemplate}" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" Margin="0,0,0,5" >
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="1" Rows="{Binding BlueStatuses.Count}" VerticalAlignment="Top" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-        </Grid>
-    </Grid>
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<ItemsControl ItemsSource="{Binding}" DataContext="{Binding RedStatuses}" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}" ItemTemplate="{StaticResource PlayerStatusTemplate}" VerticalAlignment="Bottom" Margin="0,0,0,5">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Columns="1" Rows="{Binding RedStatuses.Count}" VerticalAlignment="Top" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+			</ItemsControl>
+			<Grid Grid.Row="1">
+				<StackPanel>
+					<ProgressBar x:Name="RedTeamHealth" Height="23" />
+					<ProgressBar x:Name="BlueTeamHealth" Height="23" />
+				</StackPanel>
+			</Grid>
+			<ItemsControl Grid.Row="2" ItemsSource="{Binding}" DataContext="{Binding BlueStatuses}" d:DataContext="{d:DesignData Source=./DesignData/PlayerStatusesSampleData.xaml}" ItemTemplate="{StaticResource PlayerStatusTemplate}" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" Margin="0,0,0,5">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Columns="1" Rows="{Binding BlueStatuses.Count}" VerticalAlignment="Top" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+			</ItemsControl>
+		</Grid>
+	</Grid>
 </Window>
