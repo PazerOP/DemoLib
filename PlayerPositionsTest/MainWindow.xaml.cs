@@ -105,14 +105,21 @@ namespace PlayerPositionsTest
 		{
 			if (e.Class.Classname == TFExplosion.CLASSNAME)
 				Explosion(new TFExplosion(e));
+			else if (e.Class.Classname == "CTEPlayerAnimEvent")
+				return;
+			else if (e.Class.Classname == "CTEDust")
+				return;
+			else if (e.Class.Classname == "CTETFBlood")
+				new TFBlood(e);
+			else if (e.Class.Classname == "CTEEffectDispatch")
+				return;
+			else if (e.Class.Classname == "CTEWorldDecal")
+				return;
+			else if (e.Class.Classname == FireBullets.CLASSNAME)
+				new FireBullets(e);
 			else
 			{
-				if (e.Class.Classname != "CTEPlayerAnimEvent" &&
-					e.Class.Classname != "CTEDust" &&
-					e.Class.Classname != "CTEWorldDecal")
-				{
-					Debug.WriteLine(string.Format("Tempent: {0}", e.Class.Classname));
-				}
+				Debug.WriteLine(string.Format("Tempent: {0}", e.Class.Classname));
 			}
 		}
 
@@ -139,16 +146,17 @@ namespace PlayerPositionsTest
 				vb.Width = 35;
 				vb.Height = 35;
 
+				Random r = new Random();
+				vb.RenderTransform = new RotateTransform(r.NextDouble() * 360, vb.Width / 2, vb.Height / 2);
+
 				SetPosition(new Point(origin.X, origin.Y), vb);
 
 				IconsGrid.Children.Add(vb);
 
 				// Automatically remove the control
-				{
-					EventHandler handler = (sender, eventArgs) => IconsGrid.Children.Remove(vb);
-
-					DispatcherTimer t = new DispatcherTimer(a.Duration.TimeSpan + TimeSpan.FromSeconds(1), DispatcherPriority.Normal, handler, IconsGrid.Dispatcher);
-				}
+				new DispatcherTimer(a.Duration.TimeSpan + TimeSpan.FromSeconds(1), DispatcherPriority.Normal,
+					(s, e) => IconsGrid.Children.Remove(vb),
+					IconsGrid.Dispatcher);
 			});
 		}
 
@@ -165,7 +173,7 @@ namespace PlayerPositionsTest
 					progress.IsIndeterminate = false;
 					progress.Value = ws.Tick - ws.BaseTick;
 				}
-			}, DispatcherPriority.DataBind);
+			});
 		}
 
 		void UpdatePlayerPositions(WorldState ws)

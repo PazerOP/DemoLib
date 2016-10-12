@@ -59,10 +59,13 @@
     <Compile Include="Data\IReadOnlyVector.cs" />
     <Compile Include="Data\PlayerState.cs" />
     <Compile Include="Data\UserMessageType.cs" />
+    <Compile Include="Data\WeaponType.cs" />
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Entities\EntityWrapper.cs" />
     <Compile Include="Entities\IPropertySet.cs" />
     <Compile Include="Entities\Pill.cs" />
+    <Compile Include="Entities\TempEntities\FireBullets.cs" />
+    <Compile Include="Entities\TempEntities\TFBlood.cs" />
     <Compile Include="Entities\TempEntities\TFExplosion.cs" />
     <Compile Include="Entities\TFRocket.cs" />
     <Compile Include="Monitors\EntityMonitor.cs" />

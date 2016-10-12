@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -28,11 +29,14 @@ namespace TF2Net.Data
 		public IPlayerPropertyMonitor<int?> Health { get; }
 		public IPlayerPropertyMonitor<uint?> MaxHealth { get; }
 		public IPlayerPropertyMonitor<uint?> MaxBuffedHealth { get; }
-		public IPlayerPropertyMonitor<int?> Ping { get; }
+		public IPlayerPropertyMonitor<uint?> Ping { get; }
 		public IPlayerPropertyMonitor<int?> Score { get; }
 		public IPlayerPropertyMonitor<int?> Deaths { get; }
 		public IPlayerPropertyMonitor<bool?> Connected { get; }
 		public IPlayerPropertyMonitor<PlayerState?> PlayerState { get; }
+		public IPlayerPropertyMonitor<uint?> Damage { get; }
+
+		public ImmutableArray<IPlayerPropertyMonitor<EHandle>> Weapons { get; }
 
 		SingleEvent<Action<Player>> m_EnteredPVS { get; } = new SingleEvent<Action<Player>>();
 		public event Action<Player> EnteredPVS
@@ -85,12 +89,21 @@ namespace TF2Net.Data
 				});
 
 			PlayerState = new PlayerPropertyMonitor<PlayerState?>("DT_TFPlayerShared.m_nPlayerState", this, o => (PlayerState)(uint)(o));			
-			MaxHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxHealth", this, o => Convert.ToUInt32(o));
-			MaxBuffedHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxBuffedHealth", this, o => Convert.ToUInt32(o));
-			Ping = new PlayerResourcePropertyMonitor<int?>("m_iPing", this, o => Convert.ToInt32(o));
-			Score = new PlayerResourcePropertyMonitor<int?>("m_iScore", this, o => Convert.ToInt32(o));
-			Deaths = new PlayerResourcePropertyMonitor<int?>("m_iDeaths", this, o => Convert.ToInt32(o));
-			Connected = new PlayerResourcePropertyMonitor<bool?>("m_bConnected", this, o => Convert.ToInt32(o) != 0);
+			MaxHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxHealth", this, o => (uint)o);
+			MaxBuffedHealth = new PlayerResourcePropertyMonitor<uint?>("m_iMaxBuffedHealth", this, o => (uint)o);
+			Ping = new PlayerResourcePropertyMonitor<uint?>("m_iPing", this, o => (uint)o);
+			Score = new PlayerResourcePropertyMonitor<int?>("m_iScore", this, o => (int)o);
+			Deaths = new PlayerResourcePropertyMonitor<int?>("m_iDeaths", this, o => (int)o);
+			Connected = new PlayerResourcePropertyMonitor<bool?>("m_bConnected", this, o => (uint)o != 0);
+			Damage = new PlayerResourcePropertyMonitor<uint?>("m_iDamage", this, o => (uint)o);
+
+			// weapons
+			{
+				IPlayerPropertyMonitor<EHandle>[] array = new IPlayerPropertyMonitor<EHandle>[48];
+				for (int i = 0; i < 48; i++)
+					array[i] = new PlayerPropertyMonitor<EHandle>(string.Format("m_hMyWeapons.{0:D3}", i), this, o => new EHandle(ws, (uint)o));
+				Weapons = ImmutableArray.Create(array);
+			}
 			#endregion
 
 			World.Listeners.EntityEnteredPVS.Add(Listeners_EntityEnteredPVS);

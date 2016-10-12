@@ -54,7 +54,7 @@ namespace TF2Net.NetMessages
 			UpdateBaseline = stream.ReadBool();
 
 			Data = stream.Subsection(stream.Cursor, stream.Cursor + bitCount);
-			stream.Seek(bitCount, System.IO.SeekOrigin.Current);
+			stream.Seek(bitCount, SeekOrigin.Current);
 		}
 
 		static uint ReadUBitInt(BitStream stream)
@@ -115,7 +115,7 @@ namespace TF2Net.NetMessages
 					throw new ArgumentOutOfRangeException(nameof(Baseline));
 			}
 
-			Data.Seek(0, System.IO.SeekOrigin.Begin);
+			Data.Seek(0, SeekOrigin.Begin);
 			
 			int newEntity = -1;
 			for (int i = 0; i < UpdatedEntries; i++)
