@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BitSet;
-using TF2Net.Data;
-using TF2Net.NetMessages;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using TF2Net.Extensions;
+using System.Linq;
+using BitSet;
 using TF2Net.Entities;
 
 namespace TF2Net.Data

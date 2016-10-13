@@ -21,8 +21,7 @@ namespace TF2Net.Monitors
 		public SingleEvent<Action<IPropertyMonitor<T>>> ValueChanged { get; } = new SingleEvent<Action<IPropertyMonitor<T>>>();
 
 		IEnumerable<IPropertyMonitor<T>> PropertyMonitors { get; }
-
-
+		
 		public MultiPropertyMonitor(IEnumerable<IPropertyMonitor<T>> propertyMonitors)
 		{
 			ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));

@@ -16,7 +16,7 @@ namespace TF2Net
 		public SingleEvent<Action<Entity>> EntityLeftPVS { get; } = new SingleEvent<Action<Entity>>();
 
 		public SingleEvent<Action<WorldState>> GameEventsListLoaded { get; } = new SingleEvent<Action<WorldState>>();
-		public SingleEvent<Action<WorldState, IReadOnlyGameEvent>> GameEvent { get; } = new SingleEvent<Action<WorldState, IReadOnlyGameEvent>>();
+		public SingleEvent<Action<WorldState, GameEvent>> GameEvent { get; } = new SingleEvent<Action<WorldState, GameEvent>>();
 
 		public SingleEvent<Action<WorldState>> NewTick { get; } = new SingleEvent<Action<WorldState>>();
 

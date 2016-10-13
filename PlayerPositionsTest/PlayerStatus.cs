@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
 using TF2Net.Data;
 
 namespace PlayerPositionsTest
@@ -103,6 +96,26 @@ namespace PlayerPositionsTest
 				}
 			}
 		}
+
+		public uint LastDPM { get; set; }
+		public uint LastDamage { get; set; }
+
+		double m_DPM;
+		public double DPM
+		{
+			get { return m_DPM; }
+			set
+			{
+				if (value != m_DPM)
+				{
+					m_DPM = value;
+					NotifyPropertyChanged();
+					NotifyPropertyChanged(nameof(IntDPM));
+				}
+			}
+		}
+
+		public uint IntDPM { get { return (uint)DPM; } }
 
 		public event PropertyChangedEventHandler PropertyChanged;
 

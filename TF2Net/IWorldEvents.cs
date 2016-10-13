@@ -8,7 +8,7 @@ namespace TF2Net
 	public interface IWorldEvents
 	{
 		SingleEvent<Action<WorldState>> GameEventsListLoaded { get; }
-		SingleEvent<Action<WorldState, IReadOnlyGameEvent>> GameEvent { get; }
+		SingleEvent<Action<WorldState, GameEvent>> GameEvent { get; }
 
 		SingleEvent<Action<WorldState>> ServerClassesLoaded { get; }
 		SingleEvent<Action<WorldState>> SendTablesLoaded { get; }

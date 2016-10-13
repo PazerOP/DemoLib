@@ -396,13 +396,19 @@ namespace TF2Net.Data
 
 			public MultiPlayerPropertyMonitor(Player p, IEnumerable<IPropertyMonitor<T>> propertyMonitors) : base(propertyMonitors)
 			{
-				ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
-				ValueChanged.Add(self => ((IPropertyMonitor<T>)self).ValueChanged.Invoke(self));
-				ValueChanged.Add(self => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
-				ValueChanged.Add(self => ((IEntityPropertyMonitor<T>)self).ValueChanged.Invoke(self));
-				ValueChanged.Add(self => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
+				//ValueChanged.Add(self => ((IPropertyMonitor)self).ValueChanged.Invoke(self));
+				//ValueChanged.Add(self => ((IPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				//ValueChanged.Add(self => ((IEntityPropertyMonitor)self).ValueChanged.Invoke(self));
+				//ValueChanged.Add(self => ((IEntityPropertyMonitor<T>)self).ValueChanged.Invoke(self));
+				//ValueChanged.Add(self => ((IPlayerPropertyMonitor)self).ValueChanged.Invoke(self));
 
 				Player = p;
+
+				IPropertyMonitor<T> self = this;
+				self.ValueChanged.Add(s => ((IEntityPropertyMonitor)s).ValueChanged.Invoke(this));
+				self.ValueChanged.Add(s => ((IEntityPropertyMonitor<T>)s).ValueChanged.Invoke(this));
+				self.ValueChanged.Add(s => ((IPlayerPropertyMonitor)s).ValueChanged.Invoke(this));
+				self.ValueChanged.Add(s => ((IPlayerPropertyMonitor<T>)s).ValueChanged.Invoke(this));
 			}
 		}
 	}

@@ -23,6 +23,7 @@ using TF2Net;
 using TF2Net.Data;
 using TF2Net.Entities;
 using TF2Net.Entities.TempEntities;
+using TF2Net.Monitors;
 
 namespace PlayerPositionsTest
 {
@@ -93,10 +94,15 @@ namespace PlayerPositionsTest
 			});
 		}
 
-		private void GameEventTriggered(WorldState ws, IReadOnlyGameEvent e)
+		private void GameEventTriggered(WorldState ws, GameEvent e)
 		{
 			if (e.Declaration.Name == "player_hurt")
 				Debugger.Break();
+			else if (e.Declaration.Name == "player_death")
+			{
+				WeaponType wpn = (WeaponType)(short)e.Values["weaponid"];
+				return;
+			}
 
 			Debug.WriteLine(e.Declaration.Name);
 		}
@@ -235,8 +241,8 @@ namespace PlayerPositionsTest
 				if (!c.HasValue)
 					c = Class.Undefined;
 
-				bool? isDead = p.IsDead.Value;
-				if (!isDead.HasValue)
+				IPlayerPropertyMonitor<bool?> isDead = p.IsDead;
+				if (!isDead.Value.HasValue)
 					continue;
 
 				int? health = p.Health.Value;
@@ -247,7 +253,13 @@ namespace PlayerPositionsTest
 				if (!maxHealth.HasValue)
 					continue;
 
-				Dispatcher.InvokeAsync(() =>
+				IPlayerPropertyMonitor<uint?> damage = p.Damage;
+				if (!damage.Value.HasValue)
+					continue;
+				else
+					damage.ValueChanged.Add(PlayerDidDamage);
+
+				PlayerStatusesGrid.Dispatcher.InvokeAsync(() =>
 				{
 					if (t != Team.Red && t != Team.Blue)
 					{
@@ -266,22 +278,24 @@ namespace PlayerPositionsTest
 					}
 
 					status.Nickname = p.Info.Name;
-					status.IsDead = isDead.Value;
+					status.IsDead = isDead.Value.Value;
 					status.Team = t.Value;
 					status.Health = health.Value;
 					status.MaxHealth = maxHealth.Value;
+					status.DPM = Math.Max(0, status.DPM - status.LastDPM * (1.0 / (66.0 * 20.0)));
 
-					status.ClassPortrait = string.Format("{0} {1} {2} alpha", t.Value, c.Value, isDead.Value ? "grey" : "");
+					status.ClassPortrait = string.Format("{0} {1} {2} alpha", t.Value, c.Value, status.IsDead ? "grey" : "");
 
 					if (added)
 					{
+						status.LastDamage = damage.Value.Value;
 						if (t == Team.Red)
 							RedStatuses.Add(status);
 						else
 							BlueStatuses.Add(status);
 					}
 
-				}, DispatcherPriority.Background);
+				});
 			}
 
 			RedTeamHealth.Dispatcher.InvokeAsync(() =>
@@ -296,10 +310,14 @@ namespace PlayerPositionsTest
 					health += status.Health;
 				}
 
-				RedTeamHealth.Maximum = maxHealth;
-
-				double delta = health - RedTeamHealth.Value;
-				RedTeamHealth.Value = RedTeamHealth.Value + delta / 32;
+				{
+					double delta = maxHealth - RedTeamHealth.Maximum;
+					RedTeamHealth.Maximum = RedTeamHealth.Maximum + delta / 32;
+				}
+				{
+					double delta = health - RedTeamHealth.Value;
+					RedTeamHealth.Value = RedTeamHealth.Value + delta / 32;
+				}
 			});
 			BlueTeamHealth.Dispatcher.InvokeAsync(() =>
 			{
@@ -313,10 +331,46 @@ namespace PlayerPositionsTest
 					health += status.Health;
 				}
 
-				BlueTeamHealth.Maximum = maxHealth;
+				{
+					double delta = maxHealth - BlueTeamHealth.Maximum;
+					BlueTeamHealth.Maximum = BlueTeamHealth.Maximum + delta / 32;
+				}
+				{
+					double delta = health - BlueTeamHealth.Value;
+					BlueTeamHealth.Value = BlueTeamHealth.Value + delta / 32;
+				}
+			});
+		}
 
-				double delta = health - BlueTeamHealth.Value;
-				BlueTeamHealth.Value = BlueTeamHealth.Value + delta / 32;
+		void PlayerDidDamage(IPlayerPropertyMonitor<uint?> pm)
+		{
+			PlayerStatusesGrid.Dispatcher.InvokeAsync(() =>
+			{
+				foreach (PlayerStatus status in BlueStatuses.Concat(RedStatuses))
+				{
+					if (status.GUID != pm.Player.Info.GUID)
+						continue;
+
+					Debug.Assert(pm.Value.HasValue);
+
+					uint damage = pm.Value.Value;
+					
+					if (damage == 0)
+					{
+						status.LastDamage = 0;
+						status.DPM = 0;
+						status.LastDPM = 0;
+					}
+					else
+					{
+						uint delta = damage - status.LastDamage;
+						status.DPM += delta;
+						status.LastDamage = damage;
+						status.LastDPM = (uint)status.DPM;
+					}
+
+					break;
+				}
 			});
 		}
 

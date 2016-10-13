@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TF2Net.Data;
+﻿using TF2Net.Data;
 
 namespace TF2Net.Entities.TempEntities
 {
@@ -12,7 +7,7 @@ namespace TF2Net.Entities.TempEntities
 		public IReadOnlyVector Origin { get; }
 
 		public uint? TargetEntityIndex { get; }
-		public Entity TargetEntity { get { return Entity.World.Entities[TargetEntityIndex.Value]; } }
+		public Entity TargetEntity { get { return TargetEntityIndex.HasValue ? Entity.World.Entities[TargetEntityIndex.Value] : null; } }
 
 		public const string CLASSNAME = "CTETFBlood";
 		public TFBlood(IBaseEntity e) : base(e, CLASSNAME)
