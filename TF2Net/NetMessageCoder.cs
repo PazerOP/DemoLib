@@ -53,8 +53,9 @@ namespace TF2Net
 				case NetMessageType.SVC_SOUND:				return new NetSoundMessage();
 				case NetMessageType.SVC_SETVIEW:			return new NetSetViewMessage();
 				case NetMessageType.SVC_FIXANGLE:			return new NetFixAngleMessage();
+			    case NetMessageType.SVC_BSPDECAL:           return new NetBspDecalMessage();
 
-				case NetMessageType.SVC_USERMESSAGE:		return new NetUsrMsgMessage();
+                case NetMessageType.SVC_USERMESSAGE:		return new NetUsrMsgMessage();
 
 				case NetMessageType.SVC_ENTITYMESSAGE:		return new NetEntityMessage();
 				case NetMessageType.SVC_GAMEEVENT:			return new NetGameEventMessage();

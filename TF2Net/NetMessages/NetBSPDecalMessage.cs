@@ -1,33 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BitSet;
 using TF2Net.Data;
+using TF2Net.Extensions;
 
 namespace TF2Net.NetMessages
 {
 	[DebuggerDisplay("{Description, nq}")]
-	public class NetBSPDecalMessage : INetMessage
-	{
-		public string Description
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+	public class NetBspDecalMessage : INetMessage
+    {
+        const byte MaxDecalIndexBits = 9;
+        const byte MaxEdictBits = 11;
+        const byte SpModelIndexBits = 11;
 
-		public void ApplyWorldState(WorldState ws)
-		{
-			throw new NotImplementedException();
-		}
+        public string Description => string.Format("svc_bspdecal: {0} {1} {2}", Position, DecalTextureIndex, EntIndex);
+        public Vector Position { get; set; }
+        public ulong DecalTextureIndex { get; set; }
+        public ulong EntIndex { get; set; }
+        public ulong ModelIndex { get; set; }
+        public bool LowPrioritiy { get; set; }
 
-		public void ReadMsg(BitStream stream)
-		{
-			throw new NotImplementedException();
-		}
-	}
+
+        public void ReadMsg(BitStream stream)
+        {
+            Position = stream.ReadVector();
+            DecalTextureIndex = stream.ReadULong(MaxDecalIndexBits);
+
+            bool b = stream.ReadBool();
+            if (b)
+            {
+                EntIndex = stream.ReadULong(MaxEdictBits);
+                ModelIndex = stream.ReadULong(SpModelIndexBits);
+            }
+            else
+            {
+                EntIndex = 0;
+                ModelIndex = 0;
+            }
+            LowPrioritiy = stream.ReadBool();
+        }
+
+
+        public void ApplyWorldState(WorldState ws)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
