@@ -51,6 +51,46 @@ namespace TF2Net.NetMessages
 			}
 
 			return 0;
-		}
-	}
+	    }
+
+	    public static double Read(BitStream source)
+	    {
+	        // Read the required integer and fraction flags
+	        bool intFlag = source.ReadBool();
+	        bool fractFlag = source.ReadBool();
+	        ulong intVal = 0;
+	        ulong fractVal = 0;
+
+	        // If we got either parse them, otherwise it's a zero.
+	        if (intFlag || fractFlag)
+	        {
+	            // Read the sign bit
+	            var signBit = source.ReadBool();
+
+	            // If there's an integer, read it in
+	            if (intFlag)
+	            {
+	                // Adjust the integers from [0..MAX_COORD_VALUE-1] to [1..MAX_COORD_VALUE]
+	                intVal = source.ReadULong((byte)COORD_INTEGER_BITS) + 1;
+	            }
+
+	            // If there's a fraction, read it in
+	            if (fractFlag)
+	            {
+	                fractVal = source.ReadULong((byte)COORD_FRACTIONAL_BITS);
+	            }
+
+	            // Calculate the correct floating point value
+	            double retVal = Math.Abs(intVal + (fractVal * COORD_RESOLUTION));
+
+	            // Fixup the sign if negative.
+	            if (signBit)
+	                retVal = -retVal;
+
+	            return retVal;
+	        }
+
+	        return 0;
+	    }
+    }
 }

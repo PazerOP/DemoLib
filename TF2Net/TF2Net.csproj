@@ -71,6 +71,7 @@
     <Compile Include="Monitors\EntityMonitor.cs" />
     <Compile Include="Monitors\EntityPropertyMonitor.cs" />
     <Compile Include="Monitors\MultiPropertyMonitor.cs" />
+    <Compile Include="Extensions\BitStreamExtensions.cs" />
     <Compile Include="NetMessages\Shared\EntityCoder.cs" />
     <Compile Include="SingleEvent.cs" />
     <Compile Include="Data\BaselineIndex.cs" />
