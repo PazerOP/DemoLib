@@ -65,6 +65,8 @@ namespace TF2Net
 
 				case NetMessageType.SVC_GAMEEVENTLIST:		return new NetGameEventListMessage();
 
+				case NetMessageType.SVC_UNKNKOWN_34:		return new SomeBitMessage(10);
+
 				default:	throw new NotImplementedException(string.Format("Unimplemented {0} \"{1}\"", typeof(NetMessageType).Name, type));
 			}
 		}
